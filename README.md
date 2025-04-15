@@ -5,9 +5,9 @@ Team Members:
 <p>
 Chestine May Mari C. Cabiso
 <br>
+Axille Dayonot
+<br>
 Ruhmer Jairus R. Espina
 <br>
 Lovely Shane P. Ong
-<br>
-Axille Dayonot
 </p>
