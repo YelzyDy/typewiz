@@ -2,8 +2,10 @@
 
 Team Members:
 
-Lovely Shane P. Ong
-Ruhmer Jairus R. Espina
+
+
 <p>
 [add your names here & commit changes (alphabetical)]
+Ruhmer Jairus R. Espina
+Lovely Shane P. Ong
 </p>
