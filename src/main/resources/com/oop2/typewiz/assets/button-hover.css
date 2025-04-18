@@ -1,0 +1,9 @@
+.rounded-button:hover {
+    -fx-background-color: #365486;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+}
+
+.rounded-button:pressed {
+    -fx-background-color: #0F1035;
+}

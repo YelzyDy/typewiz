@@ -46,3 +46,15 @@
     -fx-underline: true;
     -fx-font-style: italic;
 }
+
+.text-field {
+    -fx-text-fill: white;
+    /*-fx-background-color: transparent;  optional */
+}
+
+.password-field {
+    -fx-text-fill: white;
+}
+
+
+

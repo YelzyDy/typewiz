@@ -2,25 +2,20 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.effect.ColorAdjust?>
-<?import javafx.scene.effect.InnerShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane fx:id="apLogin" prefHeight="800.0" prefWidth="1550.0" styleClass="root" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.LoginController">
+<AnchorPane fx:id="apRegister" prefHeight="800.0" prefWidth="1550.0" styleClass="root" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.RegisterController">
 
     <HBox alignment="CENTER" layoutX="-1.6" prefWidth="1552.0" spacing="10.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0">
 
@@ -37,8 +32,8 @@
         </VBox>
 
            <!-- Right: Login Form -->
-        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="634.0" minHeight="-Infinity" prefHeight="790.0" prefWidth="619.0" spacing="10.0">
-         <Label alignment="TOP_RIGHT" contentDisplay="TOP" prefHeight="124.0" prefWidth="156.0" text="Login" textFill="WHITE">
+        <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="634.0" minHeight="-Infinity" prefHeight="725.0" prefWidth="619.0" spacing="10.0">
+         <Label alignment="TOP_RIGHT" contentDisplay="TOP" prefHeight="124.0" prefWidth="206.0" text="Sign up" textFill="WHITE">
             <font>
                <Font name="Viner Hand ITC" size="52.0" />
             </font>
@@ -46,6 +41,29 @@
                <Insets bottom="20.0" right="60.0" />
             </VBox.margin>
          </Label>
+         <HBox alignment="CENTER_LEFT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="54.0" prefWidth="381.0" spacing="10" style="-fx-background-color: #2b1d3a; -fx-background-radius: 30;">
+            <children>
+               <ImageView fitHeight="26.0" fitWidth="26.0">
+                  <image>
+                     <Image url="@assets/profile_icon_login.png" />
+                  </image>
+                  <HBox.margin>
+                     <Insets left="30.0" />
+                  </HBox.margin>
+               </ImageView>
+               <TextField fx:id="tfUsername" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Username" style="-fx-background-color: #2b1d3a;">
+                  <font>
+                     <Font name="System Italic" size="19.0" />
+                  </font>
+                  <HBox.margin>
+                     <Insets />
+                  </HBox.margin>
+               </TextField>
+            </children>
+            <VBox.margin>
+               <Insets right="70.0" />
+            </VBox.margin>
+         </HBox>
          <Pane maxWidth="-Infinity" prefHeight="58.0" prefWidth="456.0">
             <children>
          
@@ -59,13 +77,10 @@
                         <Insets left="30.0" />
                      </HBox.margin>
                       </ImageView>
-                      <TextField fx:id="usernameField" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Username" style="-fx-background-color: #2b1d3a;">
+                      <TextField fx:id="tfEmail" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Email" style="-fx-background-color: #2b1d3a;">
                      <font>
                         <Font name="System Italic" size="19.0" />
                      </font>
-                     <effect>
-                        <ColorAdjust />
-                     </effect>
                   </TextField>
                   </HBox>
             </children>
@@ -82,14 +97,16 @@
                            <Insets left="30.0" />
                         </HBox.margin>
                          </ImageView>
-                      <PasswordField fx:id="passwordField" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;">
+                      <PasswordField fx:id="tfPassword" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;">
                         <font>
                            <Font name="System Italic" size="19.0" />
-                        </font></PasswordField>
+                        </font>
+                     </PasswordField>
                       <TextField fx:id="visiblePasswordField" managed="false" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;" visible="false">
-                        <font>
-                           <Font name="System Italic" size="19.0" />
-                        </font></TextField>
+                          <style>-fx-text-fill: white;</style>
+                          <font>
+                              <Font name="System Italic" size="19.0" />
+                          </font></TextField>
                       <ImageView fx:id="eyeIcon" fitHeight="29.0" fitWidth="28.0" onMouseClicked="#togglePasswordVisibility">
                           <image>
                               <Image url="@assets/password_hash_icon.png" />
@@ -99,28 +116,45 @@
                </HBox>
             </children>
          </Pane>
-
-               <!-- Remember Me & Forgot Password -->
-            <HBox alignment="CENTER_LEFT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="426.0" spacing="20">
-                <CheckBox prefHeight="18.0" prefWidth="231.0" text="Remember Me" textFill="#a1a1a1" />
-                <Hyperlink prefHeight="24.0" prefWidth="101.0" styleClass="forgot-link" text="Forgot Password?" />
-            </HBox>
+         <HBox alignment="CENTER_LEFT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="54.0" prefWidth="381.0" spacing="10" style="-fx-background-color: #2b1d3a; -fx-background-radius: 30;">
+            <children>
+               <ImageView fitHeight="26.0" fitWidth="27.0">
+                  <image>
+                     <Image url="@assets/password_icon.png" />
+                  </image>
+                  <HBox.margin>
+                     <Insets left="30.0" />
+                  </HBox.margin>
+               </ImageView>
+               <PasswordField fx:id="tfConfirmPassword" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Confirm Password" style="-fx-background-color: #2b1d3a;">
+                  <font>
+                     <Font name="System Italic" size="19.0" />
+                  </font>
+               </PasswordField>
+                <TextField fx:id="visibleConfirmPasswordField" managed="false" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;" visible="false">
+                    <style>-fx-text-fill: white;</style>
+                    <font>
+                        <Font name="System Italic" size="19.0" />
+                    </font></TextField>
+               <ImageView fx:id="eyeIcon2" fitHeight="29.0" fitWidth="28.0" onMouseClicked="#toggleConfirmPasswordVisibility">
+                  <image>
+                     <Image url="@assets/password_hash_icon.png" />
+                  </image>
+               </ImageView>
+            </children>
+            <VBox.margin>
+               <Insets right="70.0" />
+            </VBox.margin>
+         </HBox>
 
                <!-- Login Button -->
-            <Button fx:id="loginButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onAction="#handleLogin" prefHeight="58.0" prefWidth="378.0" style="-fx-background-color: #c85bff; -fx-background-radius: 30;" text="Login" textFill="WHITE">
+            <Button fx:id="creatAccountButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onAction="#handleCreateAccount" prefHeight="58.0" prefWidth="378.0" style="-fx-background-color: #c85bff; -fx-background-radius: 30;" text="Create Account" textFill="WHITE">
             <VBox.margin>
                <Insets right="80.0" top="50.0" />
             </VBox.margin>
             <font>
                <Font size="20.0" />
             </font>
-            <effect>
-               <InnerShadow>
-                  <color>
-                     <Color red="0.030081871896982193" green="0.0020272904075682163" blue="0.04210526496171951" />
-                  </color>
-               </InnerShadow>
-            </effect>
          </Button>
          <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="18.0" prefWidth="366.0">
             <children>
@@ -137,20 +171,13 @@
                <Insets right="75.0" />
             </VBox.margin>
          </HBox>
-         <Button fx:id="signUpButton" layoutX="91.0" layoutY="495.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onAction="#handleSignUp" prefHeight="58.0" prefWidth="378.0" style="-fx-background-color: #ffffff; -fx-background-radius: 30;" text="Sign up">
+         <Button fx:id="loginButton" layoutX="91.0" layoutY="495.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onAction="#handleLogin" prefHeight="58.0" prefWidth="378.0" style="-fx-background-color: #ffffff; -fx-background-radius: 30;" text="Login">
             <font>
                <Font size="20.0" />
             </font>
             <VBox.margin>
                <Insets right="80.0" />
             </VBox.margin>
-            <effect>
-               <InnerShadow choke="0.25" height="37.38" radius="14.095">
-                  <color>
-                     <Color red="0.28451332449913025" green="0.03849999979138374" blue="0.550000011920929" />
-                  </color>
-               </InnerShadow>
-            </effect>
          </Button>
         </VBox>
     </HBox>
