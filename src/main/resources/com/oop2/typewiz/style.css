@@ -1,0 +1,48 @@
+.root {
+    -fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);
+}
+
+.logo-label {
+    -fx-text-fill: white;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 0 0 0;
+}
+
+.login-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+    -fx-font-family: "Monospaced";
+}
+
+.input-field {
+    -fx-pref-width: 200;
+    -fx-background-radius: 20;
+    -fx-padding: 10;
+    -fx-background-color: #2d1e3d;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #a58cbf;
+    -fx-border-color: transparent;
+}
+
+.login-button {
+    -fx-background-color: #c85bff;
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-padding: 10 0 10 0;
+    -fx-pref-width: 220;
+}
+
+.signup-button {
+   -fx-background-color: white;
+      -fx-text-fill: black;
+      -fx-background-radius: 20;
+      -fx-padding: 10 0 10 0;
+      -fx-pref-width: 220;
+}
+
+.forgot-link {
+    -fx-text-fill: #d0a8ff;
+    -fx-underline: true;
+    -fx-font-style: italic;
+}
