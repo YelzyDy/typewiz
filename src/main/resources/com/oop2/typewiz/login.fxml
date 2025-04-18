@@ -19,13 +19,13 @@
 
 <AnchorPane prefHeight="800.0" prefWidth="1550.0" styleClass="root" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.LoginController">
 
-    <HBox alignment="CENTER" layoutX="-1.6" prefWidth="1552.0" spacing="10.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@../assets/style.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0">
+    <HBox alignment="CENTER" layoutX="-1.6" prefWidth="1552.0" spacing="10.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0.0">
 
         <!-- Left: Logo -->
         <VBox alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="481.0">
             <ImageView fitHeight="530.0" fitWidth="546.0" pickOnBounds="true" preserveRatio="true">
                 <image>
-                    <Image url="@../assets/typewiz_logo.png" />
+                    <Image url="@assets/typewiz_logo.png" />
                 </image>
             <VBox.margin>
                <Insets />
@@ -50,7 +50,7 @@
                   <HBox alignment="CENTER_LEFT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="54.0" prefWidth="381.0" spacing="10" style="-fx-background-color: #2b1d3a; -fx-background-radius: 30;">
                       <ImageView fitHeight="26.0" fitWidth="26.0">
                           <image>
-                              <Image url="@../assets/profile_icon_login.png" />
+                              <Image url="@assets/profile_icon_login.png" />
                           </image>
                      <HBox.margin>
                         <Insets left="30.0" />
@@ -70,7 +70,7 @@
                   <children>
                          <ImageView fitHeight="26.0" fitWidth="27.0">
                              <image>
-                                 <Image url="@../assets/password_icon.png" />
+                                 <Image url="@assets/password_icon.png" />
                              </image>
                         <HBox.margin>
                            <Insets left="30.0" />
@@ -82,7 +82,7 @@
                         </font></PasswordField>
                          <ImageView fitHeight="29.0" fitWidth="28.0" onMouseClicked="#togglePasswordVisibility">
                              <image>
-                                 <Image url="@../assets/password_hash_icon.png" />
+                                 <Image url="@assets/password_hash_icon.png" />
                              </image>
                          </ImageView>
                   </children>
