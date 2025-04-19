@@ -15,9 +15,12 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
 
-        // ✅ Call this AFTER load()
+        // Apply global stylesheet
+        scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());
+
+        // Get controller and pass stage
         LoginController controller = fxmlLoader.getController();
-        controller.setStage(stage);  // Pass the Stage to the controller
+        controller.setStage(stage);
 
         // Set up the stage and show the login screen
         stage.setTitle("Login");

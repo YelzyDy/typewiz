@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+
+<HBox fx:id="headerBar" alignment="CENTER_LEFT" prefHeight="79.0" prefWidth="1550.0" spacing="10" style="-fx-background-color: linear-gradient(to right, #1b0822, #100118); -fx-padding: 10;" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.HeaderController">
+
+    <!-- Left: Logo -->
+    <HBox alignment="CENTER_LEFT" spacing="5">
+        <ImageView fx:id="logoIcon" fitHeight="58.0" fitWidth="66.0" />
+        <ImageView fx:id="logoText" fitHeight="31.0" fitWidth="171.0" preserveRatio="true" />
+      <HBox.margin>
+         <Insets left="20.0" />
+      </HBox.margin>
+    </HBox>
+
+    <Region prefHeight="58.0" prefWidth="662.0" HBox.hgrow="ALWAYS" />
+
+    <!-- Right: Icon Buttons -->
+    <HBox alignment="CENTER_RIGHT" prefHeight="58.0" prefWidth="321.0" spacing="25.0">
+        <ImageView fx:id="leaderboardIcon" fitHeight="30.0" fitWidth="30.0" styleClass="header-icon" />
+      <ImageView fx:id="aboutIcon" fitHeight="30.0" fitWidth="30.0" layoutX="148.0" layoutY="10.0" styleClass="header-icon" />
+      <ImageView fx:id="profileIcon" fitHeight="30.0" fitWidth="30.0" layoutX="67.0" layoutY="10.0" styleClass="header-icon" />
+      <ImageView fx:id="settingsIcon" fitHeight="30.0" fitWidth="30.0" layoutX="291.0" layoutY="10.0" styleClass="header-icon" />
+      <HBox.margin>
+         <Insets right="20.0" />
+      </HBox.margin>
+    </HBox>
+</HBox>

@@ -2,8 +2,20 @@
 
 <?import javafx.scene.layout.*?>
 
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.oop2.typewiz.MainController"
+            prefWidth="600.0" prefHeight="400.0"
+            style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);">
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.MainController">
+    <top>
+        <fx:include source="header.fxml"/>
+    </top>
 
+    <center>
+        <AnchorPane fx:id="mainContent">
+            <!-- Main content -->
+        </AnchorPane>
+    </center>
 
-</AnchorPane>
+</BorderPane>
