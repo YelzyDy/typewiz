@@ -77,15 +77,26 @@
 .header-icon {
     -fx-opacity: 0.7;
     -fx-cursor: hand;
-    -fx-effect: drop shadow(gaussian, rgba(255,255,255,0.15), 2, 0.2, 0, 1);
-    -fx-transition: all 0.2s ease-in-out;
 }
 
 .header-icon:hover {
-    -fx-opacity: 1;
-    -fx-scale-x: 1.1;
-    -fx-scale-y: 1.1;
+    -fx-opacity: 2;
 }
+
+.rounded-button {
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-pref-width: 378px;
+    -fx-pref-height: 58px;
+}
+
+.rounded-button:hover {
+    -fx-background-color: #a03ecc; /* darker purple on hover */
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0.5, 0, 4);
+}
+
 
 
 
