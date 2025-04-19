@@ -8,11 +8,19 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class HelloApplication extends Application {
+
     @Override
     public void start(Stage stage) throws IOException {
+        // Load the FXML for the login screen
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
-        stage.setTitle("Login!");
+
+        // ✅ Call this AFTER load()
+        LoginController controller = fxmlLoader.getController();
+        controller.setStage(stage);  // Pass the Stage to the controller
+
+        // Set up the stage and show the login screen
+        stage.setTitle("Login");
         stage.setScene(scene);
         stage.show();
     }

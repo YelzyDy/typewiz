@@ -9,6 +9,8 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.effect.ColorAdjust?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.effect.Glow?>
 <?import javafx.scene.effect.InnerShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -33,6 +35,9 @@
             <VBox.margin>
                <Insets />
             </VBox.margin>
+            <effect>
+               <DropShadow radius="5.905" spread="0.14" width="4.62" />
+            </effect>
             </ImageView>
         </VBox>
 
@@ -45,6 +50,9 @@
             <VBox.margin>
                <Insets bottom="20.0" right="60.0" />
             </VBox.margin>
+            <effect>
+               <Glow level="0.4" />
+            </effect>
          </Label>
          <Pane maxWidth="-Infinity" prefHeight="58.0" prefWidth="456.0">
             <children>
@@ -61,12 +69,15 @@
                       </ImageView>
                       <TextField fx:id="usernameField" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Username" style="-fx-background-color: #2b1d3a;">
                      <font>
-                        <Font name="System Italic" size="19.0" />
+                        <Font name="Book Antiqua Italic" size="20.0" />
                      </font>
                      <effect>
                         <ColorAdjust />
                      </effect>
                   </TextField>
+                  <effect>
+                     <InnerShadow />
+                  </effect>
                   </HBox>
             </children>
          </Pane>
@@ -84,7 +95,7 @@
                          </ImageView>
                       <PasswordField fx:id="passwordField" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;">
                         <font>
-                           <Font name="System Italic" size="19.0" />
+                           <Font name="Book Antiqua Italic" size="20.0" />
                         </font></PasswordField>
                       <TextField fx:id="visiblePasswordField" managed="false" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;" visible="false">
                         <font>
@@ -96,13 +107,19 @@
                           </image>
                       </ImageView>
                   </children>
+                  <effect>
+                     <InnerShadow />
+                  </effect>
                </HBox>
             </children>
          </Pane>
 
                <!-- Remember Me & Forgot Password -->
             <HBox alignment="CENTER_LEFT" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="426.0" spacing="20">
-                <CheckBox prefHeight="18.0" prefWidth="231.0" text="Remember Me" textFill="#a1a1a1" />
+                <CheckBox prefHeight="18.0" prefWidth="231.0" text="Remember Me" textFill="#a1a1a1">
+               <font>
+                  <Font name="System Italic" size="12.0" />
+               </font></CheckBox>
                 <Hyperlink prefHeight="24.0" prefWidth="101.0" styleClass="forgot-link" text="Forgot Password?" />
             </HBox>
 
@@ -112,7 +129,7 @@
                <Insets right="80.0" top="50.0" />
             </VBox.margin>
             <font>
-               <Font size="20.0" />
+               <Font name="Book Antiqua" size="20.0" />
             </font>
             <effect>
                <InnerShadow>
@@ -139,7 +156,7 @@
          </HBox>
          <Button fx:id="signUpButton" layoutX="91.0" layoutY="495.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onAction="#handleSignUp" prefHeight="58.0" prefWidth="378.0" style="-fx-background-color: #ffffff; -fx-background-radius: 30;" text="Sign up">
             <font>
-               <Font size="20.0" />
+               <Font name="Book Antiqua" size="20.0" />
             </font>
             <VBox.margin>
                <Insets right="80.0" />

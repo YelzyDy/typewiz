@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.oop2.typewiz.LaunchController" prefWidth="600" prefHeight="400" style="-fx-background-color: white;">
+    <VBox spacing="20" alignment="CENTER" layoutX="100" layoutY="100" prefWidth="400" prefHeight="200" AnchorPane.leftAnchor="100" AnchorPane.rightAnchor="100" AnchorPane.topAnchor="100" AnchorPane.bottomAnchor="100">
+        <Label text="Loading TypeWiz..." style="-fx-font-size: 20px; -fx-text-fill: #333;" />
+        <ProgressBar fx:id="progressBar" prefWidth="300" progress="0" />
+    </VBox>
+</AnchorPane>

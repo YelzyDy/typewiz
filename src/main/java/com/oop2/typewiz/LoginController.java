@@ -1,5 +1,6 @@
 package com.oop2.typewiz;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +30,8 @@ public class LoginController {
     @FXML
     private Button signUpButton;
 
+    private Stage stage;
+
     @FXML
     private ImageView eyeIcon;
     private boolean isPasswordVisible = false;
@@ -43,6 +46,7 @@ public class LoginController {
 
     @FXML
     public void initialize() {
+        Platform.runLater(() -> apLogin.requestFocus());
         // Optional: Add input validation or styling on init
     }
 
@@ -70,17 +74,17 @@ public class LoginController {
     }
 
     @FXML
-    private void handleLogin(ActionEvent event) {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
+    private void handleLogin(ActionEvent event) throws IOException {
+            Stage stage = (Stage) loginButton.getScene().getWindow();
 
-        // Example: Replace this with actual DB auth logic
-        if ("admin".equals(username) && "password".equals(password)) {
-            showAlert(Alert.AlertType.INFORMATION, "Login Successful", "Welcome, " + username + "!");
-            // TODO: Load dashboard or next screen
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid username or password.");
-        }
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
+            Scene scene = new Scene(loader.load(), 1550, 800);
+
+            // ✅ Get LaunchController and pass the stage
+            LaunchController launchController = loader.getController();
+            launchController.setStage(stage);
+
+            stage.setScene(scene);
     }
 
     @FXML
@@ -99,5 +103,10 @@ public class LoginController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    // Method to set the stage
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 }

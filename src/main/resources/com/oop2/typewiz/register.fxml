@@ -6,12 +6,15 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.effect.InnerShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
@@ -28,6 +31,13 @@
             <VBox.margin>
                <Insets />
             </VBox.margin>
+            <effect>
+               <DropShadow radius="20.5275" spread="0.05" width="63.11">
+                  <color>
+                     <Color red="0.15789473056793213" green="0.13801169395446777" blue="0.13801169395446777" />
+                  </color>
+               </DropShadow>
+            </effect>
             </ImageView>
         </VBox>
 
@@ -53,7 +63,7 @@
                </ImageView>
                <TextField fx:id="tfUsername" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Username" style="-fx-background-color: #2b1d3a;">
                   <font>
-                     <Font name="System Italic" size="19.0" />
+                     <Font name="Book Antiqua Italic" size="20.0" />
                   </font>
                   <HBox.margin>
                      <Insets />
@@ -63,6 +73,9 @@
             <VBox.margin>
                <Insets right="70.0" />
             </VBox.margin>
+            <effect>
+               <InnerShadow />
+            </effect>
          </HBox>
          <Pane maxWidth="-Infinity" prefHeight="58.0" prefWidth="456.0">
             <children>
@@ -79,9 +92,12 @@
                       </ImageView>
                       <TextField fx:id="tfEmail" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefColumnCount="0" prefHeight="40.0" prefWidth="279.0" promptText="Email" style="-fx-background-color: #2b1d3a;">
                      <font>
-                        <Font name="System Italic" size="19.0" />
+                        <Font name="Book Antiqua Italic" size="20.0" />
                      </font>
                   </TextField>
+                  <effect>
+                     <InnerShadow />
+                  </effect>
                   </HBox>
             </children>
          </Pane>
@@ -99,7 +115,7 @@
                          </ImageView>
                       <PasswordField fx:id="tfPassword" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;">
                         <font>
-                           <Font name="System Italic" size="19.0" />
+                           <Font name="Book Antiqua Italic" size="20.0" />
                         </font>
                      </PasswordField>
                       <TextField fx:id="visiblePasswordField" managed="false" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;" visible="false">
@@ -113,6 +129,9 @@
                           </image>
                       </ImageView>
                   </children>
+                  <effect>
+                     <InnerShadow />
+                  </effect>
                </HBox>
             </children>
          </Pane>
@@ -128,7 +147,7 @@
                </ImageView>
                <PasswordField fx:id="tfConfirmPassword" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Confirm Password" style="-fx-background-color: #2b1d3a;">
                   <font>
-                     <Font name="System Italic" size="19.0" />
+                     <Font name="Book Antiqua Italic" size="20.0" />
                   </font>
                </PasswordField>
                 <TextField fx:id="visibleConfirmPasswordField" managed="false" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="41.0" prefWidth="253.0" promptText="Password" style="-fx-background-color: #2b1d3a;" visible="false">
@@ -145,6 +164,9 @@
             <VBox.margin>
                <Insets right="70.0" />
             </VBox.margin>
+            <effect>
+               <InnerShadow />
+            </effect>
          </HBox>
 
                <!-- Login Button -->
@@ -155,6 +177,9 @@
             <font>
                <Font size="20.0" />
             </font>
+            <effect>
+               <InnerShadow />
+            </effect>
          </Button>
          <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="18.0" prefWidth="366.0">
             <children>
@@ -178,6 +203,9 @@
             <VBox.margin>
                <Insets right="80.0" />
             </VBox.margin>
+            <effect>
+               <InnerShadow />
+            </effect>
          </Button>
         </VBox>
     </HBox>

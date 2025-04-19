@@ -1,5 +1,6 @@
 package com.oop2.typewiz;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -37,6 +38,7 @@ public class RegisterController {
     private void initialize() {
         setupPasswordFieldToggle(tfPassword, visiblePasswordField);
         setupPasswordFieldToggle(tfConfirmPassword, visibleConfirmPasswordField);
+        Platform.runLater(() -> apRegister.requestFocus());
     }
 
     private void setupPasswordFieldToggle(PasswordField passwordField, TextField visibleField) {
@@ -96,7 +98,7 @@ public class RegisterController {
     private void handleCreateAccount() {
         String username = tfUsername.getText();
         String email = tfEmail.getText();
-        String password = tfPassword.getText(); // both bound, so doesn't matter which
+        String password = tfPassword.getText();
         String confirmPassword = tfConfirmPassword.getText();
 
         if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
