@@ -74,5 +74,19 @@
     -fx-padding: 4;
 }
 
+.header-icon {
+    -fx-opacity: 0.7;
+    -fx-cursor: hand;
+    -fx-effect: drop shadow(gaussian, rgba(255,255,255,0.15), 2, 0.2, 0, 1);
+    -fx-transition: all 0.2s ease-in-out;
+}
+
+.header-icon:hover {
+    -fx-opacity: 1;
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+
 
 

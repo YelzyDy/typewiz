@@ -1,19 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<<<<<<< HEAD
-<?import javafx.geometry.*?>
-<?import javafx.scene.image.*?>
-<?import javafx.scene.layout.*?>
-
-<HBox fx:id="headerBar" alignment="CENTER_LEFT" prefHeight="79.0" prefWidth="1550.0" spacing="10" style="-fx-background-color: #670078; -fx-padding: 10;" stylesheets="@assets/style.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.HeaderController">
-=======
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 
 <HBox fx:id="headerBar" alignment="CENTER_LEFT" prefHeight="79.0" prefWidth="1550.0" spacing="10" style="-fx-background-color: linear-gradient(to right, #1b0822, #100118); -fx-padding: 10;" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.HeaderController">
->>>>>>> 13e6659 (added reusable header.fxml with HeaderController.java (no hover yet))
 
     <!-- Left: Logo -->
     <HBox alignment="CENTER_LEFT" spacing="5">
