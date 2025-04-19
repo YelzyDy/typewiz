@@ -80,6 +80,9 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
             Scene scene = new Scene(loader.load(), 1550, 800);
 
+             // Link stylesheet here
+            scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());
+
             // ✅ Get LaunchController and pass the stage
             LaunchController launchController = loader.getController();
             launchController.setStage(stage);

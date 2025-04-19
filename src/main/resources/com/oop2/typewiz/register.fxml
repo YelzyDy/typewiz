@@ -175,7 +175,7 @@
                <Insets right="80.0" top="50.0" />
             </VBox.margin>
             <font>
-               <Font size="20.0" />
+               <Font name="Book Antiqua" size="20.0" />
             </font>
             <effect>
                <InnerShadow />

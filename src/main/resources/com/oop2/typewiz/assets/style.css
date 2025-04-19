@@ -56,5 +56,23 @@
     -fx-text-fill: white;
 }
 
+.custom-progress-bar {
+    -fx-accent: linear-gradient(to right, #b667f1, #8224e3); /* Purple gradient */
+    -fx-background-color: rgba(255, 255, 255, 0.2); /* Track color moved here */
+    -fx-background-radius: 30;
+    -fx-border-radius: 30;
+}
+
+.custom-progress-bar .track {
+    -fx-background-color: white; /* Make track transparent */
+    -fx-background-radius: 30;
+}
+
+.custom-progress-bar .bar {
+    -fx-background-color: -fx-accent; /* Use the accent color */
+    -fx-background-radius: 30;
+    -fx-padding: 4;
+}
+
 
 

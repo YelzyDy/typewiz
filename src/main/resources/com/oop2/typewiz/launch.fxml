@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.oop2.typewiz.LaunchController" prefWidth="600" prefHeight="400" style="-fx-background-color: white;">
-    <VBox spacing="20" alignment="CENTER" layoutX="100" layoutY="100" prefWidth="400" prefHeight="200" AnchorPane.leftAnchor="100" AnchorPane.rightAnchor="100" AnchorPane.topAnchor="100" AnchorPane.bottomAnchor="100">
-        <Label text="Loading TypeWiz..." style="-fx-font-size: 20px; -fx-text-fill: #333;" />
-        <ProgressBar fx:id="progressBar" prefWidth="300" progress="0" />
+<AnchorPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001a, #2a0055);" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.LaunchController">
+    <VBox alignment="CENTER" spacing="10.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="50.0">
+        <ImageView fx:id="logoImage" fitHeight="469.0" fitWidth="669.0" preserveRatio="true">
+         <VBox.margin>
+            <Insets />
+         </VBox.margin></ImageView>
+        <ProgressBar fx:id="progressBar" prefHeight="39.0" prefWidth="568.0" progress="0" styleClass="custom-progress-bar" />
     </VBox>
 </AnchorPane>

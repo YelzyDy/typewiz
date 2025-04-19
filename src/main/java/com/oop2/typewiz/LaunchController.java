@@ -4,6 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 public class LaunchController {
 
+    public ImageView logoImage;
     @FXML
     private ProgressBar progressBar;
 
@@ -27,9 +30,10 @@ public class LaunchController {
 
     @FXML
     public void initialize() {
+        logoImage.setImage(new Image(getClass().getResource("assets/typewiz_logo.png").toExternalForm()));
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.millis(50), e -> {
-                    progress += 0.04;
+                    progress += 0.03;
                     progressBar.setProgress(progress);
 
                     if (progress >= 1.0) {
