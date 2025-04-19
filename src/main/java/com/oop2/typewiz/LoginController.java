@@ -75,20 +75,47 @@ public class LoginController {
 
     @FXML
     private void handleLogin(ActionEvent event) throws IOException {
-            Stage stage = (Stage) loginButton.getScene().getWindow();
+        String username = usernameField.getText().trim();
+        String password = isPasswordVisible ? visiblePasswordField.getText() : passwordField.getText();
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
-            Scene scene = new Scene(loader.load(), 1520, 790);
+        // 1. Check if fields are empty
+        if (username.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Username is required.");
+            return;
+        }
+        if (password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Password is required.");
+            return;
+        }
 
-             // Link stylesheet here
-            scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());
+        // 2. Optional: Basic length validation
+        if (username.length() < 3) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Username is too short.");
+            return;
+        }
+        if ( password.length() < 6) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Password is too short.");
+            return;
+        }
 
-            // ✅ Get LaunchController and pass the stage
-            LaunchController launchController = loader.getController();
-            launchController.setStage(stage);
+        // 3. Hardcoded check for demo login
+        if (!username.equals("test123") || !password.equals("test123")) {
+            showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid username or password.");
+            return;
+        }
 
-            stage.setScene(scene);
+        // 4. Load launch screen
+        Stage stage = (Stage) loginButton.getScene().getWindow();
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
+        Scene scene = new Scene(loader.load(), 1520, 790);
+        scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());
+
+        LaunchController launchController = loader.getController();
+        launchController.setStage(stage);
+
+        stage.setScene(scene);
     }
+
 
     @FXML
     public void handleSignUp(ActionEvent actionEvent) throws IOException {
