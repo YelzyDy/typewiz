@@ -1,21 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17.0.12"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.oop2.typewiz.MainController"
-            prefWidth="600.0" prefHeight="400.0"
-            style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);">
-
-    <top>
-        <fx:include source="header.fxml"/>
-    </top>
+<BorderPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.MainController">
 
     <center>
-        <AnchorPane fx:id="mainContent">
-            <!-- Main content -->
-        </AnchorPane>
+        <AnchorPane fx:id="mainContent" nodeOrientation="RIGHT_TO_LEFT">
+         <children>
+            <Button fx:id="startButton" layoutX="542.0" layoutY="139.0" mnemonicParsing="false" prefHeight="94.0" prefWidth="466.0" style="-fx-background-radius: 50; -fx-background-color: #c85bff;" styleClass="rounded-button" text="Start" textFill="WHITE">
+                <font>
+                  <Font name="Book Antiqua Bold" size="46.0" />
+               </font>
+               <effect>
+                  <InnerShadow />
+               </effect>
+               <padding>
+                  <Insets right="15.0" />
+               </padding>
+            </Button>
+            <Button fx:id="helpButton" layoutX="542.0" layoutY="272.0" mnemonicParsing="false" prefHeight="88.0" prefWidth="466.0" style="-fx-background-radius: 50; -fx-background-color: linear-gradient(to top, #ffffff, #c85bff);" styleClass="rounded-button" text="Help ">
+                <font>
+                  <Font name="Book Antiqua" size="46.0" />
+               </font>
+               <effect>
+                  <InnerShadow />
+               </effect>
+               <padding>
+                  <Insets right="10.0" />
+               </padding>
+            </Button>
+            <Button fx:id="exitButton" layoutX="541.0" layoutY="402.0" mnemonicParsing="false" prefHeight="88.0" prefWidth="466.0" style="-fx-background-radius: 50;" styleClass="rounded-button" text="Exit ">
+                <font>
+                  <Font name="Book Antiqua" size="46.0" />
+               </font>
+               <effect>
+                  <InnerShadow />
+               </effect>
+               <padding>
+                  <Insets right="15.0" />
+               </padding>
+            </Button>
+              <ImageView fitHeight="53.0" fitWidth="52.0" layoutX="565.0" layoutY="290.0">
+                  <image>
+                      <Image url="@assets/help.png" />
+                  </image>
+              </ImageView>
+              <ImageView fitHeight="54.0" fitWidth="59.0" layoutX="562.0" layoutY="417.0">
+                  <image>
+                      <Image url="@assets/exit.png" />
+                  </image>
+              </ImageView>
+              <ImageView fitHeight="56.0" fitWidth="69.0" layoutX="557.0" layoutY="158.0">
+                  <image>
+                      <Image url="@assets/start.png" />
+                  </image>
+              </ImageView>
+         </children></AnchorPane>
     </center>
+   <top>
+        <fx:include source="header.fxml" />
+   </top>
 
 </BorderPane>
