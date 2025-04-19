@@ -13,7 +13,7 @@ public class HelloApplication extends Application {
     public void start(Stage stage) throws IOException {
         // Load the FXML for the login screen
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
+        Scene scene = new Scene(fxmlLoader.load(), 1520, 790);
 
         // Apply global stylesheet
         scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());

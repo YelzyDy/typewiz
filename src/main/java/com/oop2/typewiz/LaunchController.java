@@ -49,7 +49,7 @@ public class LaunchController {
         if (stage != null) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("main.fxml"));
-                Scene scene = new Scene(loader.load(), 1550, 800);
+                Scene scene = new Scene(loader.load(), 1520, 790);
                 stage.setScene(scene);  // Switch to the main screen
             } catch (IOException e) {
                 e.printStackTrace();

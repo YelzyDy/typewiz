@@ -114,7 +114,7 @@ public class RegisterController {
     private void handleLogin(ActionEvent actionEvent) throws IOException {
         Stage stage = (Stage) apRegister.getScene().getWindow();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("login.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
+        Scene scene = new Scene(fxmlLoader.load(), 1520, 790);
         stage.setTitle("Log in");
         stage.setScene(scene);
     }

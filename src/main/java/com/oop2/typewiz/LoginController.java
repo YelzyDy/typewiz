@@ -78,7 +78,7 @@ public class LoginController {
             Stage stage = (Stage) loginButton.getScene().getWindow();
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
-            Scene scene = new Scene(loader.load(), 1550, 800);
+            Scene scene = new Scene(loader.load(), 1520, 790);
 
              // Link stylesheet here
             scene.getStylesheets().add(getClass().getResource("assets/style.css").toExternalForm());
