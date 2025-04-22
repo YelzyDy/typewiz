@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
+<!--        TODO: change this fxml that will be the basis for the game itself-->
 
 <StackPane prefHeight="494.0" prefWidth="788.0" style="-fx-padding: 20; -fx-alignment: center;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/23.0.1" fx:controller="com.oop2.typewiz.GameController">
 

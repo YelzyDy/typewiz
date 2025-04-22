@@ -5,7 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 
 public class GameController {
-
+//TODO: change this controller that will go after choosing the difficulty level
     @FXML
     private Label gameStatusLabel;
 
