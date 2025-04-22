@@ -1,12 +1,9 @@
 package com.oop2.typewiz;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.stage.Stage;
-import javafx.scene.Scene;
-import javafx.scene.Node;
 import javafx.event.ActionEvent;
-import javafx.application.Platform;
 
 public class MainController {
 
@@ -23,23 +20,39 @@ public class MainController {
     public void initialize() {
         // Optional: Add behavior or styling tweaks during controller initialization
         System.out.println("Main screen loaded.");
+
+        // Adding click events to buttons
+        startButton.setOnAction(this::handleStart);
+        helpButton.setOnAction(this::handleHelp);
+        exitButton.setOnAction(this::handleExit);
     }
 
     @FXML
     private void handleStart(ActionEvent event) {
-        System.out.println("Start button clicked");
-        // TODO: Navigate to the start screen
+        // Show confirmation that the Start button works
+        //showAlert("Start Button", "The Start button was clicked!");
+        System.out.println("The Start button was clicked!");
     }
 
     @FXML
     private void handleHelp(ActionEvent event) {
-        System.out.println("Help button clicked");
-        // TODO: Show help popup or navigate to help scene
+        // Show confirmation that the Help button works
+        //showAlert("Help Button", "The Help button was clicked!");
+        System.out.println("The Help button was clicked!");
     }
 
     @FXML
     private void handleExit(ActionEvent event) {
-        System.out.println("Exit button clicked");
-        Platform.exit();
+        // Show confirmation that the Exit button works
+        //showAlert("Exit Button", "The Exit button was clicked!");
+        System.out.println("The Exit button was clicked!");
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
