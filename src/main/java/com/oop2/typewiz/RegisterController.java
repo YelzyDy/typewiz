@@ -8,15 +8,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class RegisterController {
-
 
     @FXML private AnchorPane apRegister;
     @FXML private TextField tfUsername;
@@ -39,6 +42,11 @@ public class RegisterController {
         setupPasswordFieldToggle(tfPassword, visiblePasswordField);
         setupPasswordFieldToggle(tfConfirmPassword, visibleConfirmPasswordField);
         Platform.runLater(() -> apRegister.requestFocus());
+
+        // Add KeyEvent listener to the fields
+        tfUsername.addEventFilter(KeyEvent.KEY_PRESSED, this::handleEnterKey);
+        tfPassword.addEventFilter(KeyEvent.KEY_PRESSED, this::handleEnterKey);
+        tfConfirmPassword.addEventFilter(KeyEvent.KEY_PRESSED, this::handleEnterKey);
     }
 
     private void setupPasswordFieldToggle(PasswordField passwordField, TextField visibleField) {
@@ -95,28 +103,62 @@ public class RegisterController {
     }
 
     @FXML
-    private void handleCreateAccount() {
+    private void handleCreateAccount(ActionEvent event) {
         String username = tfUsername.getText();
-        String email = tfEmail.getText();
-        String password = tfPassword.getText();
-        String confirmPassword = tfConfirmPassword.getText();
+        String email = tfEmail.getText();  // Get the email
+        String password = tfPassword.getText();  // Remember to hash the password in real-world apps
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Please fill in all fields.");
-        } else if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Passwords do not match.");
-        } else {
-            showAlert(Alert.AlertType.INFORMATION, "Account created successfully!");
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Username, email, and password cannot be empty.");
+            return;
+        }
+
+        try (Connection connection = DatabaseConnection.connect()) {
+            String query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, username);
+                stmt.setString(2, email);  // Set email in the query
+                stmt.setString(3, password);  // In practice, hash the password before storing it
+
+                int rowsAffected = stmt.executeUpdate();  // Executes the INSERT query
+                if (rowsAffected > 0) {
+                    showAlert(Alert.AlertType.INFORMATION, "Account successfully created.");
+
+                    // Switch to login page after account creation
+                    Stage stage = (Stage) tfUsername.getScene().getWindow();
+                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("login.fxml"));
+                    Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
+                    stage.setTitle("Login");
+                    stage.setScene(scene);
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Error occurred while creating the account.");
+                }
+            }
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error occurred while creating an account.");
         }
     }
 
+
     @FXML
     private void handleLogin(ActionEvent actionEvent) throws IOException {
+        redirectToLoginPage();
+    }
+
+    private void redirectToLoginPage() throws IOException {
         Stage stage = (Stage) apRegister.getScene().getWindow();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("login.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1520, 790);
         stage.setTitle("Log in");
         stage.setScene(scene);
+    }
+
+    // Handle Enter key event to navigate to login page
+    private void handleEnterKey(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleCreateAccount(new ActionEvent());
+        }
     }
 
     private void showAlert(Alert.AlertType alertType, String message) {

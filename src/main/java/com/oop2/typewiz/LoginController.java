@@ -6,18 +6,23 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.control.Button;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LoginController {
 
-    public AnchorPane apLogin;
+    @FXML
+    private AnchorPane apLogin;
     @FXML
     private TextField usernameField;
 
@@ -41,13 +46,13 @@ public class LoginController {
     @FXML
     private TextField visiblePasswordField;
 
-
-
-
     @FXML
     public void initialize() {
         Platform.runLater(() -> apLogin.requestFocus());
-        // Optional: Add input validation or styling on init
+
+        // Add Enter key listener to the username and password fields
+        usernameField.addEventFilter(KeyEvent.KEY_PRESSED, this::handleEnterKey);
+        passwordField.addEventFilter(KeyEvent.KEY_PRESSED, this::handleEnterKey);
     }
 
     @FXML
@@ -75,16 +80,34 @@ public class LoginController {
 
     @FXML
     private void handleLogin(ActionEvent event) throws IOException {
-            Stage stage = (Stage) loginButton.getScene().getWindow();
+        String username = usernameField.getText();
+        String password = passwordField.getText();
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
-            Scene scene = new Scene(loader.load(), 1550, 800);
+        try (Connection connection = DatabaseConnection.connect()) {
+            String query = "SELECT * FROM users WHERE username = ? AND password = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(query)) {
+                stmt.setString(1, username);
+                stmt.setString(2, password);  // Again, use hashed password in a real system
+                ResultSet resultSet = stmt.executeQuery();
 
-            // ✅ Get LaunchController and pass the stage
-            LaunchController launchController = loader.getController();
-            launchController.setStage(stage);
+                if (resultSet.next()) {
+                    // User found, proceed to the next screen
+                    Stage stage = (Stage) loginButton.getScene().getWindow();
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("launch.fxml"));
+                    Scene scene = new Scene(loader.load(), 1550, 800);
 
-            stage.setScene(scene);
+                    LaunchController launchController = loader.getController();
+                    launchController.setStage(stage);
+
+                    stage.setScene(scene);
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Invalid username or password.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error occurred while logging in.");
+        }
     }
 
     @FXML
@@ -93,14 +116,11 @@ public class LoginController {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("register.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1550, 800);
         stage.setTitle("Sign up");
-//        scene.getStylesheets().add(getClass().getResource("button-hover.css").toExternalForm());
         stage.setScene(scene);
     }
 
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
+    private void showAlert(Alert.AlertType alertType, String message) {
+        Alert alert = new Alert(alertType);
         alert.setContentText(message);
         alert.showAndWait();
     }
@@ -108,5 +128,16 @@ public class LoginController {
     // Method to set the stage
     public void setStage(Stage stage) {
         this.stage = stage;
+    }
+
+    // Handle Enter key press for login action
+    private void handleEnterKey(KeyEvent event) {
+        if (event.getCode().getName().equals("Enter")) {
+            try {
+                handleLogin(new ActionEvent());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
