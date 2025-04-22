@@ -1,9 +1,15 @@
 package com.oop2.typewiz;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.event.ActionEvent;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class MainController {
 
@@ -29,9 +35,18 @@ public class MainController {
 
     @FXML
     private void handleStart(ActionEvent event) {
-        // Show confirmation that the Start button works
-        //showAlert("Start Button", "The Start button was clicked!");
-        System.out.println("The Start button was clicked!");
+        System.out.println("Start button clicked");
+        try {
+            // Load the game screen
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("game.fxml"));
+            Scene scene = new Scene(loader.load());
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(scene);
+            stage.setTitle("Game Screen");
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Error", "Unable to load the game screen.");
+        }
     }
 
     @FXML
