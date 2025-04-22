@@ -1,12 +1,16 @@
 package com.oop2.typewiz;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
-import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.application.Platform;
+
+import java.io.IOException;
 
 public class MainController {
 
@@ -21,20 +25,42 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        // Optional: Add behavior or styling tweaks during controller initialization
         System.out.println("Main screen loaded.");
     }
 
     @FXML
     private void handleStart(ActionEvent event) {
         System.out.println("Start button clicked");
-        // TODO: Navigate to the start screen
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/oop2/typewiz/difficulty.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Typing Test - Start");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Failed to load start.fxml");
+        }
     }
 
     @FXML
     private void handleHelp(ActionEvent event) {
-        System.out.println("Help button clicked");
-        // TODO: Show help popup or navigate to help scene
+//        System.out.println("Help button clicked");
+//        try {
+//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/oop2/typewiz/help.fxml"));
+//            Parent root = loader.load();
+//
+//            Stage stage = new Stage(); // Open help in a new window (popup)
+//            stage.setScene(new Scene(root));
+//            stage.setTitle("Help");
+//            stage.setResizable(false);
+//            stage.show();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            System.err.println("Failed to load help.fxml");
+//        }
     }
 
     @FXML

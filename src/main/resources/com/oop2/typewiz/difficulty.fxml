@@ -8,43 +8,18 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.MainController">
+<BorderPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.DifficultyController">
 
-    <center>
-        <AnchorPane fx:id="mainContent" nodeOrientation="RIGHT_TO_LEFT">
+   <center>
+      <AnchorPane fx:id="mainContent" nodeOrientation="RIGHT_TO_LEFT">
          <children>
-            <VBox layoutX="557.0" layoutY="118.0" prefHeight="474.0" prefWidth="444.0" spacing="40.0">
+            <HBox layoutX="333.0" layoutY="174.0" prefHeight="332.0" prefWidth="1106.0" spacing="40.0">
                <children>
-                  <Button fx:id="startButton" mnemonicParsing="false" onAction="#handleStart" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
-                      <font>
-                        <Font name="Book Antiqua Bold" size="46.0" />
-                     </font>
-                     <effect>
-                        <InnerShadow />
-                     </effect>
-                     <graphic>
-                          <ImageView fitHeight="100.0" fitWidth="443.0">
-                              <image>
-                                  <Image url="@assets/start.png" />
-                              </image>
-                           <effect>
-                              <DropShadow>
-                                 <color>
-                                    <Color red="0.19651071727275848" green="0.06900584697723389" blue="0.31578946113586426" />
-                                 </color>
-                              </DropShadow>
-                           </effect>
-                          </ImageView>
-                     </graphic>
-                     <padding>
-                        <Insets right="1.0" />
-                     </padding>
-                  </Button>
-                  <Button fx:id="helpButton" mnemonicParsing="false" onAction="#handleHelp" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
+                  <Button fx:id="hardButton" mnemonicParsing="false" onAction="#handleEasy" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
                      <font>
                         <Font name="Book Antiqua Bold" size="46.0" />
                      </font>
@@ -52,9 +27,9 @@
                         <InnerShadow />
                      </effect>
                      <graphic>
-                        <ImageView fitHeight="100.0" fitWidth="443.0">
+                        <ImageView fitHeight="250.0" fitWidth="250.0">
                            <image>
-                              <Image url="@assets/help.png" />
+                              <Image url="@assets/hard.png" />
                            </image>
                            <effect>
                               <DropShadow>
@@ -69,7 +44,7 @@
                         <Insets right="1.0" />
                      </padding>
                   </Button>
-                  <Button fx:id="exitButton" mnemonicParsing="false" onAction="#handleExit" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
+                  <Button fx:id="mediumButton" mnemonicParsing="false" onAction="#handleMedium" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
                      <font>
                         <Font name="Book Antiqua Bold" size="46.0" />
                      </font>
@@ -77,9 +52,34 @@
                         <InnerShadow />
                      </effect>
                      <graphic>
-                        <ImageView fitHeight="100.0" fitWidth="443.0">
+                        <ImageView fitHeight="250.0" fitWidth="250.0">
                            <image>
-                              <Image url="@assets/exit.png" />
+                              <Image url="@assets/medium.png" />
+                           </image>
+                           <effect>
+                              <DropShadow>
+                                 <color>
+                                    <Color red="0.19651071727275848" green="0.06900584697723389" blue="0.31578946113586426" />
+                                 </color>
+                              </DropShadow>
+                           </effect>
+                        </ImageView>
+                     </graphic>
+                     <padding>
+                        <Insets right="1.0" />
+                     </padding>
+                  </Button>
+                  <Button fx:id="easyButton" mnemonicParsing="false" onAction="#handleHard" prefHeight="100.0" prefWidth="178.0" style="-fx-background-radius: 50; -fx-background-color: transparent;" styleClass="image-button" textFill="WHITE">
+                     <font>
+                        <Font name="Book Antiqua Bold" size="46.0" />
+                     </font>
+                     <effect>
+                        <InnerShadow />
+                     </effect>
+                     <graphic>
+                        <ImageView fitHeight="250.0" fitWidth="250.0">
+                           <image>
+                              <Image url="@assets/easy.png" />
                            </image>
                            <effect>
                               <DropShadow>
@@ -95,11 +95,11 @@
                      </padding>
                   </Button>
                </children>
-            </VBox>
-         </children></AnchorPane>
-    </center>
+            </HBox>
+         </children>
+      </AnchorPane>
+   </center>
    <top>
-        <fx:include source="header.fxml" />
+      <fx:include source="header.fxml" />
    </top>
-
 </BorderPane>
