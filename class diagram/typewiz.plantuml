@@ -1,0 +1,126 @@
+@startuml
+
+title __TYPEWIZ's Class Diagram__
+
+class com.oop2.typewiz.DatabaseConnection {
+    {static} - PASSWORD : String
+    {static} - URL : String
+    {static} - USER : String
+    {static} + connect()
+}
+
+class com.oop2.typewiz.DifficultyController {
+    + handleEasy()
+    + handleHard()
+    + handleMedium()
+}
+
+class com.oop2.typewiz.GameController {
+    - gameStatusLabel : Label
+    + initialize()
+    + updateGameStatus()
+    - showAlert()
+}
+
+class com.oop2.typewiz.HeaderController {
+    - aboutIcon : ImageView
+    - leaderboardIcon : ImageView
+    - logoIcon : ImageView
+    - logoText : ImageView
+    - profileIcon : ImageView
+    - settingsIcon : ImageView
+    + initialize()
+}
+
+class com.oop2.typewiz.HelloApplication {
+    {static} + main()
+    + start()
+}
+
+class com.oop2.typewiz.LaunchController {
+    + logoImage : ImageView
+    - progress : double
+    - progressBar : ProgressBar
+    - stage : Stage
+    + initialize()
+    + setStage()
+    - switchToMainScreen()
+}
+
+class com.oop2.typewiz.LoginController {
+    - apLogin : AnchorPane
+    - eyeIcon : ImageView
+    - hiddenIcon : Image
+    - isPasswordVisible : boolean
+    - loginButton : Button
+    - passwordField : PasswordField
+    - signUpButton : Button
+    - stage : Stage
+    - usernameField : TextField
+    - visibleIcon : Image
+    - visiblePasswordField : TextField
+    + handleSignUp()
+    + initialize()
+    + setStage()
+    - handleEnterKey()
+    - handleLogin()
+    - showAlert()
+    - togglePasswordVisibility()
+}
+
+class com.oop2.typewiz.MainController {
+    - exitButton : Button
+    - helpButton : Button
+    - startButton : Button
+    + initialize()
+    - handleExit()
+    - handleHelp()
+    - handleStart()
+}
+
+class com.oop2.typewiz.RegisterController {
+    - apRegister : AnchorPane
+    - eyeIcon : ImageView
+    - eyeIcon2 : ImageView
+    - hiddenIcon : Image
+    - isPasswordVisible : boolean
+    - tfConfirmPassword : PasswordField
+    - tfEmail : TextField
+    - tfPassword : PasswordField
+    - tfUsername : TextField
+    - visibleConfirmPasswordField : TextField
+    - visibleIcon : Image
+    - visiblePasswordField : TextField
+    - handleCreateAccount()
+    - handleEnterKey()
+    - handleLogin()
+    - initialize()
+    - redirectToLoginPage()
+    - setupPasswordFieldToggle()
+    - showAlert()
+    - toggleConfirmPasswordVisibility()
+    - togglePasswordVisibility()
+}
+
+' EXISTING Inheritance
+com.oop2.typewiz.HelloApplication -up-|> javafx.application.Application
+
+' ========== ADDED INHERITANCES (Multi-level) ==========
+com.oop2.typewiz.LoginController -up-|> com.oop2.typewiz.LaunchController
+com.oop2.typewiz.RegisterController -up-|> com.oop2.typewiz.LaunchController
+
+' ========== MULTIPLE INHERITANCE (using interfaces style arrows) ==========
+com.oop2.typewiz.GameController ..|> com.oop2.typewiz.DifficultyController
+
+' ========== ASSOCIATIONS / RELATIONSHIPS ==========
+com.oop2.typewiz.LoginController --> com.oop2.typewiz.DatabaseConnection : uses
+com.oop2.typewiz.RegisterController --> com.oop2.typewiz.DatabaseConnection : uses
+com.oop2.typewiz.MainController --> com.oop2.typewiz.GameController : controls
+com.oop2.typewiz.HeaderController --> com.oop2.typewiz.MainController : references
+com.oop2.typewiz.LaunchController --> com.oop2.typewiz.HelloApplication : launches
+
+right footer
+
+endfooter
+
+@enduml
