@@ -202,54 +202,64 @@ public class LoginScreen extends GameApplication {
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
-        box.setPrefHeight(54);
-        box.setPrefWidth(380);
+        box.setPrefSize(600, 54); // Increased to allow room for text field + icon
         box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
         box.setPadding(new Insets(0, 20, 0, 20));
         box.setEffect(new InnerShadow());
 
         ImageView icon = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
-        icon.setFitHeight(26); icon.setFitWidth(26);
+        icon.setFitHeight(26);
+        icon.setFitWidth(26);
 
         if (isPassword) {
             PasswordField pf = new PasswordField();
-            pf.setPrefWidth(300);
             pf.setPromptText(promptText);
             pf.fontProperty().unbind();
             pf.setFont(Font.font("Book Antiqua Italic", 20));
             pf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            pf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(pf, Priority.ALWAYS);
 
             TextField visibleTF = new TextField();
-            visibleTF.fontProperty().unbind();
             visibleTF.setFont(Font.font("Book Antiqua Italic", 20));
             visibleTF.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
-            visibleTF.setManaged(false); visibleTF.setVisible(false);
+            visibleTF.setManaged(false);
+            visibleTF.setVisible(false);
             visibleTF.textProperty().bindBidirectional(pf.textProperty());
+            visibleTF.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(visibleTF, Priority.ALWAYS);
 
             ImageView eyeIcon = new ImageView(new Image(getClass().getResource("assets/password_hash_icon.png").toExternalForm()));
-            eyeIcon.setFitHeight(24); eyeIcon.setFitWidth(24);
+            eyeIcon.setFitHeight(24);
+            eyeIcon.setFitWidth(24);
             eyeIcon.setOnMouseClicked(e -> {
                 boolean showing = visibleTF.isVisible();
-                visibleTF.setVisible(!showing); visibleTF.setManaged(!showing);
-                pf.setVisible(showing); pf.setManaged(showing);
+                visibleTF.setVisible(!showing);
+                visibleTF.setManaged(!showing);
+                pf.setVisible(showing);
+                pf.setManaged(showing);
                 String eyePath = showing ? "assets/password_hash_icon.png" : "assets/password_unhash_icon.png";
                 eyeIcon.setImage(new Image(getClass().getResource(eyePath).toExternalForm()));
             });
 
-            Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.NEVER);
             box.getChildren().addAll(icon, pf, visibleTF, spacer, eyeIcon);
         } else {
             TextField tf = new TextField();
-            tf.setPrefWidth(300);
             tf.setPromptText(promptText);
             tf.fontProperty().unbind();
             tf.setFont(Font.font("Book Antiqua Italic", 20));
             tf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            tf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(tf, Priority.ALWAYS);
+
             box.getChildren().addAll(icon, tf);
         }
 
         return box;
     }
+
 
     // Optional: Simulate hash display (for dev/testing)
     private String hashPassword(String input) {

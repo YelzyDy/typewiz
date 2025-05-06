@@ -15,6 +15,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.geometry.Insets;
+import javafx.animation.TranslateTransition;
+import javafx.animation.FadeTransition;
+import javafx.util.Duration;
+
 
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -85,6 +89,20 @@ public class RegisterScreen extends GameApplication {
         loginBtn.setOnAction(e -> System.out.println("Login clicked"));
 
         formPane.getChildren().addAll(title, emailBox, usernameBox, passwordBox, confirmPasswordBox, createAccountBtn, separatorBox, loginBtn);
+
+        // Left logo animation
+        animateNode(logo, 0);
+
+        animateNode(title, 0.2);
+        animateNode(emailBox, 0.4);
+        animateNode(usernameBox, 0.6);
+        animateNode(passwordBox, 0.8);
+        animateNode(confirmPasswordBox, 1.0);
+        animateNode(createAccountBtn, 1.2);
+        animateNode(separatorBox, 1.4);
+        animateNode(loginBtn, 1.6);
+
+
 
         root.getChildren().addAll(leftPane, formPane);
 
@@ -170,6 +188,25 @@ public class RegisterScreen extends GameApplication {
         button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
         button.setOnMouseExited(e -> button.setStyle(baseStyle));
     }
+
+    private void animateNode(javafx.scene.Node node, double delaySeconds) {
+        node.setOpacity(0);
+
+        TranslateTransition slide = new TranslateTransition(Duration.seconds(0.6), node);
+        slide.setFromY(50); // Start slightly below
+        slide.setToY(0);     // Move to original Y position
+        slide.setDelay(Duration.seconds(delaySeconds));
+
+        FadeTransition fade = new FadeTransition(Duration.seconds(0.6), node);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        fade.setDelay(Duration.seconds(delaySeconds));
+
+        slide.play();
+        fade.play();
+    }
+
+
 
     public static void main(String[] args) {
         launch(args);
