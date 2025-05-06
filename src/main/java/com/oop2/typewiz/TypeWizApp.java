@@ -6,16 +6,13 @@ import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
-public class LoadingScreen extends GameApplication {
-
+public class TypeWizApp extends GameApplication {
     private ProgressBar progressBar;
     private double progress = 0;
 
@@ -28,6 +25,10 @@ public class LoadingScreen extends GameApplication {
 
     @Override
     protected void initUI() {
+        showLoadingScreen();
+    }
+
+    private void showLoadingScreen() {
         AnchorPane root = new AnchorPane();
         root.setPrefSize(1550, 800);
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001a, #2a0055);");
@@ -53,26 +54,26 @@ public class LoadingScreen extends GameApplication {
         root.getChildren().add(vbox);
         FXGL.getGameScene().addUINode(root);
 
-        startLoading();
+        startLoading(root);
     }
 
-    private void startLoading() {
+    private void startLoading(AnchorPane loadingRoot) {
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(50), e -> {
             progress += 0.03;
             progressBar.setProgress(progress);
 
             if (progress >= 1.0) {
-                switchToMainScreen();
+                FXGL.getGameScene().removeUINode(loadingRoot);
+                showMainMenu();
             }
         }));
         timeline.setCycleCount(100);
         timeline.play();
     }
 
-    private void switchToMainScreen() {
-        // Example: switch scene or load next UI
-        System.out.println("Loading complete! Proceed to main screen...");
-        // You could call FXGL.getGameScene().clearUINodes() and add a new scene here
+    private void showMainMenu() {
+        MainMenuScreen mainMenu = new MainMenuScreen();
+        FXGL.getGameScene().getContentRoot().getChildren().add(mainMenu.getContentRoot());
     }
 
     public static void main(String[] args) {
