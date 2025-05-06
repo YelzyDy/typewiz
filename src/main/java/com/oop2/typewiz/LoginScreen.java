@@ -19,6 +19,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
+
 public class LoginScreen extends GameApplication {
 
     @Override
@@ -41,11 +45,10 @@ public class LoginScreen extends GameApplication {
         root.setPrefSize(1550, 800);
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);");
 
-        // Left: Logo
+        // Left logo
         VBox leftBox = new VBox();
         leftBox.setAlignment(Pos.CENTER);
         leftBox.setPrefWidth(481);
-
         Image logoImage = new Image(getClass().getResource("assets/typewiz_logo.png").toExternalForm());
         ImageView logo = new ImageView(logoImage);
         logo.setFitWidth(546);
@@ -53,10 +56,9 @@ public class LoginScreen extends GameApplication {
         logo.setPreserveRatio(true);
         logo.setEffect(new DropShadow(6, Color.BLACK));
         leftBox.getChildren().add(logo);
-
         playBounceAnimation(logo);
 
-        // Right: Login Form
+        // Right: Login form
         VBox rightBox = new VBox(10);
         rightBox.setAlignment(Pos.CENTER);
         rightBox.setPrefWidth(619);
@@ -73,66 +75,47 @@ public class LoginScreen extends GameApplication {
 
         HBox optionsBox = new HBox(20);
         optionsBox.setAlignment(Pos.CENTER_LEFT);
+        optionsBox.setPadding(new Insets(0, 0, 0, 10));
         CheckBox rememberMe = new CheckBox("Remember Me");
         rememberMe.setTextFill(Color.web("#a1a1a1"));
+        rememberMe.fontProperty().unbind();
         rememberMe.setFont(Font.font("System Italic", 12));
         Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
-        optionsBox.getChildren().addAll(rememberMe, forgotPassword);
 
-        // Login Button
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        optionsBox.getChildren().addAll(rememberMe, spacer, forgotPassword);
+
+        // Buttons
         Button loginButton = FXGL.getUIFactoryService().newButton("Login");
-        loginButton.setPrefSize(378, 58);
-        loginButton.fontProperty().unbind();  // Unbind the font property
-        loginButton.setFont(Font.font("Book Antiqua", 20));  // Now you can safely set the font
-        loginButton.setStyle("-fx-background-color: #6a0073; -fx-text-fill: white;");
-        loginButton.setOnMouseEntered(e -> loginButton.setStyle("-fx-background-color: #9c006f; -fx-text-fill: white;"));
-        loginButton.setOnMouseExited(e -> loginButton.setStyle("-fx-background-color: #6a0073; -fx-text-fill: white;"));
-        VBox.setMargin(loginButton, new Insets(50, 80, 0, 0));
+        styleButton(loginButton, "#c85bff", Color.WHITE);
+        loginButton.setOnAction(e -> System.out.println("Login clicked"));
 
-        // Sign Up Button
         Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
-        signUpButton.setPrefSize(378, 58);
-        signUpButton.fontProperty().unbind();  // Unbind the font property
-        signUpButton.setFont(Font.font("Book Antiqua", 20));  // Now you can safely set the font
-        signUpButton.setStyle("-fx-background-color: #6a0073; -fx-text-fill: white;");
-        signUpButton.setOnMouseEntered(e -> signUpButton.setStyle("-fx-background-color: #9c006f; -fx-text-fill: white;"));
-        signUpButton.setOnMouseExited(e -> signUpButton.setStyle("-fx-background-color: #6a0073; -fx-text-fill: white;"));
-        VBox.setMargin(signUpButton, new Insets(0, 80, 0, 0));
+        styleButton(signUpButton, "#ffffff", Color.BLACK);
+        signUpButton.setOnAction(e -> System.out.println("Signup clicked"));
 
-// Create VBox to hold the buttons and separator
-        VBox buttonBox = new VBox(10);
-        buttonBox.setAlignment(Pos.CENTER);
-
-// Login Button
-        VBox.setMargin(loginButton, new Insets(20, 0, 0, 0));
-
-// Separator Box (Or)
+        // Separator
         HBox separatorBox = new HBox();
         separatorBox.setAlignment(Pos.CENTER);
         separatorBox.setSpacing(10);
-        Separator sepLeft = new Separator();
-        sepLeft.setPrefWidth(172);
-        Separator sepRight = new Separator();
-        sepRight.setPrefWidth(178);
+        Separator sepLeft = new Separator(); sepLeft.setPrefWidth(172);
+        Separator sepRight = new Separator(); sepRight.setPrefWidth(178);
         Text orText = FXGL.getUIFactoryService().newText("Or", Color.WHITE, 16);
         separatorBox.getChildren().addAll(sepLeft, orText, sepRight);
 
-// Sign Up Button
-        VBox.setMargin(signUpButton, new Insets(0, 0, 0, 0));
-
-// Add all components to the VBox
+        VBox buttonBox = new VBox(15);
+        buttonBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(loginButton, new Insets(20, 0, 0, 0));
         buttonBox.getChildren().addAll(loginButton, separatorBox, signUpButton);
-
-// Apply slide-in animation to the VBox
         playSlideInAnimation(buttonBox, 1.2);
-
 
         rightBox.getChildren().addAll(
                 animateNode(loginText, 0.2),
                 animateNode(usernameBox, 0.4),
                 animateNode(passwordBox, 0.6),
                 animateNode(optionsBox, 0.8),
-                animateNode(separatorBox, 1.0),
                 buttonBox
         );
 
@@ -140,24 +123,23 @@ public class LoginScreen extends GameApplication {
         applyFadeInAnimation(root);
 
         FXGL.getGameScene().addUINode(root);
-
-        // --- Placeholder for Animations and Effects ---
-
-        // Particle Effects (Floating sparkles or bubbles around the background)
-        // FXGL.getGameScene().addUINode(createParticleEmitter());
-
-        // Background Music
-        // FXGL.getAudioPlayer().loopMusic("assets/background_music.mp3");
-
-        // Typing Sound Effect on Key Press
-        // FXGL.getInput().addAction(() -> FXGL.getAudioPlayer().playSound("assets/typing_sound.wav"), KeyCode.ANY);
-
-        // Hover Sparkle Effect on Buttons
-        // addHoverSparkleEffect(loginButton);
-        // addHoverSparkleEffect(signUpButton);
-
-        // --- End of Placeholder ---
     }
+
+    private void styleButton(Button button, String bgColor, Color textColor) {
+        button.setPrefSize(378, 58);
+        button.fontProperty().unbind();
+        button.setFont(Font.font("Book Antiqua", 20));
+        button.setTextFill(textColor);
+
+        String textFillHex = textColor.toString().replace("0x", "#");
+        String baseStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+        String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 20%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+
+        button.setStyle(baseStyle);
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(baseStyle));
+    }
+
 
     private void applyFadeInAnimation(Pane root) {
         FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), root);
@@ -170,16 +152,12 @@ public class LoginScreen extends GameApplication {
         logo.setTranslateY(-100);
         logo.setScaleX(0.7);
         logo.setScaleY(0.7);
-
         TranslateTransition translate = new TranslateTransition(Duration.seconds(1), logo);
         translate.setToY(0);
         ScaleTransition scale = new ScaleTransition(Duration.seconds(1), logo);
         scale.setToX(1);
         scale.setToY(1);
-
-        ParallelTransition bounce = new ParallelTransition(translate, scale);
-        bounce.setInterpolator(Interpolator.EASE_OUT);
-        bounce.play();
+        new ParallelTransition(translate, scale).play();
     }
 
     private void playSlideInAnimation(VBox box, double delaySeconds) {
@@ -220,46 +198,70 @@ public class LoginScreen extends GameApplication {
         return node;
     }
 
-    private void addHoverEffect(Button button) {
-        Glow glow = new Glow(0.3);
-        DropShadow shadow = new DropShadow(15, Color.web("#faccff"));
-        shadow.setInput(glow);
-
-        button.setOnMouseEntered(e -> button.setEffect(shadow));
-        button.setOnMouseExited(e -> button.setEffect(null));
-    }
-
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPrefHeight(54);
-        box.setPrefWidth(381);
+        box.setPrefWidth(300);
         box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
-        box.setPadding(new Insets(0, 0, 0, 30));
+        box.setPadding(new Insets(0, 20, 0, 20));
         box.setEffect(new InnerShadow());
 
-        Image iconImage = new Image(getClass().getResource(iconPath).toExternalForm());
-        ImageView icon = new ImageView(iconImage);
-        icon.setFitHeight(26);
-        icon.setFitWidth(26);
+        ImageView icon = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
+        icon.setFitHeight(26); icon.setFitWidth(26);
 
         if (isPassword) {
             PasswordField pf = new PasswordField();
-            pf.setPrefSize(253, 41);
+            pf.setPrefWidth(180);
             pf.setPromptText(promptText);
+            pf.fontProperty().unbind();
             pf.setFont(Font.font("Book Antiqua Italic", 20));
-            pf.setStyle("-fx-background-color: #2b1d3a;");
-            box.getChildren().addAll(icon, pf);
+            pf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+
+            TextField visibleTF = new TextField();
+            visibleTF.fontProperty().unbind();
+            visibleTF.setFont(Font.font("Book Antiqua Italic", 20));
+            visibleTF.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            visibleTF.setManaged(false); visibleTF.setVisible(false);
+            visibleTF.textProperty().bindBidirectional(pf.textProperty());
+
+            ImageView eyeIcon = new ImageView(new Image(getClass().getResource("assets/password_hash_icon.png").toExternalForm()));
+            eyeIcon.setFitHeight(24); eyeIcon.setFitWidth(24);
+            eyeIcon.setOnMouseClicked(e -> {
+                boolean showing = visibleTF.isVisible();
+                visibleTF.setVisible(!showing); visibleTF.setManaged(!showing);
+                pf.setVisible(showing); pf.setManaged(showing);
+                String eyePath = showing ? "assets/password_hash_icon.png" : "assets/password_unhash_icon.png";
+                eyeIcon.setImage(new Image(getClass().getResource(eyePath).toExternalForm()));
+            });
+
+            Region spacer = new Region(); HBox.setHgrow(spacer, Priority.ALWAYS);
+            box.getChildren().addAll(icon, pf, visibleTF, spacer, eyeIcon);
         } else {
             TextField tf = new TextField();
-            tf.setPrefSize(279, 40);
+            tf.setPrefWidth(220);
             tf.setPromptText(promptText);
+            tf.fontProperty().unbind();
             tf.setFont(Font.font("Book Antiqua Italic", 20));
-            tf.setStyle("-fx-background-color: #2b1d3a;");
+            tf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
             box.getChildren().addAll(icon, tf);
         }
 
         return box;
+    }
+
+    // Optional: Simulate hash display (for dev/testing)
+    private String hashPassword(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes)
+                hexString.append(String.format("%02x", b));
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            return "HASH_ERROR";
+        }
     }
 
     public static void main(String[] args) {

@@ -68,11 +68,15 @@ public class RegisterScreen extends GameApplication {
         styleButton(createAccountBtn, "#c85bff", Color.WHITE);
         createAccountBtn.setOnAction(e -> System.out.println("Create Account clicked"));
 
-        HBox separatorBox = new HBox(new Separator(), new Text("Or"), new Separator());
+        HBox separatorBox = new HBox();
         separatorBox.setAlignment(Pos.CENTER);
-        separatorBox.setMaxWidth(366);
         separatorBox.setSpacing(10);
-        ((Text) separatorBox.getChildren().get(1)).setFill(Color.WHITE);
+        Separator sepLeft = new Separator();
+        sepLeft.setPrefWidth(172);
+        Separator sepRight = new Separator();
+        sepRight.setPrefWidth(178);
+        Text orText = FXGL.getUIFactoryService().newText("Or", Color.WHITE, 16);
+        separatorBox.getChildren().addAll(sepLeft, orText, sepRight);
 
         Button loginBtn = new Button("Login");
         styleButton(loginBtn, "#ffffff", Color.BLACK);
