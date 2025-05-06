@@ -26,6 +26,7 @@ public class RegisterScreen extends GameApplication {
         settings.setWidth(1550);
         settings.setHeight(800);
         settings.setTitle("TypeWiz Registration");
+
     }
 
     @Override
@@ -59,10 +60,11 @@ public class RegisterScreen extends GameApplication {
         title.setFont(Font.font("Viner Hand ITC", 52));
         VBox.setMargin(title, new Insets(0, 60, 20, 0));
 
-        TextField tfUsername = createInputField("Username", "assets/profile_icon_login.png");
-        TextField tfEmail = createInputField("Email", "assets/profile_icon_login.png");
-        PasswordField tfPassword = createPasswordField("Password", "assets/password_icon.png");
-        PasswordField tfConfirmPassword = createPasswordField("Confirm Password", "assets/password_icon.png");
+        HBox emailBox = createInputField("assets/profile_icon_login.png", "Email", false);
+        HBox usernameBox = createInputField("assets/profile_icon_login.png", "Username", false);
+        HBox passwordBox = createInputField("assets/password_icon.png", "Password", true);
+        HBox confirmPasswordBox = createInputField("assets/password_icon.png", "Confirm Password", true);
+        VBox.setMargin(confirmPasswordBox, new Insets(0, 0, 20, 0)); //
 
         Button createAccountBtn = new Button("Create Account");
         styleButton(createAccountBtn, "#c85bff", Color.WHITE);
@@ -82,65 +84,91 @@ public class RegisterScreen extends GameApplication {
         styleButton(loginBtn, "#ffffff", Color.BLACK);
         loginBtn.setOnAction(e -> System.out.println("Login clicked"));
 
-        formPane.getChildren().addAll(title, tfUsername, tfEmail, tfPassword, tfConfirmPassword, createAccountBtn, separatorBox, loginBtn);
+        formPane.getChildren().addAll(title, emailBox, usernameBox, passwordBox, confirmPasswordBox, createAccountBtn, separatorBox, loginBtn);
 
         root.getChildren().addAll(leftPane, formPane);
 
         FXGL.getGameScene().addUINode(root);
     }
 
-    private TextField createInputField(String prompt, String iconPath) {
+    private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
+        box.setPrefSize(600, 54); // Increased to allow room for text field + icon
         box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
-        box.setPrefSize(381, 54);
+        box.setPadding(new Insets(0, 20, 0, 20));
         box.setEffect(new InnerShadow());
 
-        ImageView icon = new ImageView(new Image(
-                getClass().getResource(iconPath).toExternalForm()));
+        ImageView icon = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
         icon.setFitHeight(26);
         icon.setFitWidth(26);
 
-        TextField tf = new TextField();
-        tf.setPromptText(prompt);
-        tf.setFont(Font.font("Book Antiqua Italic", 20));
-        tf.setPrefSize(279, 40);
-        tf.setStyle("-fx-background-color: #2b1d3a; -fx-text-fill: white;");
+        if (isPassword) {
+            PasswordField pf = new PasswordField();
+            pf.setPromptText(promptText);
+            pf.fontProperty().unbind();
+            pf.setFont(Font.font("Book Antiqua Italic", 20));
+            pf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            pf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(pf, Priority.ALWAYS);
 
-        box.getChildren().addAll(icon, tf);
-        VBox wrapper = new VBox(box);
-        return tf;
+            TextField visibleTF = new TextField();
+            visibleTF.setFont(Font.font("Book Antiqua Italic", 20));
+            visibleTF.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            visibleTF.setManaged(false);
+            visibleTF.setVisible(false);
+            visibleTF.textProperty().bindBidirectional(pf.textProperty());
+            visibleTF.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(visibleTF, Priority.ALWAYS);
+
+            ImageView eyeIcon = new ImageView(new Image(getClass().getResource("assets/password_hash_icon.png").toExternalForm()));
+            eyeIcon.setFitHeight(24);
+            eyeIcon.setFitWidth(24);
+            eyeIcon.setOnMouseClicked(e -> {
+                boolean showing = visibleTF.isVisible();
+                visibleTF.setVisible(!showing);
+                visibleTF.setManaged(!showing);
+                pf.setVisible(showing);
+                pf.setManaged(showing);
+                String eyePath = showing ? "assets/password_hash_icon.png" : "assets/password_unhash_icon.png";
+                eyeIcon.setImage(new Image(getClass().getResource(eyePath).toExternalForm()));
+            });
+
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.NEVER);
+            box.getChildren().addAll(icon, pf, visibleTF, spacer, eyeIcon);
+        } else {
+            TextField tf = new TextField();
+            tf.setPromptText(promptText);
+            tf.fontProperty().unbind();
+            tf.setFont(Font.font("Book Antiqua Italic", 20));
+            tf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            tf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(tf, Priority.ALWAYS);
+
+            box.getChildren().addAll(icon, tf);
+        }
+
+        return box;
     }
 
-    private PasswordField createPasswordField(String prompt, String iconPath) {
-        HBox box = new HBox(10);
-        box.setAlignment(Pos.CENTER_LEFT);
-        box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
-        box.setPrefSize(381, 54);
-        box.setEffect(new InnerShadow());
 
-        ImageView icon = new ImageView(new Image(
-                getClass().getResource(iconPath).toExternalForm()));
-        icon.setFitHeight(26);
-        icon.setFitWidth(26);
 
-        PasswordField pf = new PasswordField();
-        pf.setPromptText(prompt);
-        pf.setFont(Font.font("Book Antiqua Italic", 20));
-        pf.setPrefSize(253, 41);
-        pf.setStyle("-fx-background-color: #2b1d3a; -fx-text-fill: white;");
-
-        box.getChildren().addAll(icon, pf);
-        VBox wrapper = new VBox(box);
-        return pf;
-    }
 
     private void styleButton(Button button, String bgColor, Color textColor) {
         button.setPrefSize(378, 58);
+        button.fontProperty().unbind();
         button.setFont(Font.font("Book Antiqua", 20));
         button.setTextFill(textColor);
-        button.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 30;");
         button.setEffect(new InnerShadow());
+
+        String textFillHex = textColor.toString().replace("0x", "#");
+        String baseStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+        String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 20%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+
+        button.setStyle(baseStyle);
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(baseStyle));
     }
 
     public static void main(String[] args) {

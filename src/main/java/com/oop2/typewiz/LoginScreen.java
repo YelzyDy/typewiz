@@ -130,6 +130,7 @@ public class LoginScreen extends GameApplication {
         button.fontProperty().unbind();
         button.setFont(Font.font("Book Antiqua", 20));
         button.setTextFill(textColor);
+        button.setEffect(new InnerShadow());
 
         String textFillHex = textColor.toString().replace("0x", "#");
         String baseStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
@@ -202,7 +203,7 @@ public class LoginScreen extends GameApplication {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPrefHeight(54);
-        box.setPrefWidth(300);
+        box.setPrefWidth(380);
         box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
         box.setPadding(new Insets(0, 20, 0, 20));
         box.setEffect(new InnerShadow());
@@ -212,7 +213,7 @@ public class LoginScreen extends GameApplication {
 
         if (isPassword) {
             PasswordField pf = new PasswordField();
-            pf.setPrefWidth(180);
+            pf.setPrefWidth(300);
             pf.setPromptText(promptText);
             pf.fontProperty().unbind();
             pf.setFont(Font.font("Book Antiqua Italic", 20));
@@ -239,7 +240,7 @@ public class LoginScreen extends GameApplication {
             box.getChildren().addAll(icon, pf, visibleTF, spacer, eyeIcon);
         } else {
             TextField tf = new TextField();
-            tf.setPrefWidth(220);
+            tf.setPrefWidth(300);
             tf.setPromptText(promptText);
             tf.fontProperty().unbind();
             tf.setFont(Font.font("Book Antiqua Italic", 20));
