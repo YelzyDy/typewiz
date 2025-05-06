@@ -4,6 +4,7 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -25,17 +26,29 @@ import javafx.scene.text.Text;
 
 public class RegisterScreen extends GameApplication {
 
-    @Override
-    protected void initSettings(GameSettings settings) {
-        settings.setWidth(1550);
-        settings.setHeight(800);
-        settings.setTitle("TypeWiz Registration");
+    private HBox root;
 
+    public Node getRoot() {
+        addRegisterUI(); // ensure the UI is initialized
+        return root;
     }
 
     @Override
-    protected void initUI() {
-        HBox root = new HBox(10);
+    protected void initSettings(GameSettings settings) {
+        settings.setTitle("TypeWiz Register");
+        settings.setWidth(1550);
+        settings.setHeight(800);
+        settings.setMainMenuEnabled(false);
+        settings.setGameMenuEnabled(false);
+    }
+
+//    @Override
+//    protected void initUI() {
+//        addRegisterUI();
+//    }
+
+    private void addRegisterUI() {
+        root = new HBox(10);
         root.setPrefSize(1550, 800);
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);");
@@ -72,7 +85,7 @@ public class RegisterScreen extends GameApplication {
 
         Button createAccountBtn = new Button("Create Account");
         styleButton(createAccountBtn, "#c85bff", Color.WHITE);
-        createAccountBtn.setOnAction(e -> System.out.println("Create Account clicked"));
+        createAccountBtn.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOADING));
 
         HBox separatorBox = new HBox();
         separatorBox.setAlignment(Pos.CENTER);
@@ -86,7 +99,7 @@ public class RegisterScreen extends GameApplication {
 
         Button loginBtn = new Button("Login");
         styleButton(loginBtn, "#ffffff", Color.BLACK);
-        loginBtn.setOnAction(e -> System.out.println("Login clicked"));
+        loginBtn.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOGIN));
 
         formPane.getChildren().addAll(title, emailBox, usernameBox, passwordBox, confirmPasswordBox, createAccountBtn, separatorBox, loginBtn);
 
@@ -106,7 +119,6 @@ public class RegisterScreen extends GameApplication {
 
         root.getChildren().addAll(leftPane, formPane);
 
-        FXGL.getGameScene().addUINode(root);
     }
 
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {

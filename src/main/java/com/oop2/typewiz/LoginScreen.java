@@ -24,6 +24,12 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 
 public class LoginScreen extends GameApplication {
+    private HBox root; // class-level root
+
+    public Node getRoot() {
+        addLoginUI(); // ensure UI is initialized
+        return root;
+    }
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -34,13 +40,13 @@ public class LoginScreen extends GameApplication {
         settings.setGameMenuEnabled(false);
     }
 
-    @Override
-    protected void initUI() {
-        addLoginUI();
-    }
+//    @Override
+//    protected void initUI() {
+//        addLoginUI();
+//    }
 
     public void addLoginUI() {
-        HBox root = new HBox(10);
+         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1550, 800);
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);");
@@ -90,11 +96,11 @@ public class LoginScreen extends GameApplication {
         // Buttons
         Button loginButton = FXGL.getUIFactoryService().newButton("Login");
         styleButton(loginButton, "#c85bff", Color.WHITE);
-        loginButton.setOnAction(e -> System.out.println("Login clicked"));
+        loginButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOADING));
 
         Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
         styleButton(signUpButton, "#ffffff", Color.BLACK);
-        signUpButton.setOnAction(e -> System.out.println("Signup clicked"));
+        signUpButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.REGISTER));
 
         // Separator
         HBox separatorBox = new HBox();
@@ -122,7 +128,6 @@ public class LoginScreen extends GameApplication {
         root.getChildren().addAll(leftBox, rightBox);
         applyFadeInAnimation(root);
 
-        FXGL.getGameScene().addUINode(root);
     }
 
     private void styleButton(Button button, String bgColor, Color textColor) {
