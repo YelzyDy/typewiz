@@ -198,7 +198,7 @@ public class Gameplay extends GameApplication {
 
     private void spawnNewWord() {
         stopTimer();
-
+        
         // Only remove entities that are not player or enemy
         FXGL.getGameWorld().getEntitiesCopy().forEach(e -> {
             if (e != playerEntity && e != enemyEntity && e != enemyHealthBarEntity) {
@@ -253,7 +253,7 @@ public class Gameplay extends GameApplication {
 
         for (int i = 0; i < particleCount; i++) {
             Rectangle particle = new Rectangle(2, 2);
-
+            
             // Red/Orange colors for mistakes
             Color color = Color.rgb(255, 50 + random.nextInt(100), 0);
             particle.setFill(color);
@@ -275,15 +275,15 @@ public class Gameplay extends GameApplication {
     private void shootBeam() {
         // Create beam line
         Line beam = new Line(
-                playerEntity.getX() + 50,  // Start from right side of player
-                playerEntity.getY() + 40,  // Middle of player
-                enemyEntity.getX(),        // To left side of enemy
-                enemyEntity.getY() + 40    // Middle of enemy
+            playerEntity.getX() + 50,  // Start from right side of player
+            playerEntity.getY() + 40,  // Middle of player
+            enemyEntity.getX(),        // To left side of enemy
+            enemyEntity.getY() + 40    // Middle of enemy
         );
         beam.setStroke(Color.LIME);
         beam.setStrokeWidth(15);       // Much thicker beam
         beam.setOpacity(0.9);
-
+        
         // Add dramatic glow effect
         beam.setEffect(new javafx.scene.effect.Glow(0.8));
 
@@ -318,31 +318,31 @@ public class Gameplay extends GameApplication {
 
     private void addDramaticBeamParticles(Line beam, Color... colors) {
         int particleCount = 40;  // More particles for more dramatic effect
-
+        
         for (int i = 0; i < particleCount; i++) {
             // Position along the beam line
             double ratio = random.nextDouble();
             double x = beam.getStartX() + ratio * (beam.getEndX() - beam.getStartX());
             double y = beam.getStartY() + ratio * (beam.getEndY() - beam.getStartY());
-
+            
             // Small random offset from the line
             double offsetAngle = random.nextDouble() * Math.PI * 2;
             double offsetDistance = random.nextDouble() * 20;  // Wider spread
             x += Math.cos(offsetAngle) * offsetDistance;
             y += Math.sin(offsetAngle) * offsetDistance;
-
+            
             // Larger, more dramatic particles
             Rectangle particle = new Rectangle(4 + random.nextInt(4), 4 + random.nextInt(4));
-
+            
             // Random color from provided colors
             Color color = colors[random.nextInt(colors.length)];
             particle.setFill(color);
-
+            
             // Add glow to some particles
             if (random.nextBoolean()) {
                 particle.setEffect(new javafx.scene.effect.Glow(0.7));
             }
-
+            
             FXGL.entityBuilder()
                     .at(x, y)
                     .view(particle)
@@ -354,7 +354,7 @@ public class Gameplay extends GameApplication {
     private void updateEnemyHealthBar() {
         double healthPercentage = Math.max(0, enemyHealth / 100.0);
         enemyHealthBar.setWidth(100 * healthPercentage);
-
+        
         if (healthPercentage > 0.6) {
             enemyHealthBar.setFill(Color.LIME);
         } else if (healthPercentage > 0.3) {
@@ -367,11 +367,11 @@ public class Gameplay extends GameApplication {
     private void handleEnemyDefeat() {
         // Add victory effects
         playExplosionAnimation();
-
+        
         // Reset enemy health
         enemyHealth = 100;
         updateEnemyHealthBar();
-
+        
         // Increase score
         FXGL.getWorldProperties().increment("score", 50);
     }
@@ -386,9 +386,9 @@ public class Gameplay extends GameApplication {
             Rectangle particle = new Rectangle(3, 3);
 
             Color color = Color.rgb(
-                    200 + random.nextInt(55),  // More red for hit effect
-                    200 + random.nextInt(55),  // Some green
-                    100 + random.nextInt(50)   // Less blue
+                200 + random.nextInt(55),  // More red for hit effect
+                200 + random.nextInt(55),  // Some green
+                100 + random.nextInt(50)   // Less blue
             );
 
             particle.setFill(color);
@@ -430,18 +430,18 @@ public class Gameplay extends GameApplication {
     private void enemyShootWizardBeam() {
         // Create wizard beam line
         Line wizardBeam = new Line(
-                enemyEntity.getX(),        // Start from left side of enemy
-                enemyEntity.getY() + 40,   // Middle of enemy
-                playerEntity.getX() + 50,  // To right side of player
-                playerEntity.getY() + 40   // Middle of player
+            enemyEntity.getX(),        // Start from left side of enemy
+            enemyEntity.getY() + 40,   // Middle of enemy
+            playerEntity.getX() + 50,  // To right side of player
+            playerEntity.getY() + 40   // Middle of player
         );
-
+        
         // Magical colors for wizard beam
         wizardBeam.setStroke(Color.PURPLE);
         wizardBeam.setStrokeWidth(18);  // Even thicker for wizard beam
         wizardBeam.setOpacity(0.9);
         wizardBeam.getStrokeDashArray().addAll(15.0, 10.0); // Dashed line for magical effect
-
+        
         // Add dramatic glow effect
         wizardBeam.setEffect(new javafx.scene.effect.Glow(1.0));
 
@@ -570,7 +570,7 @@ class ParticleBehavior extends com.almasb.fxgl.entity.component.Component {
     public ParticleBehavior(boolean isMistake) {
         Random random = new Random();
         this.isMistake = isMistake;
-
+        
         if (isMistake) {
             // Faster, shorter-lived particles for mistakes
             velocityX = (random.nextDouble() - 0.5) * 300;
