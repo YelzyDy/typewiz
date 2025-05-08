@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001a, #2a0055);" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.LaunchController">
+<AnchorPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001a, #2a0055);" stylesheets="assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.toDelete.LaunchController">
     <VBox alignment="CENTER" spacing="10.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="50.0">
         <ImageView fx:id="logoImage" fitHeight="469.0" fitWidth="669.0" preserveRatio="true">
          <VBox.margin>

@@ -6,11 +6,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.InnerShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -19,10 +15,13 @@ import javafx.geometry.Insets;
 import javafx.animation.TranslateTransition;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
-
-
 import javafx.scene.text.Font;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.InnerShadow;
 import javafx.scene.text.Text;
+import javafx.scene.layout.Region;
+import javafx.scene.control.Button;
+import javafx.scene.input.MouseEvent;
 
 public class RegisterScreen extends GameApplication {
 
@@ -42,16 +41,11 @@ public class RegisterScreen extends GameApplication {
         settings.setGameMenuEnabled(false);
     }
 
-//    @Override
-//    protected void initUI() {
-//        addRegisterUI();
-//    }
-
     private void addRegisterUI() {
         root = new HBox(10);
         root.setPrefSize(1550, 800);
         root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);");
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
 
         // Left VBox with Logo
         VBox leftPane = new VBox();
@@ -75,6 +69,7 @@ public class RegisterScreen extends GameApplication {
         Label title = new Label("Sign up");
         title.setTextFill(Color.WHITE);
         title.setFont(Font.font("Viner Hand ITC", 52));
+        title.setEffect(new DropShadow(10, Color.web("#c85bff")));
         VBox.setMargin(title, new Insets(0, 60, 20, 0));
 
         HBox emailBox = createInputField("assets/profile_icon_login.png", "Email", false);
@@ -115,19 +110,16 @@ public class RegisterScreen extends GameApplication {
         animateNode(separatorBox, 1.4);
         animateNode(loginBtn, 1.6);
 
-
-
         root.getChildren().addAll(leftPane, formPane);
-
     }
 
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPrefSize(600, 54); // Increased to allow room for text field + icon
-        box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
+        box.setStyle("-fx-background-color: rgba(255,255,255,0.07); -fx-background-radius: 30;");
         box.setPadding(new Insets(0, 20, 0, 20));
-        box.setEffect(new InnerShadow());
+        box.setEffect(new Glow(0.3));
 
         ImageView icon = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
         icon.setFitHeight(26);
@@ -136,7 +128,6 @@ public class RegisterScreen extends GameApplication {
         if (isPassword) {
             PasswordField pf = new PasswordField();
             pf.setPromptText(promptText);
-            pf.fontProperty().unbind();
             pf.setFont(Font.font("Book Antiqua Italic", 20));
             pf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
             pf.setMaxWidth(Double.MAX_VALUE);
@@ -182,9 +173,6 @@ public class RegisterScreen extends GameApplication {
         return box;
     }
 
-
-
-
     private void styleButton(Button button, String bgColor, Color textColor) {
         button.setPrefSize(378, 58);
         button.fontProperty().unbind();
@@ -194,7 +182,7 @@ public class RegisterScreen extends GameApplication {
 
         String textFillHex = textColor.toString().replace("0x", "#");
         String baseStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
-        String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 20%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+        String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 10%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(200,91,255,0.6), 10, 0.3, 0, 3);";
 
         button.setStyle(baseStyle);
         button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
@@ -217,8 +205,6 @@ public class RegisterScreen extends GameApplication {
         slide.play();
         fade.play();
     }
-
-
 
     public static void main(String[] args) {
         launch(args);

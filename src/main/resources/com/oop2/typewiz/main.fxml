@@ -12,7 +12,7 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.MainController">
+<BorderPane prefHeight="800.0" prefWidth="1550.0" style="-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);" stylesheets="@assets/style.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oop2.typewiz.toDelete.MainController">
 
     <center>
         <AnchorPane fx:id="mainContent" nodeOrientation="RIGHT_TO_LEFT">

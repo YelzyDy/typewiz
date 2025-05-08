@@ -1,5 +1,6 @@
-package com.oop2.typewiz;
+package com.oop2.typewiz.toDelete;
 
+import com.oop2.typewiz.DatabaseConnection;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
