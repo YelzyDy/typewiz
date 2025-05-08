@@ -74,7 +74,7 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Subtitle with typewriter effect
         Text subtitle = new Text("_");
-        subtitle.setFont(Font.font("Consolas", 24));
+        subtitle.setFont(Font.font("Consolas", 20));
         subtitle.setFill(Color.web("#d1c4e9"));
         animateTypingText(subtitle, "Master the Magic of Typing");
 
