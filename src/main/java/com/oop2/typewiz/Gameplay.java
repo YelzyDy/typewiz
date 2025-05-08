@@ -3,6 +3,7 @@ package com.oop2.typewiz;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
@@ -10,6 +11,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import javafx.scene.shape.Line;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.ScaleTransition;
 
 import java.util.List;
 import java.util.Random;
@@ -38,6 +43,14 @@ public class Gameplay extends GameApplication {
     private double lastTime;
     private boolean timerRunning;
 
+    // Character entities
+    private Entity playerEntity;
+    private Entity enemyEntity;
+    private Rectangle enemyHealthBar;
+    private Entity enemyHealthBarEntity;
+    private double enemyHealth = 100;
+    private static final double DAMAGE_PER_HIT = 10;
+
     private static final double BASE_TIME_LIMIT = 5.0;
     private static final double TIME_PENALTY = 1.0;
 
@@ -53,6 +66,28 @@ public class Gameplay extends GameApplication {
         FXGL.getWorldProperties().setValue("score", 0);
         FXGL.getWorldProperties().setValue("health", 100);
         FXGL.getWorldProperties().setValue("streak", 0);
+
+        // Create player character
+        Rectangle playerRect = new Rectangle(50, 80, Color.BLUE);
+        playerEntity = FXGL.entityBuilder()
+                .at(100, FXGL.getAppHeight() / 2 - 40)
+                .view(playerRect)
+                .buildAndAttach();
+
+        // Create enemy character
+        Rectangle enemyRect = new Rectangle(50, 80, Color.RED);
+        enemyEntity = FXGL.entityBuilder()
+                .at(FXGL.getAppWidth() - 150, FXGL.getAppHeight() / 2 - 40)
+                .view(enemyRect)
+                .buildAndAttach();
+
+        // Create enemy health bar
+        enemyHealthBar = new Rectangle(100, 10, Color.LIME);
+        enemyHealthBarEntity = FXGL.entityBuilder()
+                .at(FXGL.getAppWidth() - 175, FXGL.getAppHeight() / 2 - 60)
+                .view(enemyHealthBar)
+                .buildAndAttach();
+
         spawnNewWord();
     }
 
@@ -66,6 +101,8 @@ public class Gameplay extends GameApplication {
                 if (!targetWord.startsWith(currentInput)) {
                     decreaseHealth();
                     FXGL.getWorldProperties().setValue("streak", 0);
+                    playMistakeAnimation();
+                    enemyShootWizardBeam();
                 }
 
                 checkInput();
@@ -159,10 +196,15 @@ public class Gameplay extends GameApplication {
         }
     }
 
-
     private void spawnNewWord() {
         stopTimer();
-        FXGL.getGameWorld().getEntitiesCopy().forEach(e -> e.removeFromWorld());
+        
+        // Only remove entities that are not player or enemy
+        FXGL.getGameWorld().getEntitiesCopy().forEach(e -> {
+            if (e != playerEntity && e != enemyEntity && e != enemyHealthBarEntity) {
+                e.removeFromWorld();
+            }
+        });
 
         targetWord = words.get(random.nextInt(words.size()));
         currentInput = "";
@@ -203,6 +245,167 @@ public class Gameplay extends GameApplication {
         }
     }
 
+    private void playMistakeAnimation() {
+        // Create mistake particles
+        int particleCount = 15;
+        double centerX = FXGL.getAppWidth() / 2;
+        double centerY = FXGL.getAppHeight() / 2;
+
+        for (int i = 0; i < particleCount; i++) {
+            Rectangle particle = new Rectangle(2, 2);
+            
+            // Red/Orange colors for mistakes
+            Color color = Color.rgb(255, 50 + random.nextInt(100), 0);
+            particle.setFill(color);
+
+            // Random position around the input text
+            double angle = random.nextDouble() * Math.PI * 2;
+            double distance = random.nextDouble() * 30;
+            double x = centerX + Math.cos(angle) * distance;
+            double y = centerY + Math.sin(angle) * distance + 50; // Offset to be near input text
+
+            FXGL.entityBuilder()
+                    .at(x, y)
+                    .view(particle)
+                    .with(new ParticleBehavior(true)) // true for mistake particles
+                    .buildAndAttach();
+        }
+    }
+
+    private void shootBeam() {
+        // Create beam line
+        Line beam = new Line(
+            playerEntity.getX() + 50,  // Start from right side of player
+            playerEntity.getY() + 40,  // Middle of player
+            enemyEntity.getX(),        // To left side of enemy
+            enemyEntity.getY() + 40    // Middle of enemy
+        );
+        beam.setStroke(Color.LIME);
+        beam.setStrokeWidth(15);       // Much thicker beam
+        beam.setOpacity(0.9);
+        
+        // Add dramatic glow effect
+        beam.setEffect(new javafx.scene.effect.Glow(0.8));
+
+        Entity beamEntity = FXGL.entityBuilder()
+                .view(beam)
+                .buildAndAttach();
+
+        // Animate the beam with more dramatic timing
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.6), beam);
+        fadeOut.setFromValue(0.9);
+        fadeOut.setToValue(0);
+
+        ScaleTransition stretch = new ScaleTransition(Duration.seconds(0.6), beam);
+        stretch.setFromX(0);
+        stretch.setToX(1.2);  // Overshoot a bit for drama
+
+        ParallelTransition animation = new ParallelTransition(fadeOut, stretch);
+        animation.setOnFinished(e -> beamEntity.removeFromWorld());
+        animation.play();
+
+        // Add dramatic particles along the beam
+        addDramaticBeamParticles(beam, Color.LIME, Color.GREEN, Color.YELLOWGREEN);
+
+        // Damage enemy
+        enemyHealth -= DAMAGE_PER_HIT;
+        updateEnemyHealthBar();
+
+        if (enemyHealth <= 0) {
+            handleEnemyDefeat();
+        }
+    }
+
+    private void addDramaticBeamParticles(Line beam, Color... colors) {
+        int particleCount = 40;  // More particles for more dramatic effect
+        
+        for (int i = 0; i < particleCount; i++) {
+            // Position along the beam line
+            double ratio = random.nextDouble();
+            double x = beam.getStartX() + ratio * (beam.getEndX() - beam.getStartX());
+            double y = beam.getStartY() + ratio * (beam.getEndY() - beam.getStartY());
+            
+            // Small random offset from the line
+            double offsetAngle = random.nextDouble() * Math.PI * 2;
+            double offsetDistance = random.nextDouble() * 20;  // Wider spread
+            x += Math.cos(offsetAngle) * offsetDistance;
+            y += Math.sin(offsetAngle) * offsetDistance;
+            
+            // Larger, more dramatic particles
+            Rectangle particle = new Rectangle(4 + random.nextInt(4), 4 + random.nextInt(4));
+            
+            // Random color from provided colors
+            Color color = colors[random.nextInt(colors.length)];
+            particle.setFill(color);
+            
+            // Add glow to some particles
+            if (random.nextBoolean()) {
+                particle.setEffect(new javafx.scene.effect.Glow(0.7));
+            }
+            
+            FXGL.entityBuilder()
+                    .at(x, y)
+                    .view(particle)
+                    .with(new ParticleBehavior(false))  // Use success particles behavior
+                    .buildAndAttach();
+        }
+    }
+
+    private void updateEnemyHealthBar() {
+        double healthPercentage = Math.max(0, enemyHealth / 100.0);
+        enemyHealthBar.setWidth(100 * healthPercentage);
+        
+        if (healthPercentage > 0.6) {
+            enemyHealthBar.setFill(Color.LIME);
+        } else if (healthPercentage > 0.3) {
+            enemyHealthBar.setFill(Color.YELLOW);
+        } else {
+            enemyHealthBar.setFill(Color.RED);
+        }
+    }
+
+    private void handleEnemyDefeat() {
+        // Add victory effects
+        playExplosionAnimation();
+        
+        // Reset enemy health
+        enemyHealth = 100;
+        updateEnemyHealthBar();
+        
+        // Increase score
+        FXGL.getWorldProperties().increment("score", 50);
+    }
+
+    private void playExplosionAnimation() {
+        // Create explosion particles around the enemy
+        int particleCount = 30 + targetWord.length() * 5;
+        double centerX = enemyEntity.getX() + 25; // Center of enemy
+        double centerY = enemyEntity.getY() + 40;
+
+        for (int i = 0; i < particleCount; i++) {
+            Rectangle particle = new Rectangle(3, 3);
+
+            Color color = Color.rgb(
+                200 + random.nextInt(55),  // More red for hit effect
+                200 + random.nextInt(55),  // Some green
+                100 + random.nextInt(50)   // Less blue
+            );
+
+            particle.setFill(color);
+
+            double angle = random.nextDouble() * Math.PI * 2;
+            double distance = random.nextDouble() * 50;
+            double x = centerX + Math.cos(angle) * distance;
+            double y = centerY + Math.sin(angle) * distance;
+
+            FXGL.entityBuilder()
+                    .at(x, y)
+                    .view(particle)
+                    .with(new ParticleBehavior(false))
+                    .buildAndAttach();
+        }
+    }
+
     private void checkInput() {
         if (currentInput.equals(targetWord)) {
             int streak = FXGL.getWorldProperties().getInt("streak");
@@ -214,8 +417,53 @@ public class Gameplay extends GameApplication {
             wordText.setFill(Color.GOLD);
             inputText.setFill(Color.LIME);
 
-            FXGL.runOnce(this::spawnNewWord, Duration.seconds(0.2));
+            // Shoot beam at enemy
+            shootBeam();
+
+            // Play explosion animation
+            playExplosionAnimation();
+
+            FXGL.runOnce(this::spawnNewWord, Duration.seconds(0.5));
         }
+    }
+
+    private void enemyShootWizardBeam() {
+        // Create wizard beam line
+        Line wizardBeam = new Line(
+            enemyEntity.getX(),        // Start from left side of enemy
+            enemyEntity.getY() + 40,   // Middle of enemy
+            playerEntity.getX() + 50,  // To right side of player
+            playerEntity.getY() + 40   // Middle of player
+        );
+        
+        // Magical colors for wizard beam
+        wizardBeam.setStroke(Color.PURPLE);
+        wizardBeam.setStrokeWidth(18);  // Even thicker for wizard beam
+        wizardBeam.setOpacity(0.9);
+        wizardBeam.getStrokeDashArray().addAll(15.0, 10.0); // Dashed line for magical effect
+        
+        // Add dramatic glow effect
+        wizardBeam.setEffect(new javafx.scene.effect.Glow(1.0));
+
+        Entity beamEntity = FXGL.entityBuilder()
+                .view(wizardBeam)
+                .buildAndAttach();
+
+        // Animate the beam with even more dramatic wizardly effects
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(0.7), wizardBeam);
+        fadeOut.setFromValue(0.9);
+        fadeOut.setToValue(0);
+
+        ScaleTransition stretch = new ScaleTransition(Duration.seconds(0.7), wizardBeam);
+        stretch.setFromX(0);
+        stretch.setToX(1.3);  // More overshoot for wizard drama
+
+        ParallelTransition animation = new ParallelTransition(fadeOut, stretch);
+        animation.setOnFinished(e -> beamEntity.removeFromWorld());
+        animation.play();
+
+        // Add magical particles along the beam
+        addDramaticBeamParticles(wizardBeam, Color.PURPLE, Color.MAGENTA, Color.BLUE);
     }
 
     @Override
@@ -308,5 +556,57 @@ public class Gameplay extends GameApplication {
 
     public static void main(String[] args) {
         launch(args);
+    }
+}
+
+class ParticleBehavior extends com.almasb.fxgl.entity.component.Component {
+    private double velocityX;
+    private double velocityY;
+    private double lifeTime;
+    private double currentTime = 0.0;
+    private double fadeStart;
+    private boolean isMistake;
+
+    public ParticleBehavior(boolean isMistake) {
+        Random random = new Random();
+        this.isMistake = isMistake;
+        
+        if (isMistake) {
+            // Faster, shorter-lived particles for mistakes
+            velocityX = (random.nextDouble() - 0.5) * 300;
+            velocityY = (random.nextDouble() - 0.5) * 300;
+            lifeTime = 0.5;
+            fadeStart = 0.3;
+        } else {
+            // Normal success particles
+            velocityX = (random.nextDouble() - 0.5) * 400;
+            velocityY = (random.nextDouble() - 0.5) * 400;
+            lifeTime = 1.0;
+            fadeStart = 0.7;
+        }
+    }
+
+    @Override
+    public void onUpdate(double tpf) {
+        currentTime += tpf;
+
+        // Update position
+        entity.translateX(velocityX * tpf);
+        entity.translateY(velocityY * tpf);
+
+
+        // Apply gravity
+        velocityY += 100 * tpf;
+
+        // Fade out
+        if (currentTime > fadeStart) {
+            double opacity = 1.0 - ((currentTime - fadeStart) / (lifeTime - fadeStart));
+            entity.getViewComponent().setOpacity(opacity);
+        }
+
+        // Remove when expired
+        if (currentTime >= lifeTime) {
+            entity.removeFromWorld();
+        }
     }
 }
