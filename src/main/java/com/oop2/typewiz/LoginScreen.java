@@ -3,9 +3,10 @@ package com.oop2.typewiz;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
-import javafx.animation.FadeTransition;
+import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
@@ -18,7 +19,17 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
+
 public class LoginScreen extends GameApplication {
+    private HBox root; // class-level root
+
+    public Node getRoot() {
+        addLoginUI(); // ensure UI is initialized
+        return root;
+    }
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -29,99 +40,112 @@ public class LoginScreen extends GameApplication {
         settings.setGameMenuEnabled(false);
     }
 
-    @Override
-    protected void initUI() {
-        addLoginUI();
-    }
+//    @Override
+//    protected void initUI() {
+//        addLoginUI();
+//    }
 
     public void addLoginUI() {
-        // Main background (HBox)
-        HBox root = new HBox(10);
+         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1550, 800);
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0f001f, #4a0060);");
 
-        // Left: Logo
+        // Left logo
         VBox leftBox = new VBox();
         leftBox.setAlignment(Pos.CENTER);
         leftBox.setPrefWidth(481);
-
         Image logoImage = new Image(getClass().getResource("assets/typewiz_logo.png").toExternalForm());
         ImageView logo = new ImageView(logoImage);
         logo.setFitWidth(546);
         logo.setFitHeight(530);
         logo.setPreserveRatio(true);
         logo.setEffect(new DropShadow(6, Color.BLACK));
-
         leftBox.getChildren().add(logo);
+        playBounceAnimation(logo);
 
-        // Right: Login Form
+        // Right: Login form
         VBox rightBox = new VBox(10);
         rightBox.setAlignment(Pos.CENTER);
         rightBox.setPrefWidth(619);
         rightBox.setPrefHeight(790);
 
-        // "Login" label
         Text loginText = FXGL.getUIFactoryService().newText("Login", Color.WHITE, 52);
-        loginText.fontProperty().unbind();  // Unbind if previously bound
-        loginText.setFont(Font.font("Viner Hand ITC", 52));  // Now you can set the font manually
+        loginText.fontProperty().unbind();
+        loginText.setFont(Font.font("Viner Hand ITC", 52));
         loginText.setEffect(new Glow(0.4));
         VBox.setMargin(loginText, new Insets(0, 60, 20, 0));
 
-        // Username field with icon
         HBox usernameBox = createInputField("assets/profile_icon_login.png", "Username", false);
-
-        // Password field with icon
         HBox passwordBox = createInputField("assets/password_icon.png", "Password", true);
 
-        // Remember Me + Forgot Password
         HBox optionsBox = new HBox(20);
         optionsBox.setAlignment(Pos.CENTER_LEFT);
+        optionsBox.setPadding(new Insets(0, 0, 0, 10));
         CheckBox rememberMe = new CheckBox("Remember Me");
         rememberMe.setTextFill(Color.web("#a1a1a1"));
+        rememberMe.fontProperty().unbind();
         rememberMe.setFont(Font.font("System Italic", 12));
         Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
-        optionsBox.getChildren().addAll(rememberMe, forgotPassword);
 
-        // Login Button
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        optionsBox.getChildren().addAll(rememberMe, spacer, forgotPassword);
+
+        // Buttons
         Button loginButton = FXGL.getUIFactoryService().newButton("Login");
-        loginButton.setPrefSize(378, 58);
-        loginButton.fontProperty().unbind();  // Unbind the font property
-        loginButton.setFont(Font.font("Book Antiqua", 20));  // Now you can safely set the font
-        VBox.setMargin(loginButton, new Insets(50, 80, 0, 0));
+        styleButton(loginButton, "#c85bff", Color.WHITE);
+        loginButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOADING));
 
-        // Separator "Or"
+        Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
+        styleButton(signUpButton, "#ffffff", Color.BLACK);
+        signUpButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.REGISTER));
+
+        // Separator
         HBox separatorBox = new HBox();
         separatorBox.setAlignment(Pos.CENTER);
         separatorBox.setSpacing(10);
-        Separator sepLeft = new Separator();
-        sepLeft.setPrefWidth(172);
-        Separator sepRight = new Separator();
-        sepRight.setPrefWidth(178);
+        Separator sepLeft = new Separator(); sepLeft.setPrefWidth(172);
+        Separator sepRight = new Separator(); sepRight.setPrefWidth(178);
         Text orText = FXGL.getUIFactoryService().newText("Or", Color.WHITE, 16);
         separatorBox.getChildren().addAll(sepLeft, orText, sepRight);
 
-        // Sign Up Button
-        Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
-        signUpButton.setPrefSize(378, 58);
-        signUpButton.fontProperty().unbind();  // Unbind the font property
-        signUpButton.setFont(Font.font("Book Antiqua", 20));  // Now you can safely set the font
-        VBox.setMargin(signUpButton, new Insets(0, 80, 0, 0));
+        VBox buttonBox = new VBox(15);
+        buttonBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(loginButton, new Insets(20, 0, 0, 0));
+        buttonBox.getChildren().addAll(loginButton, separatorBox, signUpButton);
+        playSlideInAnimation(buttonBox, 1.2);
 
-        // Align buttons with "OR"
-        HBox buttonsBox = new HBox(10);
-        buttonsBox.setAlignment(Pos.CENTER);
-        buttonsBox.getChildren().addAll(loginButton, signUpButton);
-
-        rightBox.getChildren().addAll(loginText, usernameBox, passwordBox, optionsBox, separatorBox, buttonsBox);
+        rightBox.getChildren().addAll(
+                animateNode(loginText, 0.2),
+                animateNode(usernameBox, 0.4),
+                animateNode(passwordBox, 0.6),
+                animateNode(optionsBox, 0.8),
+                buttonBox
+        );
 
         root.getChildren().addAll(leftBox, rightBox);
-
-        // Add fade-in animation
         applyFadeInAnimation(root);
 
-        FXGL.getGameScene().addUINode(root);
     }
+
+    private void styleButton(Button button, String bgColor, Color textColor) {
+        button.setPrefSize(378, 58);
+        button.fontProperty().unbind();
+        button.setFont(Font.font("Book Antiqua", 20));
+        button.setTextFill(textColor);
+        button.setEffect(new InnerShadow());
+
+        String textFillHex = textColor.toString().replace("0x", "#");
+        String baseStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+        String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 20%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand;";
+
+        button.setStyle(baseStyle);
+        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseExited(e -> button.setStyle(baseStyle));
+    }
+
 
     private void applyFadeInAnimation(Pane root) {
         FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), root);
@@ -130,37 +154,130 @@ public class LoginScreen extends GameApplication {
         fadeIn.play();
     }
 
+    private void playBounceAnimation(ImageView logo) {
+        logo.setTranslateY(-100);
+        logo.setScaleX(0.7);
+        logo.setScaleY(0.7);
+        TranslateTransition translate = new TranslateTransition(Duration.seconds(1), logo);
+        translate.setToY(0);
+        ScaleTransition scale = new ScaleTransition(Duration.seconds(1), logo);
+        scale.setToX(1);
+        scale.setToY(1);
+        new ParallelTransition(translate, scale).play();
+    }
+
+    private void playSlideInAnimation(VBox box, double delaySeconds) {
+        box.setTranslateY(100);
+        box.setOpacity(0);
+
+        FadeTransition fade = new FadeTransition(Duration.seconds(0.8), box);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        fade.setDelay(Duration.seconds(delaySeconds));
+
+        TranslateTransition slide = new TranslateTransition(Duration.seconds(0.8), box);
+        slide.setFromY(100);
+        slide.setToY(0);
+        slide.setDelay(Duration.seconds(delaySeconds));
+
+        fade.play();
+        slide.play();
+    }
+
+    private Node animateNode(Node node, double delay) {
+        node.setTranslateY(30);
+        node.setOpacity(0);
+
+        FadeTransition fade = new FadeTransition(Duration.seconds(0.6), node);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        fade.setDelay(Duration.seconds(delay));
+
+        TranslateTransition slide = new TranslateTransition(Duration.seconds(0.6), node);
+        slide.setFromY(30);
+        slide.setToY(0);
+        slide.setDelay(Duration.seconds(delay));
+
+        fade.play();
+        slide.play();
+
+        return node;
+    }
+
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER_LEFT);
-        box.setPrefHeight(54);
-        box.setPrefWidth(381);
+        box.setPrefSize(600, 54); // Increased to allow room for text field + icon
         box.setStyle("-fx-background-color: #2b1d3a; -fx-background-radius: 30;");
-        box.setPadding(new Insets(0, 0, 0, 30));
+        box.setPadding(new Insets(0, 20, 0, 20));
         box.setEffect(new InnerShadow());
 
-        Image iconImage = new Image(getClass().getResource(iconPath).toExternalForm());
-        ImageView icon = new ImageView(iconImage);
+        ImageView icon = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
         icon.setFitHeight(26);
         icon.setFitWidth(26);
 
         if (isPassword) {
             PasswordField pf = new PasswordField();
-            pf.setPrefSize(253, 41);
             pf.setPromptText(promptText);
+            pf.fontProperty().unbind();
             pf.setFont(Font.font("Book Antiqua Italic", 20));
-            pf.setStyle("-fx-background-color: #2b1d3a;");
-            box.getChildren().addAll(icon, pf);
+            pf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            pf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(pf, Priority.ALWAYS);
+
+            TextField visibleTF = new TextField();
+            visibleTF.setFont(Font.font("Book Antiqua Italic", 20));
+            visibleTF.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            visibleTF.setManaged(false);
+            visibleTF.setVisible(false);
+            visibleTF.textProperty().bindBidirectional(pf.textProperty());
+            visibleTF.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(visibleTF, Priority.ALWAYS);
+
+            ImageView eyeIcon = new ImageView(new Image(getClass().getResource("assets/password_hash_icon.png").toExternalForm()));
+            eyeIcon.setFitHeight(24);
+            eyeIcon.setFitWidth(24);
+            eyeIcon.setOnMouseClicked(e -> {
+                boolean showing = visibleTF.isVisible();
+                visibleTF.setVisible(!showing);
+                visibleTF.setManaged(!showing);
+                pf.setVisible(showing);
+                pf.setManaged(showing);
+                String eyePath = showing ? "assets/password_hash_icon.png" : "assets/password_unhash_icon.png";
+                eyeIcon.setImage(new Image(getClass().getResource(eyePath).toExternalForm()));
+            });
+
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.NEVER);
+            box.getChildren().addAll(icon, pf, visibleTF, spacer, eyeIcon);
         } else {
             TextField tf = new TextField();
-            tf.setPrefSize(279, 40);
             tf.setPromptText(promptText);
+            tf.fontProperty().unbind();
             tf.setFont(Font.font("Book Antiqua Italic", 20));
-            tf.setStyle("-fx-background-color: #2b1d3a;");
+            tf.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+            tf.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(tf, Priority.ALWAYS);
+
             box.getChildren().addAll(icon, tf);
         }
 
         return box;
+    }
+
+
+    // Optional: Simulate hash display (for dev/testing)
+    private String hashPassword(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes)
+                hexString.append(String.format("%02x", b));
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            return "HASH_ERROR";
+        }
     }
 
     public static void main(String[] args) {
