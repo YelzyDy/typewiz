@@ -1,4 +1,4 @@
-package com.oop2.typewiz;
+package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
