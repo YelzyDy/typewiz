@@ -51,7 +51,7 @@ public class Medieval extends GameApplication {
         Level level = getAssetLoader().loadLevel("Medieval.tmx", new TMXLevelLoader());
         getGameWorld().setLevel(level);
 
-        spawn("PLATFORM");
+        getGameWorld().spawn("Platform");
 
 
     }
