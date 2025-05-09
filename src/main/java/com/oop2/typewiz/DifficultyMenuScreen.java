@@ -3,6 +3,7 @@ package com.oop2.typewiz;
 import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
+import com.oop2.typewiz.util.ThreadManager;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.*;
@@ -130,7 +131,22 @@ public class DifficultyMenuScreen extends FXGLMenu {
             button.setEffect(null);
         });
 
-        button.setOnAction(e -> action.run());
+        button.setOnAction(e -> {
+            button.setDisable(true); // Prevent multiple clicks
+            ThreadManager.runAsyncThenUI(
+                    () -> {
+                        // background work (optional): simulate delay or load
+                        try {
+                            Thread.sleep(200); // Optional: simulate loading
+                        } catch (InterruptedException ignored) {}
+                    },
+                    () -> {
+                        action.run();
+                        button.setDisable(false);
+                    }
+            );
+        });
+
 
         return button;
     }

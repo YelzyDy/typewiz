@@ -3,6 +3,7 @@ package com.oop2.typewiz;
 import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
+import com.oop2.typewiz.util.ThreadManager;
 import javafx.geometry.Pos;
 import javafx.scene.effect.*;
 import javafx.scene.layout.*;
@@ -49,22 +50,20 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Buttons with wizard theme
         Button startButton = createWizardButton("START QUEST", () -> {
-            new Thread(() -> {
-                // Simulate asset preloading
-                preloadAssetsInBackground();
-
-                // Create difficulty menu on FX thread
-                javafx.application.Platform.runLater(() -> {
-                    DifficultyMenuScreen screen = new DifficultyMenuScreen(
-                            () -> FXGL.getSceneService().popSubScene(),
-                            () -> runStartGameThread(Difficulty.APPRENTICE),
-                            () -> runStartGameThread(Difficulty.WIZARD),
-                            () -> runStartGameThread(Difficulty.ARCHMAGE)
-                    );
-                    FXGL.getSceneService().pushSubScene(screen);
-                });
-            }).start();
+            ThreadManager.runAsyncThenUI(
+                    this::preloadAssetsInBackground,
+                    () -> {
+                        DifficultyMenuScreen screen = new DifficultyMenuScreen(
+                                () -> FXGL.getSceneService().popSubScene(),
+                                () -> runStartGameThread(Difficulty.APPRENTICE),
+                                () -> runStartGameThread(Difficulty.WIZARD),
+                                () -> runStartGameThread(Difficulty.ARCHMAGE)
+                        );
+                        FXGL.getSceneService().pushSubScene(screen);
+                    }
+            );
         });
+
 
         Button helpButton = createWizardButton("SPELLBOOK", () -> {
             FXGL.getDialogService().showMessageBox(
@@ -91,29 +90,19 @@ public class MainMenuScreen extends FXGLMenu {
         getContentRoot().getChildren().add(root);
     }
     private void runStartGameThread(Difficulty difficulty) {
-        new Thread(() -> {
-            FXGL.getWorldProperties().setValue("difficulty", difficulty);
+        ThreadManager.runAsyncThenUI(
+                () -> {
+                    FXGL.getWorldProperties().setValue("difficulty", difficulty);
 
-            Thread soundThread = new Thread(() -> {
-                // Simulate sound preloading or other resources
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException ignored) {}
-            });
-
-            soundThread.start();
-
-            // Wait for soundThread to finish
-            try {
-                soundThread.join();
-            } catch (InterruptedException ignored) {}
-
-            // Start game on FX thread
-            javafx.application.Platform.runLater(() -> {
-                FXGL.getGameController().startNewGame();
-            });
-        }).start();
+                    // Simulate preloading sounds/resources
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException ignored) {}
+                },
+                () -> FXGL.getGameController().startNewGame()
+        );
     }
+
 
 
     private void preloadAssetsInBackground() {

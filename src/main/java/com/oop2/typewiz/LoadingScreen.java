@@ -39,7 +39,7 @@ public class LoadingScreen extends LoadingScene {
         background.setEffect(new Bloom(0.1));
 
         // Twinkling stars
-        Pane stars = createStarParticles(30);
+//        Pane stars = createStarParticles(30);
 
         // Logo
         ImageView logo = new ImageView(new Image(getClass().getResource("assets/typewiz_logo.png").toExternalForm()));
@@ -100,7 +100,8 @@ public class LoadingScreen extends LoadingScene {
 
 
         // Root
-        root = new StackPane(background, stars, centerBox);
+//        root = new StackPane(background, stars, centerBox);
+        root = new StackPane(background, centerBox);
         getContentRoot().getChildren().setAll(root);
 
         // Start loading animation
@@ -123,23 +124,23 @@ public class LoadingScreen extends LoadingScene {
 
     }
 
-    private Pane createStarParticles(int count) {
-        Pane stars = new Pane();
-        for (int i = 0; i < count; i++) {
-            Rectangle star = new Rectangle(2, 2, Color.web("#ffeb3b", 0.7));
-            star.setLayoutX(Math.random() * getAppWidth());
-            star.setLayoutY(Math.random() * getAppHeight());
-            star.setEffect(new Glow(0.8));
-
-            FadeTransition ft = new FadeTransition(Duration.seconds(2 + Math.random() * 3), star);
-            ft.setFromValue(0.3);
-            ft.setToValue(0.9);
-            ft.setCycleCount(FadeTransition.INDEFINITE);
-            ft.setAutoReverse(true);
-            ft.play();
-
-            stars.getChildren().add(star);
-        }
-        return stars;
-    }
+//    private Pane createStarParticles(int count) {
+//        Pane stars = new Pane();
+//        for (int i = 0; i < count; i++) {
+//            Rectangle star = new Rectangle(2, 2, Color.web("#ffeb3b", 0.7));
+//            star.setLayoutX(Math.random() * getAppWidth());
+//            star.setLayoutY(Math.random() * getAppHeight());
+//            star.setEffect(new Glow(0.8));
+//
+//            FadeTransition ft = new FadeTransition(Duration.seconds(2 + Math.random() * 3), star);
+//            ft.setFromValue(0.3);
+//            ft.setToValue(0.9);
+//            ft.setCycleCount(FadeTransition.INDEFINITE);
+//            ft.setAutoReverse(true);
+//            ft.play();
+//
+//            stars.getChildren().add(star);
+//        }
+//        return stars;
+//    }
 }
