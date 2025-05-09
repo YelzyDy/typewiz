@@ -22,6 +22,8 @@ public class Game extends GameApplication {
     private LocalTimer blockSpawnTimer;
     private static final double BLOCK_SPEED = 100; // pixels per second
     private static final double SPAWN_INTERVAL = 3.0; // seconds between block spawns
+    private static final double ROW_SPACING = 140; // Slightly reduced spacing between rows
+    private static final int NUM_ROWS = 5; // Total number of rows
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -100,18 +102,29 @@ public class Game extends GameApplication {
                 .zIndex(25)
                 .buildAndAttach();
         
-        // Initialize timer for spawning moving blocks
+        // Initialize timer for spawning blocks
         blockSpawnTimer = FXGL.newLocalTimer();
         blockSpawnTimer.capture();
         
         // Run the game loop
         FXGL.getGameTimer().runAtInterval(() -> {
             if (blockSpawnTimer.elapsed(Duration.seconds(SPAWN_INTERVAL))) {
-                spawnMovingBlock();
+                // Keep original bottom row position
+                double bottomRowY = FXGL.getAppHeight() - 120;
+                
+                // Calculate a fixed horizontal position for alignment
+                double fixedX = FXGL.getAppWidth() + 10;
+                
+                // Spawn blocks in all rows with vertical alignment
+                for (int i = 0; i < NUM_ROWS; i++) {
+                    double rowY = bottomRowY - (i * ROW_SPACING);
+                    spawnMovingBlock(rowY, i, fixedX);
+                }
+                
                 blockSpawnTimer.capture();
             }
             
-            // Update moving blocks
+            // Update all moving blocks
             FXGL.getGameWorld().getEntitiesByType(EntityType.MOVING_BLOCK).forEach(entity -> {
                 entity.translateX(-BLOCK_SPEED * FXGL.tpf());
                 
@@ -123,18 +136,29 @@ public class Game extends GameApplication {
         }, Duration.seconds(0.016)); // ~60 fps
     }
     
-    private void spawnMovingBlock() {
+    private void spawnMovingBlock(double yPosition, int rowIndex, double xPosition) {
         // Create a block that will move from right to left
         double blockSize = 40;
-        Rectangle block = new Rectangle(blockSize, blockSize, Color.rgb(200, 200, 220));
         
-        // Start position is just off the right side of the screen
-        double startX = FXGL.getAppWidth() + 10;
-        double blockY = FXGL.getAppHeight() - 120; // Position on the platform
+        // Use slightly different colors for different rows
+        Color blockColor;
+        if (rowIndex == 0) {
+            blockColor = Color.rgb(200, 200, 220); // Original bottom row color
+        } else if (rowIndex == 1) {
+            blockColor = Color.rgb(190, 210, 230); // Slightly bluer
+        } else if (rowIndex == 2) {
+            blockColor = Color.rgb(180, 220, 240); // More blue
+        } else if (rowIndex == 3) {
+            blockColor = Color.rgb(170, 230, 250); // Even more blue
+        } else {
+            blockColor = Color.rgb(160, 240, 255); // Very blue
+        }
+        
+        Rectangle block = new Rectangle(blockSize, blockSize, blockColor);
         
         Entity blockEntity = FXGL.entityBuilder()
                 .type(EntityType.MOVING_BLOCK)
-                .at(startX, blockY)
+                .at(xPosition, yPosition)
                 .view(block)
                 .bbox(new HitBox(BoundingShape.box(blockSize, blockSize)))
                 .zIndex(30)
