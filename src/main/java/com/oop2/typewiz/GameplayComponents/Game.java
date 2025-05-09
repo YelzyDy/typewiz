@@ -8,6 +8,9 @@ import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.AnimationChannel;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
@@ -77,17 +80,35 @@ public class Game extends GameApplication {
                 .zIndex(21)
                 .buildAndAttach();
                 
-        // Add a visible placeholder block for the future sprite
-        double spriteWidth = 40;
-        double spriteHeight = 50;
-        Rectangle spritePlaceholder = new Rectangle(spriteWidth, spriteHeight, Color.ORANGE); // Using orange for visibility
+        // Add the wizard sprite with animation
+        Image wizardImage = FXGL.image("wizard/wizard.png");
         
-        // Create collision box for the sprite
-        Entity spritePlaceholderEntity = FXGL.entityBuilder()
-                .type(EntityType.PLAYER) // Mark as player for potential future interactions
-                .at(89, 170) // Position directly on top of barrier
-                .view(spritePlaceholder)
-                .bbox(new HitBox(BoundingShape.box(spriteWidth, spriteHeight)))
+        // Each frame is 500x500 pixels (2000/4 = 500)
+        int frameWidth = 500;
+        int frameHeight = 500;
+        
+        // Create animation channel for idle animation (assuming first row is idle)
+        // Wizard sheet is 4x4 frames, so we use the first row for idle
+        AnimationChannel idleAnimation = new AnimationChannel(wizardImage, 
+                4, // 4 frames per row
+                frameWidth, frameHeight, 
+                Duration.seconds(1), // Half second per frame
+                0, 3); // First row, frames 0-3
+        
+        // Create the animated texture
+        AnimatedTexture wizardTexture = new AnimatedTexture(idleAnimation);
+        wizardTexture.loop();
+        
+        // Scale the wizard to a proper size for the scene
+        double wizardScale = 0.30; // Scale to 15% of original size
+        
+        // Create the wizard entity
+        Entity wizardEntity = FXGL.entityBuilder()
+                .type(EntityType.PLAYER)
+                .at(-5, 50) // Position directly on top of barrier
+                .view(wizardTexture)
+                .scale(wizardScale, wizardScale) // Scale down the wizard
+                .bbox(new HitBox(BoundingShape.box(frameWidth * wizardScale, frameHeight * wizardScale)))
                 .zIndex(25)
                 .buildAndAttach();
         
