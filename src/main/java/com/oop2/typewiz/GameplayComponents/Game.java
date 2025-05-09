@@ -10,20 +10,92 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
-import javafx.geometry.Rectangle2D;
+import javafx.geometry.Pos;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.ImagePattern;
+import javafx.scene.layout.StackPane;
+import javafx.scene.Node;
+import javafx.scene.text.TextFlow;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+// Define EntityType enum
+enum EntityType {
+    PLATFORM,
+    PLAYER,
+    MOVING_BLOCK
+}
 
 public class Game extends GameApplication {
     private LocalTimer blockSpawnTimer;
     private static final double BLOCK_SPEED = 100; // pixels per second
     private static final double SPAWN_INTERVAL = 3.0; // seconds between block spawns
-    private static final double ROW_SPACING = 140; // Slightly reduced spacing between rows
+    private static final double ROW_SPACING = 140; // Spacing between rows
     private static final int NUM_ROWS = 5; // Total number of rows
+    private static final int MAX_HEALTH = 100;
+    private static final int HEALTH_LOSS_PER_MISS = 20;
+    private static final double WAVE_PAUSE_TIME = 5.0; // 5 seconds pause between waves
+    
+    private int playerHealth = MAX_HEALTH;
+    private Text healthText;
+    private Rectangle healthBar;
+    private List<Entity> activeWordBlocks = new ArrayList<>();
+    private Entity selectedWordBlock = null;
+    private StringBuilder currentInput = new StringBuilder();
+    private Text inputText;
+    private boolean gameOver = false;
+    private Entity gameOverScreen;
+    private final Random random = new Random();
+    
+    // Add score tracking
+    private int score = 0;
+    private Text scoreText;
+    
+    // Add wave tracking
+    private int currentWave = 1;
+    private Text waveText;
+    private boolean waveCompleted = false;
+    private LocalTimer waveTimer;
+    private boolean waveInProgress = false;
+    private Text instructionText;
+    
+    // Word list for typing
+    private final List<String> wordList = Arrays.asList(
+            "code", "java", "type", "game", "block", 
+            "winter", "wizard", "magic", "spell", "potion",
+            "frost", "snow", "ice", "cold", "programming",
+            "keyboard", "screen", "input", "output", "variable",
+            "function", "class", "method", "array", "string"
+    );
+
+    // Add medium and hard word lists for difficulty progression
+    private final List<String> mediumWordList = Arrays.asList(
+            "variable", "function", "method", "algorithm", "interface",
+            "inheritance", "polymorphism", "abstraction", "encapsulation", "iteration",
+            "recursion", "exception", "debugging", "framework", "compiler",
+            "library", "component", "parameter", "structure", "observer"
+    );
+    
+    private final List<String> hardWordList = Arrays.asList(
+            "synchronization", "multithreading", "serialization", "optimization", "implementation",
+            "initialization", "authentication", "configuration", "virtualization", "documentation",
+            "architecture", "dependency", "infrastructure", "persistence", "transaction",
+            "asynchronous", "development", "integration", "management", "deployment"
+    );
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -102,43 +174,432 @@ public class Game extends GameApplication {
                 .zIndex(25)
                 .buildAndAttach();
         
-        // Initialize timer for spawning blocks
+        // Set up UI elements
+        setupUI();
+        
+        // Initialize timers
         blockSpawnTimer = FXGL.newLocalTimer();
         blockSpawnTimer.capture();
         
+        waveTimer = FXGL.newLocalTimer();
+        waveTimer.capture();
+        
+        // Set up input handling
+        setupInput();
+        
+        // Show initial wave message and start first wave
+        showWaveStartMessage();
+        
         // Run the game loop
         FXGL.getGameTimer().runAtInterval(() -> {
-            if (blockSpawnTimer.elapsed(Duration.seconds(SPAWN_INTERVAL))) {
-                // Keep original bottom row position
-                double bottomRowY = FXGL.getAppHeight() - 120;
-                
-                // Calculate a fixed horizontal position for alignment
-                double fixedX = FXGL.getAppWidth() + 10;
-                
-                // Spawn blocks in all rows with vertical alignment
-                for (int i = 0; i < NUM_ROWS; i++) {
-                    double rowY = bottomRowY - (i * ROW_SPACING);
-                    spawnMovingBlock(rowY, i, fixedX);
+            if (gameOver) return;
+            
+            // Handle wave completion
+            if (waveCompleted) {
+                if (waveTimer.elapsed(Duration.seconds(WAVE_PAUSE_TIME))) {
+                    waveCompleted = false;
+                    currentWave++;
+                    waveText.setText("Wave: " + currentWave);
+                    blockSpawnTimer.capture(); // Reset spawn timer for next wave
+                    waveInProgress = false;
+                    
+                    // Show message for next wave
+                    showWaveStartMessage();
                 }
-                
-                blockSpawnTimer.capture();
+                return;
             }
             
-            // Update all moving blocks
-            FXGL.getGameWorld().getEntitiesByType(EntityType.MOVING_BLOCK).forEach(entity -> {
-                entity.translateX(-BLOCK_SPEED * FXGL.tpf());
+            if (playerHealth <= 0) {
+                showGameOverScreen("Game Over!");
+                return;
+            }
+            
+            // Spawn word blocks for current wave if not in progress
+            if (!waveInProgress) {
+                waveInProgress = true;
+                startWave();
+                return;
+            }
+            
+            // Update all word blocks
+            List<Entity> blocksToRemove = new ArrayList<>();
+            
+            for (Entity entity : activeWordBlocks) {
+                // Increase speed based on current wave
+                double blockSpeedForWave = BLOCK_SPEED + (currentWave * 5);
+                entity.translateX(-blockSpeedForWave * FXGL.tpf());
                 
-                // Remove blocks that have gone off screen
-                if (entity.getX() < -50) {
+                // If block reaches the left edge, it's a miss
+                if (entity.getX() < 0) {
+                    decreaseHealth();
+                    blocksToRemove.add(entity);
                     entity.removeFromWorld();
                 }
-            });
+            }
+            
+            // Remove blocks that have gone off screen
+            activeWordBlocks.removeAll(blocksToRemove);
+            
+            // If the selected block was removed, select the next one
+            if (blocksToRemove.contains(selectedWordBlock) && !activeWordBlocks.isEmpty()) {
+                selectWordBlock(activeWordBlocks.get(0));
+            } else if (blocksToRemove.contains(selectedWordBlock)) {
+                selectedWordBlock = null;
+            }
+            
+            // Update input display
+            updateInputDisplay();
+            
+            // Check if wave is complete (no blocks left)
+            if (activeWordBlocks.isEmpty() && waveInProgress) {
+                waveCompleted = true;
+                waveInProgress = false;
+                waveTimer.capture();
+                // Show wave completion message
+                showWaveCompletionMessage();
+            }
+            
         }, Duration.seconds(0.016)); // ~60 fps
     }
     
-    private void spawnMovingBlock(double yPosition, int rowIndex, double xPosition) {
+    private void startWave() {
+        // Keep original bottom row position
+        double bottomRowY = FXGL.getAppHeight() - 120;
+        
+        // Calculate a fixed horizontal position for alignment
+        double fixedX = FXGL.getAppWidth() + 10;
+        
+        // Spawn blocks in all rows with vertical alignment
+        for (int i = 0; i < NUM_ROWS; i++) {
+            // Skip some rows randomly for early waves
+            if (currentWave < 3 && random.nextDouble() > 0.7) {
+                continue;
+            }
+            
+            double rowY = bottomRowY - (i * ROW_SPACING);
+            Entity wordBlock = spawnWordBlock(rowY, i, fixedX);
+            activeWordBlocks.add(wordBlock);
+        }
+        
+        // Select the first word block by default if none is selected
+        if (selectedWordBlock == null && !activeWordBlocks.isEmpty()) {
+            selectWordBlock(activeWordBlocks.get(0));
+        }
+        
+        // Hide instruction text
+        instructionText.setVisible(false);
+    }
+    
+    private void setupUI() {
+        // Create health bar
+        VBox healthDisplay = new VBox(5);
+        healthDisplay.setTranslateX(20);
+        healthDisplay.setTranslateY(20);
+        
+        Text healthLabel = new Text("Health:");
+        healthLabel.setFill(Color.WHITE);
+        healthLabel.setFont(Font.font(18));
+        
+        healthBar = new Rectangle(200, 20, Color.GREEN);
+        
+        healthText = new Text(playerHealth + "/" + MAX_HEALTH);
+        healthText.setFill(Color.WHITE);
+        healthText.setFont(Font.font(16));
+        
+        healthDisplay.getChildren().addAll(healthLabel, healthBar, healthText);
+        
+        // Create score display
+        VBox scoreDisplay = new VBox(5);
+        scoreDisplay.setTranslateX(20);
+        scoreDisplay.setTranslateY(100);
+        
+        Text scoreLabel = new Text("Score:");
+        scoreLabel.setFill(Color.WHITE);
+        scoreLabel.setFont(Font.font(18));
+        
+        scoreText = new Text("0");
+        scoreText.setFill(Color.WHITE);
+        scoreText.setFont(Font.font(24));
+        
+        scoreDisplay.getChildren().addAll(scoreLabel, scoreText);
+        
+        // Create wave display
+        VBox waveDisplay = new VBox(5);
+        waveDisplay.setTranslateX(20);
+        waveDisplay.setTranslateY(170);
+        
+        Text waveLabel = new Text("Wave:");
+        waveLabel.setFill(Color.WHITE);
+        waveLabel.setFont(Font.font(18));
+        
+        waveText = new Text("1");
+        waveText.setFill(Color.WHITE);
+        waveText.setFont(Font.font(24));
+        
+        waveDisplay.getChildren().addAll(waveLabel, waveText);
+        
+        // Create instruction text
+        instructionText = new Text("Press ENTER to start wave");
+        instructionText.setTranslateX(FXGL.getAppWidth() / 2 - 150);
+        instructionText.setTranslateY(FXGL.getAppHeight() / 2);
+        instructionText.setFill(Color.YELLOW);
+        instructionText.setFont(Font.font(28));
+        
+        // Add controls help text
+        Text controlsText = new Text("Controls: SHIFT to switch words | SPACE to destroy word");
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        controlsText.setTranslateY(FXGL.getAppHeight() - 20);
+        controlsText.setFill(Color.LIGHTGRAY);
+        controlsText.setFont(Font.font(16));
+        
+        // Add UI elements to the scene
+        FXGL.addUINode(healthDisplay);
+        FXGL.addUINode(scoreDisplay);
+        FXGL.addUINode(waveDisplay);
+        FXGL.addUINode(instructionText);
+        FXGL.addUINode(controlsText);
+    }
+    
+    private void updateHealthBar() {
+        double healthPercentage = (double) playerHealth / MAX_HEALTH;
+        healthBar.setWidth(200 * healthPercentage);
+        healthText.setText(playerHealth + "/" + MAX_HEALTH);
+        
+        // Update color based on health
+        if (healthPercentage > 0.6) {
+            healthBar.setFill(Color.GREEN);
+        } else if (healthPercentage > 0.3) {
+            healthBar.setFill(Color.YELLOW);
+        } else {
+            healthBar.setFill(Color.RED);
+        }
+    }
+    
+    private void decreaseHealth() {
+        playerHealth = Math.max(0, playerHealth - HEALTH_LOSS_PER_MISS);
+        updateHealthBar();
+    }
+    
+    private void updateInputDisplay() {
+        // This method is no longer needed as we show the text directly above blocks
+        // But we keep an empty implementation to avoid errors in existing code
+    }
+    
+    private void setupInput() {
+        FXGL.getInput().addEventHandler(KeyEvent.KEY_TYPED, event -> {
+            if (gameOver || waveCompleted) return;
+            if (!waveInProgress) return;
+            
+            char typedChar = event.getCharacter().charAt(0);
+            if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
+                if (selectedWordBlock != null) {
+                    String targetWord = selectedWordBlock.getString("word");
+                    
+                    // Check if this would be a valid next character
+                    if (currentInput.length() < targetWord.length() && 
+                        typedChar == targetWord.charAt(currentInput.length())) {
+                        // Only add if it's correct (part of error trapping)
+                        currentInput.append(typedChar);
+                        updateSelectedWordDisplay();
+                    }
+                    // If wrong character, do nothing (error trapping)
+                }
+            }
+        });
+        
+        FXGL.getInput().addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (gameOver) {
+                // Handle retry on game over screen
+                if (event.getCode() == KeyCode.ENTER) {
+                    if (gameOverScreen != null) {
+                        restartGame();
+                    }
+                }
+                return;
+            }
+            
+            // Start wave when Enter is pressed
+            if (!waveInProgress && !waveCompleted && event.getCode() == KeyCode.ENTER) {
+                startWave();
+                return;
+            }
+            
+            if (waveCompleted) return;
+            if (!waveInProgress) return;
+            
+            if (event.getCode() == KeyCode.BACK_SPACE && currentInput.length() > 0) {
+                currentInput.deleteCharAt(currentInput.length() - 1);
+                updateSelectedWordDisplay();
+            } else if (event.getCode() == KeyCode.SHIFT) {
+                // Switch between blocks with Shift
+                selectNextWordBlock();
+                event.consume();
+            } else if (event.getCode() == KeyCode.SPACE) {
+                // Complete word with Space
+                checkWordCompletion();
+                event.consume();
+            }
+        });
+    }
+    
+    private void selectWordBlock(Entity wordBlock) {
+        // Deselect the previous block
+        if (selectedWordBlock != null) {
+            // Reset the text color
+            Text wordText = (Text) selectedWordBlock.getObject("wordText");
+            wordText.setFill(Color.WHITE);
+            
+            // Remove any blue text
+            if (selectedWordBlock.getProperties().exists("blueText")) {
+                Text blueText = (Text) selectedWordBlock.getObject("blueText");
+                
+                // Find the stack pane
+                Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+                if (view instanceof StackPane) {
+                    StackPane stackPane = (StackPane) view;
+                    stackPane.getChildren().remove(blueText);
+                }
+                
+                // Clear our tracking properties
+                selectedWordBlock.getProperties().setValue("blueTextCreated", false);
+                selectedWordBlock.getProperties().remove("blueText");
+            }
+        }
+        
+        // Select the new block
+        selectedWordBlock = wordBlock;
+        
+        // Highlight the text
+        Text wordText = (Text) selectedWordBlock.getObject("wordText");
+        wordText.setFill(Color.YELLOW);
+        
+        // Reset input
+        currentInput.setLength(0);
+    }
+    
+    private void selectNextWordBlock() {
+        if (activeWordBlocks.isEmpty()) return;
+        
+        int currentIndex = activeWordBlocks.indexOf(selectedWordBlock);
+        int nextIndex = (currentIndex + 1) % activeWordBlocks.size();
+        selectWordBlock(activeWordBlocks.get(nextIndex));
+    }
+    
+    private void checkWordCompletion() {
+        if (selectedWordBlock == null) return;
+        
+        String targetWord = selectedWordBlock.getString("word");
+        String typed = currentInput.toString();
+        
+        // Check if the typed text matches the target word
+        if (typed.equals(targetWord)) {
+            // Word completed successfully
+            Entity completedBlock = selectedWordBlock;
+            activeWordBlocks.remove(completedBlock);
+            completedBlock.removeFromWorld();
+            
+            // Calculate score based on word length and current wave
+            int wordScore = targetWord.length() * 10 * currentWave;
+            score += wordScore;
+            scoreText.setText(Integer.toString(score));
+            
+            // Select next block if available
+            if (!activeWordBlocks.isEmpty()) {
+                selectWordBlock(activeWordBlocks.get(0));
+            } else {
+                selectedWordBlock = null;
+            }
+        }
+    }
+    
+    private void updateSelectedWordDisplay() {
+        if (selectedWordBlock == null) return;
+        
+        String targetWord = selectedWordBlock.getString("word");
+        String typed = currentInput.toString();
+        
+        // Get the original word text
+        Text wordText = (Text) selectedWordBlock.getObject("wordText");
+        
+        // Make sure it's visible
+        wordText.setVisible(true);
+        
+        // Set the original text (full word)
+        wordText.setText(targetWord);
+        
+        // For completely typed words, make everything blue
+        if (typed.length() == targetWord.length()) {
+            wordText.setFill(Color.BLUE);
+            return;
+        }
+        
+        // For partially typed words, use yellow since we can't easily do multi-colored text
+        wordText.setFill(Color.YELLOW);
+        
+        // Create a second text for the blue part (typed letters)
+        if (typed.length() > 0) {
+            // Check if blue text exists
+            if (!selectedWordBlock.getProperties().exists("blueTextCreated")) {
+                Text blueText = new Text("");
+                blueText.setFont(Font.font(22));
+                blueText.setFill(Color.BLUE);
+                blueText.setTranslateY(-25);
+                blueText.setTextAlignment(TextAlignment.CENTER);
+                
+                // Get the view container
+                Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+                if (view instanceof StackPane) {
+                    StackPane stackPane = (StackPane) view;
+                    stackPane.getChildren().add(blueText);
+                    
+                    // Store reference to blue text
+                    selectedWordBlock.getProperties().setValue("blueTextCreated", true);
+                    selectedWordBlock.setProperty("blueText", blueText);
+                }
+            }
+            
+            // Update blue text content to show typed letters
+            if (selectedWordBlock.getProperties().exists("blueText")) {
+                Text blueText = (Text) selectedWordBlock.getObject("blueText");
+                String typedPart = targetWord.substring(0, typed.length());
+                blueText.setText(typedPart);
+                
+                // Carefully position the blue text to overlay properly
+                double leftPadding = calculateLeftPadding(targetWord, typed.length());
+                blueText.setTranslateX(leftPadding);
+            }
+        }
+    }
+    
+    private double calculateLeftPadding(String word, int typedLength) {
+        // Simple approximation - move blue text to align left with the start of the word
+        // This is a rough estimation - may need adjustment per font
+        return -1 * (word.length() - typedLength) * 5.5;
+    }
+    
+    private Entity spawnWordBlock(double yPosition, int rowIndex, double xPosition) {
         // Create a block that will move from right to left
         double blockSize = 40;
+        
+        // Pick a random word from the list based on current wave
+        String word;
+        if (currentWave <= 3) {
+            word = wordList.get(random.nextInt(wordList.size()));
+        } else if (currentWave <= 7) {
+            word = random.nextBoolean() 
+                ? wordList.get(random.nextInt(wordList.size())) 
+                : mediumWordList.get(random.nextInt(mediumWordList.size()));
+        } else {
+            // Higher chance of hard words in later waves
+            double rand = random.nextDouble();
+            if (rand < 0.2) {
+                word = wordList.get(random.nextInt(wordList.size()));
+            } else if (rand < 0.5) {
+                word = mediumWordList.get(random.nextInt(mediumWordList.size()));
+            } else {
+                word = hardWordList.get(random.nextInt(hardWordList.size()));
+            }
+        }
         
         // Use slightly different colors for different rows
         Color blockColor;
@@ -156,13 +617,138 @@ public class Game extends GameApplication {
         
         Rectangle block = new Rectangle(blockSize, blockSize, blockColor);
         
+        // Create text for the word - make it larger
+        Text wordText = new Text(word);
+        wordText.setFont(Font.font(22)); // Increased from 16
+        wordText.setFill(Color.WHITE); // Default color is white
+        wordText.setTranslateY(-25); // Position above the block - moved up a bit
+        wordText.setTextAlignment(TextAlignment.CENTER);
+        
+        // Create a stack pane to hold both the block and text
+        StackPane view = new StackPane(block, wordText);
+        view.setAlignment(Pos.CENTER);
+        
         Entity blockEntity = FXGL.entityBuilder()
                 .type(EntityType.MOVING_BLOCK)
                 .at(xPosition, yPosition)
-                .view(block)
+                .view(view)
                 .bbox(new HitBox(BoundingShape.box(blockSize, blockSize)))
+                .with("word", word)
+                .with("wordText", wordText)
                 .zIndex(30)
                 .buildAndAttach();
+        
+        return blockEntity;
+    }
+    
+    private void showWaveStartMessage() {
+        instructionText.setText("Wave " + currentWave + " - Press ENTER to start");
+        instructionText.setVisible(true);
+    }
+    
+    private void showWaveCompletionMessage() {
+        Text waveCompleteText = new Text("Wave " + currentWave + " Complete!");
+        waveCompleteText.setFont(Font.font(48));
+        waveCompleteText.setFill(Color.YELLOW);
+        waveCompleteText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        waveCompleteText.setTranslateY(FXGL.getAppHeight() / 2);
+        
+        Entity waveMessageEntity = FXGL.entityBuilder()
+                .view(waveCompleteText)
+                .with("removeAfter", WAVE_PAUSE_TIME) // Remove after pause time
+                .zIndex(90)
+                .buildAndAttach();
+        
+        // Schedule removal
+        FXGL.getGameTimer().runOnceAfter(() -> {
+            waveMessageEntity.removeFromWorld();
+        }, Duration.seconds(WAVE_PAUSE_TIME));
+    }
+    
+    private void showGameOverScreen(String message) {
+        gameOver = true;
+        
+        // Create semi-transparent overlay
+        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), Color.color(0, 0, 0, 0.7));
+        
+        // Create game over text
+        Text gameOverText = new Text(message);
+        gameOverText.setFont(Font.font(48));
+        gameOverText.setFill(Color.WHITE);
+        gameOverText.setTranslateY(-70);
+        
+        // Create score text
+        Text scoreText = new Text("Final Score: " + score);
+        scoreText.setFont(Font.font(30));
+        scoreText.setFill(Color.WHITE);
+        scoreText.setTranslateY(-20);
+        
+        // Create health text
+        Text healthText = new Text("Health remaining: " + playerHealth);
+        healthText.setFont(Font.font(24));
+        healthText.setFill(Color.WHITE);
+        healthText.setTranslateY(20);
+        
+        // Create wave text
+        Text waveText = new Text("Waves completed: " + (currentWave - 1));
+        waveText.setFont(Font.font(24));
+        waveText.setFill(Color.WHITE);
+        waveText.setTranslateY(50);
+        
+        // Create retry text
+        Text retryText = new Text("Press ENTER to retry");
+        retryText.setFont(Font.font(20));
+        retryText.setFill(Color.YELLOW);
+        retryText.setTranslateY(90);
+        
+        // Create layout for game over screen
+        VBox gameOverLayout = new VBox(10, gameOverText, scoreText, healthText, waveText, retryText);
+        gameOverLayout.setAlignment(Pos.CENTER);
+        gameOverLayout.setTranslateX(FXGL.getAppWidth() / 2 - 150);
+        gameOverLayout.setTranslateY(FXGL.getAppHeight() / 2 - 100);
+        
+        // Add game over screen to scene
+        gameOverScreen = FXGL.entityBuilder()
+                .view(new StackPane(overlay, gameOverLayout))
+                .zIndex(100) // Above everything else
+                .buildAndAttach();
+    }
+    
+    private void restartGame() {
+        // Reset game state
+        playerHealth = MAX_HEALTH;
+        gameOver = false;
+        waveCompleted = false;
+        waveInProgress = false;
+        currentInput.setLength(0);
+        score = 0;
+        currentWave = 1;
+        
+        // Clear all word blocks
+        for (Entity entity : activeWordBlocks) {
+            entity.removeFromWorld();
+        }
+        activeWordBlocks.clear();
+        selectedWordBlock = null;
+        
+        // Remove game over screen
+        if (gameOverScreen != null) {
+            gameOverScreen.removeFromWorld();
+            gameOverScreen = null;
+        }
+        
+        // Reset UI
+        updateHealthBar();
+        updateInputDisplay();
+        scoreText.setText("0");
+        waveText.setText("1");
+        
+        // Show message for first wave
+        showWaveStartMessage();
+        
+        // Reset timers
+        blockSpawnTimer.capture();
+        waveTimer.capture();
     }
 
     public static void main(String[] args) {
