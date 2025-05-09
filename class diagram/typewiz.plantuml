@@ -9,20 +9,20 @@ class com.oop2.typewiz.DatabaseConnection {
     {static} + connect()
 }
 
-class com.oop2.typewiz.DifficultyController {
+class com.oop2.typewiz.toDelete.DifficultyController {
     + handleEasy()
     + handleHard()
     + handleMedium()
 }
 
-class com.oop2.typewiz.GameController {
+class com.oop2.typewiz.toDelete.GameController {
     - gameStatusLabel : Label
     + initialize()
     + updateGameStatus()
     - showAlert()
 }
 
-class com.oop2.typewiz.HeaderController {
+class com.oop2.typewiz.toDelete.HeaderController {
     - aboutIcon : ImageView
     - leaderboardIcon : ImageView
     - logoIcon : ImageView
@@ -37,7 +37,7 @@ class com.oop2.typewiz.HelloApplication {
     + start()
 }
 
-class com.oop2.typewiz.LaunchController {
+class com.oop2.typewiz.toDelete.LaunchController {
     + logoImage : ImageView
     - progress : double
     - progressBar : ProgressBar
@@ -47,7 +47,7 @@ class com.oop2.typewiz.LaunchController {
     - switchToMainScreen()
 }
 
-class com.oop2.typewiz.LoginController {
+class com.oop2.typewiz.toDelete.LoginController {
     - apLogin : AnchorPane
     - eyeIcon : ImageView
     - hiddenIcon : Image
@@ -68,7 +68,7 @@ class com.oop2.typewiz.LoginController {
     - togglePasswordVisibility()
 }
 
-class com.oop2.typewiz.MainController {
+class com.oop2.typewiz.toDelete.MainController {
     - exitButton : Button
     - helpButton : Button
     - startButton : Button
@@ -78,7 +78,7 @@ class com.oop2.typewiz.MainController {
     - handleStart()
 }
 
-class com.oop2.typewiz.RegisterController {
+class com.oop2.typewiz.toDelete.RegisterController {
     - apRegister : AnchorPane
     - eyeIcon : ImageView
     - eyeIcon2 : ImageView
@@ -106,18 +106,18 @@ class com.oop2.typewiz.RegisterController {
 com.oop2.typewiz.HelloApplication -up-|> javafx.application.Application
 
 ' ========== ADDED INHERITANCES (Multi-level) ==========
-com.oop2.typewiz.LoginController -up-|> com.oop2.typewiz.LaunchController
-com.oop2.typewiz.RegisterController -up-|> com.oop2.typewiz.LaunchController
+com.oop2.typewiz.toDelete.LoginController -up-|> com.oop2.typewiz.toDelete.LaunchController
+com.oop2.typewiz.toDelete.RegisterController -up-|> com.oop2.typewiz.toDelete.LaunchController
 
 ' ========== MULTIPLE INHERITANCE (using interfaces style arrows) ==========
-com.oop2.typewiz.GameController ..|> com.oop2.typewiz.DifficultyController
+com.oop2.typewiz.toDelete.GameController ..|> com.oop2.typewiz.toDelete.DifficultyController
 
 ' ========== ASSOCIATIONS / RELATIONSHIPS ==========
-com.oop2.typewiz.LoginController --> com.oop2.typewiz.DatabaseConnection : uses
-com.oop2.typewiz.RegisterController --> com.oop2.typewiz.DatabaseConnection : uses
-com.oop2.typewiz.MainController --> com.oop2.typewiz.GameController : controls
-com.oop2.typewiz.HeaderController --> com.oop2.typewiz.MainController : references
-com.oop2.typewiz.LaunchController --> com.oop2.typewiz.HelloApplication : launches
+com.oop2.typewiz.toDelete.LoginController --> com.oop2.typewiz.DatabaseConnection : uses
+com.oop2.typewiz.toDelete.RegisterController --> com.oop2.typewiz.DatabaseConnection : uses
+com.oop2.typewiz.toDelete.MainController --> com.oop2.typewiz.toDelete.GameController : controls
+com.oop2.typewiz.toDelete.HeaderController --> com.oop2.typewiz.toDelete.MainController : references
+com.oop2.typewiz.toDelete.LaunchController --> com.oop2.typewiz.HelloApplication : launches
 
 right footer
 

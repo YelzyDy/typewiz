@@ -1,4 +1,4 @@
-package com.oop2.typewiz;
+package com.oop2.typewiz.toDelete;
 
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
