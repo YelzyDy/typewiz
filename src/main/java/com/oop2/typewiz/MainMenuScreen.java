@@ -49,12 +49,21 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Buttons with wizard theme
         Button startButton = createWizardButton("START QUEST", () -> {
-            FXGL.getSceneService().pushSubScene(new DifficultyMenuScreen(
-                    () -> FXGL.getSceneService().popSubScene(),
-                    () -> startGame(Difficulty.APPRENTICE),
-                    () -> startGame(Difficulty.WIZARD),
-                    () -> startGame(Difficulty.ARCHMAGE)
-            ));
+            new Thread(() -> {
+                // Simulate asset preloading
+                preloadAssetsInBackground();
+
+                // Create difficulty menu on FX thread
+                javafx.application.Platform.runLater(() -> {
+                    DifficultyMenuScreen screen = new DifficultyMenuScreen(
+                            () -> FXGL.getSceneService().popSubScene(),
+                            () -> runStartGameThread(Difficulty.APPRENTICE),
+                            () -> runStartGameThread(Difficulty.WIZARD),
+                            () -> runStartGameThread(Difficulty.ARCHMAGE)
+                    );
+                    FXGL.getSceneService().pushSubScene(screen);
+                });
+            }).start();
         });
 
         Button helpButton = createWizardButton("SPELLBOOK", () -> {
@@ -81,6 +90,38 @@ public class MainMenuScreen extends FXGLMenu {
         root.getChildren().add(glassPane);
         getContentRoot().getChildren().add(root);
     }
+    private void runStartGameThread(Difficulty difficulty) {
+        new Thread(() -> {
+            FXGL.getWorldProperties().setValue("difficulty", difficulty);
+
+            Thread soundThread = new Thread(() -> {
+                // Simulate sound preloading or other resources
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ignored) {}
+            });
+
+            soundThread.start();
+
+            // Wait for soundThread to finish
+            try {
+                soundThread.join();
+            } catch (InterruptedException ignored) {}
+
+            // Start game on FX thread
+            javafx.application.Platform.runLater(() -> {
+                FXGL.getGameController().startNewGame();
+            });
+        }).start();
+    }
+
+
+    private void preloadAssetsInBackground() {
+        // Simulate loading assets
+        try {
+            Thread.sleep(300); // Replace with actual preload code like FXGL.getAssetLoader().load...
+        } catch (InterruptedException ignored) {}
+    }
 
 
     private Button createWizardButton(String text, Runnable action) {
@@ -90,7 +131,14 @@ public class MainMenuScreen extends FXGLMenu {
         button.setPrefWidth(350);
         button.setPrefHeight(70);
 
-        // Gradient border (violet to yellow)
+        // Set default transparent background
+        button.setBackground(new Background(new BackgroundFill(
+                Color.TRANSPARENT,
+                new CornerRadii(10),
+                javafx.geometry.Insets.EMPTY
+        )));
+
+        // Gradient border
         button.setBorder(new Border(new BorderStroke(
                 new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
                         new Stop(0, Color.web("#b388ff")),
@@ -108,7 +156,7 @@ public class MainMenuScreen extends FXGLMenu {
                     new CornerRadii(10),
                     javafx.geometry.Insets.EMPTY
             )));
-            button.setEffect(new javafx.scene.effect.Glow(0.3));
+            button.setEffect(new Glow(0.3));
         });
 
         button.setOnMouseExited(e -> {
@@ -122,9 +170,9 @@ public class MainMenuScreen extends FXGLMenu {
 
         button.setOnAction(e -> action.run());
 
-
         return button;
     }
+
 
     private void startGame(Difficulty difficulty) {
         FXGL.getWorldProperties().setValue("difficulty", difficulty);
