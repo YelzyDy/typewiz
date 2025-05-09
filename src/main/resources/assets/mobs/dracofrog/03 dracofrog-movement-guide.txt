@@ -1,0 +1,14 @@
+dracofrog movement gayddd ;>
+
+00 - 07 -> static / standing with flow movement gamay
+
+08 - 15 -> about to attack
+
+16 - 20 -> power attack
+
+21 - 25 -> first hit (slightly weakens)
+
+26 - 31 -> combo hit (@ frame 31 ded)
+
+32 - 37 -> walking forward
+
