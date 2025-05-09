@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.HashSet;
+import java.util.Set;
 
 // Define EntityType enum
 enum EntityType {
@@ -42,6 +44,8 @@ enum EntityType {
 
 public class Game extends GameApplication {
     private LocalTimer blockSpawnTimer;
+    private LocalTimer waveTimer;
+    private LocalTimer continuousSpawnTimer; // New timer for continuous spawning
     private static final double BLOCK_SPEED = 100; // pixels per second
     private static final double SPAWN_INTERVAL = 3.0; // seconds between block spawns
     private static final double ROW_SPACING = 140; // Spacing between rows
@@ -49,6 +53,8 @@ public class Game extends GameApplication {
     private static final int MAX_HEALTH = 100;
     private static final int HEALTH_LOSS_PER_MISS = 20;
     private static final double WAVE_PAUSE_TIME = 5.0; // 5 seconds pause between waves
+    private static final int MAX_WAVES = 10; // Maximum number of waves before game completion
+    private static final double INITIAL_CONTINUOUS_SPAWN_TIME = 10.0; // Initial time between continuous spawns (seconds)
     
     private int playerHealth = MAX_HEALTH;
     private Text healthText;
@@ -69,7 +75,6 @@ public class Game extends GameApplication {
     private int currentWave = 1;
     private Text waveText;
     private boolean waveCompleted = false;
-    private LocalTimer waveTimer;
     private boolean waveInProgress = false;
     private Text instructionText;
     
@@ -184,6 +189,9 @@ public class Game extends GameApplication {
         waveTimer = FXGL.newLocalTimer();
         waveTimer.capture();
         
+        continuousSpawnTimer = FXGL.newLocalTimer(); // Initialize the continuous spawn timer
+        continuousSpawnTimer.capture();
+        
         // Set up input handling
         setupInput();
         
@@ -199,6 +207,13 @@ public class Game extends GameApplication {
                 if (waveTimer.elapsed(Duration.seconds(WAVE_PAUSE_TIME))) {
                     waveCompleted = false;
                     currentWave++;
+                    
+                    // Check if we've completed all waves
+                    if (currentWave > MAX_WAVES) {
+                        showGameOverScreen("Game Complete!");
+                        return;
+                    }
+                    
                     waveText.setText("Wave: " + currentWave);
                     blockSpawnTimer.capture(); // Reset spawn timer for next wave
                     waveInProgress = false;
@@ -219,6 +234,13 @@ public class Game extends GameApplication {
                 waveInProgress = true;
                 startWave();
                 return;
+            }
+            
+            // Check for continuous spawning within a wave
+            double continuousSpawnInterval = getContinuousSpawnInterval();
+            if (continuousSpawnTimer.elapsed(Duration.seconds(continuousSpawnInterval))) {
+                spawnAdditionalBlocks();
+                continuousSpawnTimer.capture();
             }
             
             // Update all word blocks
@@ -262,6 +284,72 @@ public class Game extends GameApplication {
         }, Duration.seconds(0.016)); // ~60 fps
     }
     
+    // Get spawn interval based on current wave (gets faster with each wave)
+    private double getContinuousSpawnInterval() {
+        // Start at 10 seconds, decrease by 0.5 seconds per wave (minimum 2 seconds)
+        return Math.max(2.0, INITIAL_CONTINUOUS_SPAWN_TIME - (currentWave - 1) * 0.5);
+    }
+    
+    // Method to spawn additional blocks during a wave
+    private void spawnAdditionalBlocks() {
+        // Keep original bottom row position
+        double bottomRowY = FXGL.getAppHeight() - 120;
+        
+        // Calculate a fixed horizontal position for alignment
+        double fixedX = FXGL.getAppWidth() + 10;
+        
+        // Spawn a random number of blocks (1-3) in random rows
+        int blocksToSpawn = 1 + random.nextInt(Math.min(3, currentWave));
+        
+        // Keep track of which rows we've used to avoid overlap
+        Set<Integer> usedRows = new HashSet<>();
+        
+        for (int i = 0; i < blocksToSpawn; i++) {
+            // Try to find an unused row
+            int attempts = 0;
+            int rowIndex;
+            
+            // Try up to 10 times to find an unused row
+            do {
+                rowIndex = random.nextInt(NUM_ROWS);
+                attempts++;
+            } while (usedRows.contains(rowIndex) && attempts < 10);
+            
+            // If all rows are used, skip this block spawn
+            if (usedRows.contains(rowIndex)) {
+                continue;
+            }
+            
+            usedRows.add(rowIndex);
+            double rowY = bottomRowY - (rowIndex * ROW_SPACING);
+            
+            // Check if there are existing blocks close to this position
+            boolean canSpawn = true;
+            
+            for (Entity existingBlock : activeWordBlocks) {
+                // Check if the block is in the same row
+                if (Math.abs(existingBlock.getY() - rowY) < 10) {
+                    // Check if there's overlap (blocks are too close horizontally)
+                    // Minimum 150px horizontal spacing
+                    if (fixedX - existingBlock.getX() < 150) {
+                        canSpawn = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (canSpawn) {
+                Entity wordBlock = spawnWordBlock(rowY, rowIndex, fixedX);
+                activeWordBlocks.add(wordBlock);
+                
+                // If this is the first block and no block is selected, select it
+                if (selectedWordBlock == null && i == 0) {
+                    selectWordBlock(wordBlock);
+                }
+            }
+        }
+    }
+    
     private void startWave() {
         // Keep original bottom row position
         double bottomRowY = FXGL.getAppHeight() - 120;
@@ -273,7 +361,11 @@ public class Game extends GameApplication {
         for (int i = 0; i < NUM_ROWS; i++) {
             // No more skipping rows in early waves
             double rowY = bottomRowY - (i * ROW_SPACING);
-            Entity wordBlock = spawnWordBlock(rowY, i, fixedX);
+            
+            // Add horizontal offset to stagger the blocks
+            double offsetX = fixedX + (i * 100); // Add 100px offset per row to prevent vertical stacking
+            
+            Entity wordBlock = spawnWordBlock(rowY, i, offsetX);
             activeWordBlocks.add(wordBlock);
         }
         
@@ -284,6 +376,9 @@ public class Game extends GameApplication {
         
         // Hide instruction text
         instructionText.setVisible(false);
+        
+        // Reset the continuous spawn timer when starting a new wave
+        continuousSpawnTimer.capture();
     }
     
     private void setupUI() {
@@ -454,6 +549,8 @@ public class Game extends GameApplication {
             } else if (event.getCode() == KeyCode.SHIFT) {
                 // Switch between blocks with Shift
                 selectNextWordBlock();
+                // Explicitly ensure highlight is updated
+                updateSelectedWordDisplay();
                 event.consume();
             } else if (event.getCode() == KeyCode.SPACE) {
                 // Complete word with Space
@@ -748,7 +845,7 @@ public class Game extends GameApplication {
         healthText.setTranslateY(20);
         
         // Create wave text
-        Text waveText = new Text("Waves completed: " + (currentWave - 1));
+        Text waveText = new Text("Waves completed: " + (currentWave >= MAX_WAVES ? MAX_WAVES : currentWave));
         waveText.setFont(Font.font(24));
         waveText.setFill(Color.WHITE);
         waveText.setTranslateY(50);
@@ -807,6 +904,7 @@ public class Game extends GameApplication {
         // Reset timers
         blockSpawnTimer.capture();
         waveTimer.capture();
+        continuousSpawnTimer.capture(); // Reset continuous spawn timer
     }
 
     public static void main(String[] args) {
