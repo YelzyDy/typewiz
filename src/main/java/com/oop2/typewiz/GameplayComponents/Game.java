@@ -65,27 +65,31 @@ public class Game extends GameApplication {
                 .zIndex(10) // Higher z-index to be in front of background
                 .buildAndAttach();
                 
-        // Create a tower on the left side
-        double towerWidth = 120;
-        double towerHeight = 300;
-        Rectangle towerRect = new Rectangle(towerWidth, towerHeight, Color.rgb(60, 60, 100));
+        // Add a barrier on top of the existing tower in the image
+        // Position is based on the tower's location in the image (approximately x=125, y=280)
+        double barrierWidth = 120;
+        double barrierHeight = 15;
+        Rectangle barrierRect = new Rectangle(barrierWidth, barrierHeight, Color.rgb(70, 70, 110));
         
-        Entity towerEntity = FXGL.entityBuilder()
-                .at(100, FXGL.getAppHeight() - towerHeight - 60) // Position tower on the platform
-                .view(towerRect)
-                .zIndex(20)
+        Entity barrierEntity = FXGL.entityBuilder()
+                .at(49, 220) // Moved higher and more to the left
+                .view(barrierRect)
+                .zIndex(21)
                 .buildAndAttach();
                 
-        // Add a placeholder block on top of the tower
-        Rectangle placeholderBlock = new Rectangle(50, 50, Color.ORANGE);
-        Entity placeholderEntity = FXGL.entityBuilder()
-                .at(135, FXGL.getAppHeight() - towerHeight - 110) // Position on top of tower
-                .view(placeholderBlock)
+        // Add a visible placeholder block for the future sprite
+        double spriteWidth = 40;
+        double spriteHeight = 50;
+        Rectangle spritePlaceholder = new Rectangle(spriteWidth, spriteHeight, Color.ORANGE); // Using orange for visibility
+        
+        // Create collision box for the sprite
+        Entity spritePlaceholderEntity = FXGL.entityBuilder()
+                .type(EntityType.PLAYER) // Mark as player for potential future interactions
+                .at(89, 170) // Position directly on top of barrier
+                .view(spritePlaceholder)
+                .bbox(new HitBox(BoundingShape.box(spriteWidth, spriteHeight)))
                 .zIndex(25)
                 .buildAndAttach();
-                
-        // Add barriers/crenellations to the platform
-        addBarriersToPath();
         
         // Initialize timer for spawning moving blocks
         blockSpawnTimer = FXGL.newLocalTimer();
@@ -108,24 +112,6 @@ public class Game extends GameApplication {
                 }
             });
         }, Duration.seconds(0.016)); // ~60 fps
-    }
-    
-    private void addBarriersToPath() {
-        // Add several barrier/crenellation elements along the platform
-        double barrierHeight = 20;
-        double platformY = FXGL.getAppHeight() - 150; // Same position as the platform
-        
-        // Create barriers at intervals
-        for (int i = 0; i < 10; i++) {
-            double xPos = 200 + i * 120;
-            Rectangle barrier = new Rectangle(15, barrierHeight, Color.rgb(80, 80, 120));
-            
-            Entity barrierEntity = FXGL.entityBuilder()
-                    .at(xPos, platformY - barrierHeight)
-                    .view(barrier)
-                    .zIndex(15)
-                    .buildAndAttach();
-        }
     }
     
     private void spawnMovingBlock() {
