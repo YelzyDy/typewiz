@@ -48,14 +48,20 @@ We incorporated several design patterns to ensure maintainable and efficient cod
 **Factory Pattern:** Utilized for creating game entities dynamically without exposing the instantiation logic.<br>
 
 # Advanced Concepts Incorporated 💻✨
-**Threads and Multithreading** <br>
+
+<h3>
+  Threads and Multithreading
+</h3>
 
 The game leverages threads and multithreading to enhance performance and responsiveness:<br>
 
-**Game Loop:** A separate thread manages the game loop, ensuring smooth gameplay and timely updates for animations and collision detection.
-**Background Tasks:** Long-running operations, such as database interactions or loading resources, are executed on background threads to prevent blocking the main UI thread.
+**Game Loop:** A separate thread manages the game loop, ensuring smooth gameplay and timely updates for animations and collision detection.<br>
+**Background Tasks:** Long-running operations, such as database interactions or loading resources, are executed on background threads to prevent blocking the main UI thread.<br>
+**Multithreading for Concurrency:** By using multiple threads, we ensured responsiveness even under heavy computational loads.
 
-**JDBC (Java Database Connectivity)** <br>
+<h3>
+  JDBC (Java Database Connectivity)
+</h3>
 
 To enhance the game's functionality, we integrated JDBC:<br>
 
@@ -77,7 +83,7 @@ Each team member contributed to the ideation, design, and development process:<b
 
 
 
-to be continued/changed...
+-> to be continued/changed...
 
 
 
