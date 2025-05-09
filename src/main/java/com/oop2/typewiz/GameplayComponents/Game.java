@@ -99,7 +99,7 @@ public class Game extends GameApplication {
             }
             
             // Update moving blocks
-            getGameWorld().getEntitiesByType(EntityType.MOVING_BLOCK).forEach(entity -> {
+            FXGL.getGameWorld().getEntitiesByType(EntityType.MOVING_BLOCK).forEach(entity -> {
                 entity.translateX(-BLOCK_SPEED * FXGL.tpf());
                 
                 // Remove blocks that have gone off screen

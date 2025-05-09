@@ -6,6 +6,6 @@ package com.oop2.typewiz.GameplayComponents;
  */
 public enum EntityType {
 
-    PLAYER, PLATFORM, NPC, INTERACTION_ZONE,
+    PLAYER, PLATFORM, NPC, INTERACTION_ZONE, MOVING_BLOCK,
 
 }
