@@ -8,7 +8,9 @@ public class TypeWizApp extends GameApplication {
     public enum ScreenType {
         LOGIN,
         REGISTER,
-        LOADING
+        LOADING,
+        MAIN_MENU,
+        DIFFICULTY_SELECTION
     }
 
     @Override
