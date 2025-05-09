@@ -271,11 +271,7 @@ public class Game extends GameApplication {
         
         // Spawn blocks in all rows with vertical alignment
         for (int i = 0; i < NUM_ROWS; i++) {
-            // Skip some rows randomly for early waves
-            if (currentWave < 3 && random.nextDouble() > 0.7) {
-                continue;
-            }
-            
+            // No more skipping rows in early waves
             double rowY = bottomRowY - (i * ROW_SPACING);
             Entity wordBlock = spawnWordBlock(rowY, i, fixedX);
             activeWordBlocks.add(wordBlock);
@@ -395,14 +391,39 @@ public class Game extends GameApplication {
                 if (selectedWordBlock != null) {
                     String targetWord = selectedWordBlock.getString("word");
                     
+                    // Make sure we're not exceeding the word length
+                    if (currentInput.length() >= targetWord.length()) {
+                        return;
+                    }
+                    
                     // Check if this would be a valid next character
-                    if (currentInput.length() < targetWord.length() && 
-                        typedChar == targetWord.charAt(currentInput.length())) {
+                    if (typedChar == targetWord.charAt(currentInput.length())) {
                         // Only add if it's correct (part of error trapping)
                         currentInput.append(typedChar);
                         updateSelectedWordDisplay();
+                        
+                        // Check if we've completed the word
+                        if (currentInput.length() == targetWord.length()) {
+                            // Visual feedback that word is complete
+                            Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+                            if (view instanceof StackPane) {
+                                StackPane stackPane = (StackPane) view;
+                                for (Node child : stackPane.getChildren()) {
+                                    if (child instanceof TextFlow) {
+                                        for (Node letter : ((TextFlow)child).getChildren()) {
+                                            if (letter instanceof Text) {
+                                                ((Text)letter).setFill(Color.BLUE);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Wrong character - clear input and reset display (stronger error trapping)
+                        currentInput.setLength(0);
+                        createYellowHighlight();
                     }
-                    // If wrong character, do nothing (error trapping)
                 }
             }
         });
@@ -445,36 +466,76 @@ public class Game extends GameApplication {
     private void selectWordBlock(Entity wordBlock) {
         // Deselect the previous block
         if (selectedWordBlock != null) {
-            // Reset the text color
-            Text wordText = (Text) selectedWordBlock.getObject("wordText");
-            wordText.setFill(Color.WHITE);
-            
-            // Remove any blue text
-            if (selectedWordBlock.getProperties().exists("blueText")) {
-                Text blueText = (Text) selectedWordBlock.getObject("blueText");
+            // Reset the word to white
+            Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+            if (view instanceof StackPane) {
+                StackPane stackPane = (StackPane) view;
                 
-                // Find the stack pane
-                Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
-                if (view instanceof StackPane) {
-                    StackPane stackPane = (StackPane) view;
-                    stackPane.getChildren().remove(blueText);
+                // Remove any fancy text flow
+                for (int i = stackPane.getChildren().size() - 1; i >= 0; i--) {
+                    Node child = stackPane.getChildren().get(i);
+                    if (child instanceof TextFlow) {
+                        stackPane.getChildren().remove(child);
+                    }
                 }
                 
-                // Clear our tracking properties
-                selectedWordBlock.getProperties().setValue("blueTextCreated", false);
-                selectedWordBlock.getProperties().remove("blueText");
+                // Restore simple white text
+                Text whiteText = new Text(selectedWordBlock.getString("word"));
+                whiteText.setFont(Font.font(22));
+                whiteText.setFill(Color.WHITE);
+                whiteText.setTranslateY(-25);
+                whiteText.setTextAlignment(TextAlignment.CENTER);
+                
+                stackPane.getChildren().add(whiteText);
+                selectedWordBlock.setProperty("wordText", whiteText);
             }
         }
         
         // Select the new block
         selectedWordBlock = wordBlock;
         
-        // Highlight the text
-        Text wordText = (Text) selectedWordBlock.getObject("wordText");
-        wordText.setFill(Color.YELLOW);
-        
-        // Reset input
+        // Always reset input when switching blocks
         currentInput.setLength(0);
+        
+        // Create initial yellow highlight for the selected block
+        createYellowHighlight();
+    }
+    
+    // New method to create yellow highlight for selected block
+    private void createYellowHighlight() {
+        if (selectedWordBlock == null) return;
+        
+        String targetWord = selectedWordBlock.getString("word");
+        
+        // Get the view container
+        Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+        if (!(view instanceof StackPane)) return;
+        
+        StackPane stackPane = (StackPane) view;
+        
+        // Remove existing texts
+        for (int i = stackPane.getChildren().size() - 1; i >= 0; i--) {
+            Node child = stackPane.getChildren().get(i);
+            if (child instanceof Text || child instanceof TextFlow) {
+                stackPane.getChildren().remove(child);
+            }
+        }
+        
+        // Create a new TextFlow for multi-colored text
+        TextFlow textFlow = new TextFlow();
+        textFlow.setTextAlignment(TextAlignment.CENTER);
+        textFlow.setTranslateY(-25);
+        
+        // Add all letters in yellow (selected but not typed)
+        for (int i = 0; i < targetWord.length(); i++) {
+            Text letterText = new Text(String.valueOf(targetWord.charAt(i)));
+            letterText.setFont(Font.font(22));
+            letterText.setFill(Color.YELLOW);
+            textFlow.getChildren().add(letterText);
+        }
+        
+        // Add the TextFlow to the stackPane
+        stackPane.getChildren().add(textFlow);
     }
     
     private void selectNextWordBlock() {
@@ -514,67 +575,64 @@ public class Game extends GameApplication {
     
     private void updateSelectedWordDisplay() {
         if (selectedWordBlock == null) return;
-        
+         
         String targetWord = selectedWordBlock.getString("word");
         String typed = currentInput.toString();
         
-        // Get the original word text
-        Text wordText = (Text) selectedWordBlock.getObject("wordText");
+        // Safety check - if the typed text doesn't match the beginning of the target word,
+        // reset the input and restart
+        boolean mismatch = false;
+        for (int i = 0; i < typed.length(); i++) {
+            if (i >= targetWord.length() || typed.charAt(i) != targetWord.charAt(i)) {
+                mismatch = true;
+                break;
+            }
+        }
         
-        // Make sure it's visible
-        wordText.setVisible(true);
-        
-        // Set the original text (full word)
-        wordText.setText(targetWord);
-        
-        // For completely typed words, make everything blue
-        if (typed.length() == targetWord.length()) {
-            wordText.setFill(Color.BLUE);
+        if (mismatch) {
+            // Clear input and reset display if there's a mismatch
+            currentInput.setLength(0);
+            typed = "";
+            createYellowHighlight();
             return;
         }
+         
+        // Get the view container
+        Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
+        if (!(view instanceof StackPane)) return;
         
-        // For partially typed words, use yellow since we can't easily do multi-colored text
-        wordText.setFill(Color.YELLOW);
+        StackPane stackPane = (StackPane) view;
         
-        // Create a second text for the blue part (typed letters)
-        if (typed.length() > 0) {
-            // Check if blue text exists
-            if (!selectedWordBlock.getProperties().exists("blueTextCreated")) {
-                Text blueText = new Text("");
-                blueText.setFont(Font.font(22));
-                blueText.setFill(Color.BLUE);
-                blueText.setTranslateY(-25);
-                blueText.setTextAlignment(TextAlignment.CENTER);
-                
-                // Get the view container
-                Node view = selectedWordBlock.getViewComponent().getChildren().get(0);
-                if (view instanceof StackPane) {
-                    StackPane stackPane = (StackPane) view;
-                    stackPane.getChildren().add(blueText);
-                    
-                    // Store reference to blue text
-                    selectedWordBlock.getProperties().setValue("blueTextCreated", true);
-                    selectedWordBlock.setProperty("blueText", blueText);
-                }
-            }
-            
-            // Update blue text content to show typed letters
-            if (selectedWordBlock.getProperties().exists("blueText")) {
-                Text blueText = (Text) selectedWordBlock.getObject("blueText");
-                String typedPart = targetWord.substring(0, typed.length());
-                blueText.setText(typedPart);
-                
-                // Carefully position the blue text to overlay properly
-                double leftPadding = calculateLeftPadding(targetWord, typed.length());
-                blueText.setTranslateX(leftPadding);
+        // Remove existing texts
+        for (int i = stackPane.getChildren().size() - 1; i >= 0; i--) {
+            Node child = stackPane.getChildren().get(i);
+            if (child instanceof Text || child instanceof TextFlow) {
+                stackPane.getChildren().remove(child);
             }
         }
-    }
-    
-    private double calculateLeftPadding(String word, int typedLength) {
-        // Simple approximation - move blue text to align left with the start of the word
-        // This is a rough estimation - may need adjustment per font
-        return -1 * (word.length() - typedLength) * 5.5;
+        
+        // Create a new TextFlow for multi-colored text
+        TextFlow textFlow = new TextFlow();
+        textFlow.setTextAlignment(TextAlignment.CENTER);
+        textFlow.setTranslateY(-25);
+        
+        // Add letter by letter with appropriate colors
+        for (int i = 0; i < targetWord.length(); i++) {
+            Text letterText = new Text(String.valueOf(targetWord.charAt(i)));
+            letterText.setFont(Font.font(22));
+            
+            // Letters that have been typed are blue, the rest are yellow
+            if (i < typed.length()) {
+                letterText.setFill(Color.BLUE);
+            } else {
+                letterText.setFill(Color.YELLOW);
+            }
+            
+            textFlow.getChildren().add(letterText);
+        }
+        
+        // Add the TextFlow to the stackPane
+        stackPane.getChildren().add(textFlow);
     }
     
     private Entity spawnWordBlock(double yPosition, int rowIndex, double xPosition) {
