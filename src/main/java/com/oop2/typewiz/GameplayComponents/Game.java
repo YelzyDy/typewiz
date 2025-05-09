@@ -68,18 +68,6 @@ public class Game extends GameApplication {
                 .zIndex(10) // Higher z-index to be in front of background
                 .buildAndAttach();
                 
-        // Add a barrier on top of the existing tower in the image
-        // Position is based on the tower's location in the image (approximately x=125, y=280)
-        double barrierWidth = 120;
-        double barrierHeight = 15;
-        Rectangle barrierRect = new Rectangle(barrierWidth, barrierHeight, Color.rgb(70, 70, 110));
-        
-        Entity barrierEntity = FXGL.entityBuilder()
-                .at(49, 220) // Moved higher and more to the left
-                .view(barrierRect)
-                .zIndex(21)
-                .buildAndAttach();
-                
         // Add the wizard sprite with animation
         Image wizardImage = FXGL.image("wizard/wizard.png");
         
