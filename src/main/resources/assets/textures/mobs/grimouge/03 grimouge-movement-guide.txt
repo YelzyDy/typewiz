@@ -1,0 +1,21 @@
+grimouge movement guide ;>
+
+00 - 31 -> floating/flying normal form of the grimouge
+
+32 - 46 -> second form of the grimouge {could be used alternatively when about to die or upskill}
+
+47 -> back to normal {about to attack}
+
+48 - 50 -> about to bite
+
+51 - 52 -> mouth wide open
+
+53 - 54 -> clamped out
+
+55 -> mouth fully closed
+
+56 - 58 -> transforming to normal form again
+
+59 - 60 -> about to go on his dead state
+
+61 - 70 -> paper ashes, poof dead xx
