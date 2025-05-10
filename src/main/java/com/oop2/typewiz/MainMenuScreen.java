@@ -32,7 +32,7 @@ public class MainMenuScreen extends FXGLMenu {
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #2a0845, #4a148c);");
 
         // Glass panel effect (matches difficulty screen)
-        Rectangle panel = new Rectangle(500, 550);
+        Rectangle panel = new Rectangle(600, 700); // was 500 x 550
         panel.setArcHeight(30);
         panel.setArcWidth(30);
         panel.setFill(Color.web("rgba(60, 0, 90, 0.5)"));
@@ -49,18 +49,18 @@ public class MainMenuScreen extends FXGLMenu {
                 new Stop(1, Color.web("#b388ff"))));
         title.setEffect(new Glow(0.8));
 
-        // Bouncing animation for title
-        ThreadManager.runAsyncThenUI(
-                () -> {
-                    TranslateTransition bounce = new TranslateTransition(Duration.seconds(1), title);
-                    bounce.setByY(-20); // Move up
-                    bounce.setCycleCount(Animation.INDEFINITE);
-                    bounce.setAutoReverse(true);
-                    bounce.setInterpolator(Interpolator.EASE_BOTH);
-                    bounce.play();
-                },
-                () -> {} // UI thread callback (empty since animation starts asynchronously)
-        );
+//        // Bouncing animation for title
+//        ThreadManager.runAsyncThenUI(
+//                () -> {
+//                    TranslateTransition bounce = new TranslateTransition(Duration.seconds(1), title);
+//                    bounce.setByY(-20); // Move up
+//                    bounce.setCycleCount(Animation.INDEFINITE);
+//                    bounce.setAutoReverse(true);
+//                    bounce.setInterpolator(Interpolator.EASE_BOTH);
+//                    bounce.play();
+//                },
+//                () -> {} // UI thread callback (empty since animation starts asynchronously)
+//        );
 
         // Subtitle with typewriter effect (Fade-In Animation)
         Text subtitle = new Text("Master the Magic of Typing");
@@ -111,12 +111,16 @@ public class MainMenuScreen extends FXGLMenu {
             );
         });
 
+        Button activityButton = createWizardButton("CREATORS", () -> {
+            FXGL.getSceneService().pushSubScene(new CreditsScreen(() -> FXGL.getSceneService().popSubScene()));
+        });
+
         Button exitButton = createWizardButton("LEAVE TOWER", () -> {
             FXGL.getGameController().exit();
         });
 
         // Layout
-        VBox menuBox = new VBox(20, title, subtitle, startButton, helpButton, exitButton);
+        VBox menuBox = new VBox(20, title, subtitle, startButton, helpButton, activityButton, exitButton);
         menuBox.setAlignment(Pos.CENTER);
         menuBox.setMaxWidth(400);
 
@@ -221,8 +225,10 @@ public class MainMenuScreen extends FXGLMenu {
             );
         });
 
+
         // Click effect (Scale Animation)
         button.setOnAction(e -> {
+
             ThreadManager.runAsyncThenUI(
                     () -> {
                         ScaleTransition scaleClick = new ScaleTransition(Duration.seconds(0.1), button);
