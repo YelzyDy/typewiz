@@ -78,7 +78,7 @@ public class Game extends GameApplication {
     
     // Color constants for word highlighting
     private static final Color SELECTED_COLOR = Color.LIME;
-    private static final Color TYPED_COLOR = Color.BLUE;
+    private static final Color TYPED_COLOR = Color.DEEPSKYBLUE;
     private static final Color DEFAULT_COLOR = Color.WHITE;
     
     // Add score tracking
@@ -92,6 +92,27 @@ public class Game extends GameApplication {
     private LocalTimer waveTimer;
     private boolean waveInProgress = false;
     private Text instructionText;
+    
+    // Add max waves constant and completion tracking
+    private static final int MAX_WAVES = 10;
+    private boolean gameCompleted = false;
+    
+    // Wave difficulty progression parameters
+    private static final int[] WAVE_SPAWNS_PER_WAVE = {
+        10, 12, 15, 18, 20, 22, 25, 28, 30, 35 // Increasing spawns per wave
+    };
+    private static final double[] WAVE_SPEED_MULTIPLIERS = {
+        1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0, 2.2 // Increasing speed per wave
+    };
+    private static final int[] MIN_SPAWNS_PER_GROUP_BY_WAVE = {
+        1, 1, 2, 2, 2, 3, 3, 3, 4, 4 // Increasing minimum spawns per group
+    };
+    private static final int[] MAX_SPAWNS_PER_GROUP_BY_WAVE = {
+        2, 3, 3, 4, 4, 5, 5, 6, 6, 7 // Increasing maximum spawns per group
+    };
+    private static final double[] SPAWN_DELAY_MULTIPLIERS = {
+        1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.5 // Decreasing delay between groups
+    };
     
     // Word list for typing
     private final List<String> wordList = Arrays.asList(
@@ -197,6 +218,11 @@ public class Game extends GameApplication {
     // Update spawn constants
     private double spawnPerimeterRight;
     private double visibleThreshold;
+
+    private boolean shouldShowWaveAnnouncement = true;
+    private Entity waveAnnouncementOverlay;
+    private LocalTimer announcementTimer;
+    private static final double ANNOUNCEMENT_DURATION = 2.0; // seconds to show the announcement
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -365,11 +391,15 @@ public class Game extends GameApplication {
         
         // Show initial wave message and start first wave
         showWaveStartMessage();
+
+        // Initialize announcement timer
+        announcementTimer = FXGL.newLocalTimer();
+        announcementTimer.capture();
     }
     
     @Override
     protected void onUpdate(double tpf) {
-        if (gameOver) return;
+        if (gameOver || gameCompleted) return;
         
         // Use FXGL's built-in timing
         double frameTime = FXGL.tpf();
@@ -379,6 +409,21 @@ public class Game extends GameApplication {
             return;
         }
         
+        // Handle wave announcement if needed
+        if (shouldShowWaveAnnouncement) {
+            showWaveAnnouncement();
+            shouldShowWaveAnnouncement = false;
+            // We don't return here to ensure game updates continue and highlighting works
+        }
+        
+        // Check if we need to hide the announcement
+        if (waveAnnouncementOverlay != null && announcementTimer.elapsed(Duration.seconds(ANNOUNCEMENT_DURATION))) {
+            waveAnnouncementOverlay.removeFromWorld();
+            waveAnnouncementOverlay = null;
+            // Continue spawning after announcement
+            isSpawningWave = true;
+        }
+        
         // Handle wave spawning
         if (isSpawningWave) {
             // Spawn new group if all gargoyles are defeated or timer elapsed
@@ -386,24 +431,35 @@ public class Game extends GameApplication {
                 if (totalWaveSpawns > 0) {
                     spawnGargoyleGroup();
                 } else if (activeGargoyles.isEmpty()) {
-                    // Wave completed - start next wave immediately
+                    // Wave completed - prepare for next wave
                     currentWave++;
-                    waveText.setText("Wave: " + currentWave);
+                    waveText.setText("Wave: " + currentWave + "/" + MAX_WAVES);
                     waveInProgress = false;
-                    startWave();
+                    
+                    // Check if all waves are completed
+                    if (currentWave > MAX_WAVES) {
+                        showVictoryScreen();
+                        return;
+                    }
+                    
+                    // Set flag to show announcement for next wave
+                    shouldShowWaveAnnouncement = true;
                 }
             }
         }
         
         // Spawn word blocks for current wave if not in progress
-        if (!waveInProgress && !gameOver) {
+        if (!waveInProgress && !gameOver && !gameCompleted) {
             waveInProgress = true;
             startWave();
             return;
         }
         
-        // Calculate current wave speed in pixels per second
-        double currentSpeed = GARGOYLE_SPEED + (currentWave * WAVE_SPEED_INCREMENT);
+        // Get wave index (0-based)
+        int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
+        
+        // Calculate current wave speed in pixels per second with wave-specific multiplier
+        double currentSpeed = GARGOYLE_SPEED * WAVE_SPEED_MULTIPLIERS[waveIndex];
         
         // Process gargoyles in batches
         if (!activeGargoyles.isEmpty()) {
@@ -528,6 +584,12 @@ public class Game extends GameApplication {
     }
     
     private void startWave() {
+        // Check if all waves are completed
+        if (currentWave > MAX_WAVES) {
+            showVictoryScreen();
+            return;
+        }
+        
         // Remove all existing gargoyles before starting a new wave
         for (Entity g : new ArrayList<>(activeGargoyles)) {
             g.removeFromWorld();
@@ -537,20 +599,36 @@ public class Game extends GameApplication {
         activeGargoyles.clear();
         newBlocks.clear();
         
-        // Reset wave spawning state
-        isSpawningWave = true;
+        // Get wave index (0-based)
+        int waveIndex = currentWave - 1;
+        
+        // Reset wave spawning state with wave-specific parameters
+        isSpawningWave = false; // Start as false, set to true after announcement
         spawnFromRight = true; // Always spawn from right side
-        currentGroupSize = random.nextInt(MAX_SPAWNS_PER_GROUP - MIN_SPAWNS_PER_GROUP + 1) + MIN_SPAWNS_PER_GROUP;
-        totalWaveSpawns = random.nextInt(MAX_SPAWNS_PER_WAVE - MIN_SPAWNS_PER_WAVE + 1) + MIN_SPAWNS_PER_WAVE;
-        currentSpawnDelay = WAVE_SPAWN_DELAY;
+        
+        // Apply wave-specific difficulty settings
+        int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        int maxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        currentGroupSize = random.nextInt(maxSpawns - minSpawns + 1) + minSpawns;
+        
+        // Set total spawns for this wave
+        totalWaveSpawns = WAVE_SPAWNS_PER_WAVE[waveIndex];
+        
+        // Apply wave-specific spawn delay
+        currentSpawnDelay = WAVE_SPAWN_DELAY * SPAWN_DELAY_MULTIPLIERS[waveIndex];
         
         waveSpawnTimer.capture();
         
         System.out.println("Starting wave " + currentWave + " with " + totalWaveSpawns + " total spawns");
-        spawnGargoyleGroup();
+        System.out.println("Wave " + currentWave + " settings: Speed multiplier " + 
+                WAVE_SPEED_MULTIPLIERS[waveIndex] + ", Delay multiplier " + 
+                SPAWN_DELAY_MULTIPLIERS[waveIndex]);
     }
     
     private void spawnGargoyleGroup() {
+        // Get wave index (0-based)
+        int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
+        
         System.out.println("Spawning group of " + currentGroupSize + " gargoyles from right side");
         
         // Calculate spawn area
@@ -594,26 +672,49 @@ public class Game extends GameApplication {
             selectWordBlock(activeGargoyles.get(0));
         }
         
-        // Prepare for next group
-        currentGroupSize = random.nextInt(MAX_SPAWNS_PER_GROUP - MIN_SPAWNS_PER_GROUP + 1) + MIN_SPAWNS_PER_GROUP;
-        currentSpawnDelay *= SPAWN_SPEED_INCREASE;
+        // Prepare for next group with wave-specific parameters
+        int waveMinSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        int waveMaxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        currentGroupSize = random.nextInt(waveMaxSpawns - waveMinSpawns + 1) + waveMinSpawns;
+        
+        // Apply wave-specific delay reduction for next spawn
+        currentSpawnDelay *= SPAWN_SPEED_INCREASE * SPAWN_DELAY_MULTIPLIERS[waveIndex];
+        
         waveSpawnTimer.capture();
     }
     
     private String getRandomWordForWave() {
-        if (currentWave <= 3) {
-            return wordList.get(random.nextInt(wordList.size()));
-        } else if (currentWave <= 7) {
-            return random.nextBoolean() 
-                ? wordList.get(random.nextInt(wordList.size())) 
-                : mediumWordList.get(random.nextInt(mediumWordList.size()));
-        } else {
+        // Get wave index (0-based) and ensure it's within bounds
+        int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
+        
+        // Early waves (1-3) - mostly easy words
+        if (waveIndex < 3) {
             double rand = random.nextDouble();
-            if (rand < 0.2) {
+            if (rand < 0.7) { // 70% easy words
                 return wordList.get(random.nextInt(wordList.size()));
-            } else if (rand < 0.5) {
+            } else { // 30% medium words
                 return mediumWordList.get(random.nextInt(mediumWordList.size()));
-            } else {
+            }
+        } 
+        // Mid waves (4-6) - mix of easy and medium words, few hard words
+        else if (waveIndex < 6) {
+            double rand = random.nextDouble();
+            if (rand < 0.3) { // 30% easy words
+                return wordList.get(random.nextInt(wordList.size()));
+            } else if (rand < 0.8) { // 50% medium words
+                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+            } else { // 20% hard words
+                return hardWordList.get(random.nextInt(hardWordList.size()));
+            }
+        } 
+        // Late waves (7-10) - mostly medium and hard words
+        else {
+            double rand = random.nextDouble();
+            if (rand < 0.1) { // 10% easy words
+                return wordList.get(random.nextInt(wordList.size()));
+            } else if (rand < 0.5) { // 40% medium words
+                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+            } else { // 50% hard words
                 return hardWordList.get(random.nextInt(hardWordList.size()));
             }
         }
@@ -661,22 +762,23 @@ public class Game extends GameApplication {
         waveLabel.setFill(Color.WHITE);
         waveLabel.setFont(Font.font(18));
         
-        waveText = new Text("1");
+        waveText = new Text("1/" + MAX_WAVES);
         waveText.setFill(Color.WHITE);
         waveText.setFont(Font.font(24));
         
         waveDisplay.getChildren().addAll(waveLabel, waveText);
         
-        // Create instruction text
-        instructionText = new Text("Press ENTER to start wave");
+        // Create instruction text (invisible by default)
+        instructionText = new Text("");
         instructionText.setTranslateX(FXGL.getAppWidth() / 2 - 150);
         instructionText.setTranslateY(FXGL.getAppHeight() / 2);
         instructionText.setFill(Color.YELLOW);
         instructionText.setFont(Font.font(28));
+        instructionText.setVisible(false);
         
         // Add controls help text
-        Text controlsText = new Text("Controls: SHIFT to switch words | SPACE to destroy word");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        Text controlsText = new Text("Controls: Type words | SHIFT to switch targets | SPACE to destroy word");
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 240);
         controlsText.setTranslateY(FXGL.getAppHeight() - 20);
         controlsText.setFill(Color.LIGHTGRAY);
         controlsText.setFont(Font.font(16));
@@ -816,6 +918,7 @@ public class Game extends GameApplication {
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(DEFAULT_COLOR);
+                    // Preserve the stroke and glow effect for visibility
                 }
             }
         } catch (Exception e) {
@@ -832,6 +935,10 @@ public class Game extends GameApplication {
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(SELECTED_COLOR);
+                    
+                    // Increase glow effect for better visibility when selected
+                    javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.5);
+                    letter.setEffect(glow);
                 }
             }
         } catch (Exception e) {
@@ -851,10 +958,18 @@ public class Game extends GameApplication {
             
             // Update colors - typed letters blue, remaining letters yellow
             for (int i = 0; i < letterNodes.size(); i++) {
+                Text letter = letterNodes.get(i);
+                
                 if (i < typed.length()) {
-                    letterNodes.get(i).setFill(TYPED_COLOR);
+                    letter.setFill(TYPED_COLOR);
+                    // Add stronger glow for typed letters
+                    javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.7);
+                    letter.setEffect(glow);
                 } else {
-                    letterNodes.get(i).setFill(SELECTED_COLOR);
+                    letter.setFill(SELECTED_COLOR);
+                    // Normal glow for untyped letters
+                    javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.5);
+                    letter.setEffect(glow);
                 }
             }
         } catch (Exception e) {
@@ -871,6 +986,10 @@ public class Game extends GameApplication {
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(TYPED_COLOR);
+                    
+                    // Add strong glow effect for completed words
+                    javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.8);
+                    letter.setEffect(glow);
                 }
             }
         } catch (Exception e) {
@@ -1005,8 +1124,15 @@ public class Game extends GameApplication {
     }
     
     private void showWaveStartMessage() {
-        instructionText.setText("Wave " + currentWave + " - Press ENTER to start");
-        instructionText.setVisible(true);
+        // Reset and hide instruction text
+        instructionText.setVisible(false);
+        
+        // Set wave in progress and prepare for announcement
+        waveInProgress = true;
+        shouldShowWaveAnnouncement = true;
+        
+        // Start the wave initialization without spawning yet
+        startWave();
     }
     
     private void showWaveCompletionMessage() {
@@ -1066,11 +1192,19 @@ public class Game extends GameApplication {
         // Reset game state
         playerHealth = MAX_HEALTH;
         gameOver = false;
+        gameCompleted = false;
         waveCompleted = false;
         waveInProgress = false;
         currentInput.setLength(0);
         score = 0;
         currentWave = 1;
+        
+        // Reset announcement state
+        shouldShowWaveAnnouncement = true;
+        if (waveAnnouncementOverlay != null) {
+            waveAnnouncementOverlay.removeFromWorld();
+            waveAnnouncementOverlay = null;
+        }
         
         // Release all word blocks back to the pool
         wordBlockPool.releaseAll();
@@ -1089,14 +1223,16 @@ public class Game extends GameApplication {
         // Update UI
         updateHealthBar();
         scoreText.setText("0");
-        waveText.setText("Wave: 1");
+        waveText.setText("Wave: " + currentWave + "/" + MAX_WAVES);
         
-        // Show wave start message
-        showWaveStartMessage();
+        // Start the game immediately but don't start spawning yet
+        waveInProgress = true;
+        startWave();
         
         // Reset timers
         blockSpawnTimer.capture();
         waveTimer.capture();
+        announcementTimer.capture();
     }
 
     private void setupPerformanceUI() {
@@ -1238,12 +1374,115 @@ public class Game extends GameApplication {
             Text letterText = new Text(String.valueOf(c));
             letterText.setFont(Font.font("Arial", WORD_FONT_SIZE));
             letterText.setFill(Color.WHITE);
+            
+            // Add stroke to make text more visible
+            letterText.setStroke(Color.BLACK);
+            letterText.setStrokeWidth(1.5);
+            
+            // Add a slight glow effect for better visibility
+            javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.3);
+            letterText.setEffect(glow);
+            
             letterNodes.add(letterText);
             textFlow.getChildren().add(letterText);
         }
 
         // Store letter nodes for later use
         gargoyle.setProperty("letterNodes", letterNodes);
+    }
+
+    private void showVictoryScreen() {
+        gameCompleted = true;
+        
+        // Create semi-transparent overlay
+        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), Color.color(0, 0, 0, 0.7));
+        
+        // Create victory text
+        Text victoryText = new Text("Victory! All Waves Completed!");
+        victoryText.setFont(Font.font(48));
+        victoryText.setFill(Color.GOLD);
+        victoryText.setTranslateY(-70);
+        
+        // Create score text
+        Text scoreText = new Text("Final Score: " + score);
+        scoreText.setFont(Font.font(30));
+        scoreText.setFill(Color.WHITE);
+        scoreText.setTranslateY(-20);
+        
+        // Create health text
+        Text healthText = new Text("Health remaining: " + playerHealth);
+        healthText.setFont(Font.font(24));
+        healthText.setFill(Color.WHITE);
+        healthText.setTranslateY(20);
+        
+        // Create waves completed text
+        Text waveText = new Text("All " + MAX_WAVES + " waves completed!");
+        waveText.setFont(Font.font(24));
+        waveText.setFill(Color.LIGHTGREEN);
+        waveText.setTranslateY(50);
+        
+        // Create retry text
+        Text retryText = new Text("Press ENTER to restart");
+        retryText.setFont(Font.font(20));
+        retryText.setFill(Color.YELLOW);
+        retryText.setTranslateY(90);
+        
+        // Create layout for victory screen
+        VBox victoryLayout = new VBox(10, victoryText, scoreText, healthText, waveText, retryText);
+        victoryLayout.setAlignment(Pos.CENTER);
+        victoryLayout.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        victoryLayout.setTranslateY(FXGL.getAppHeight() / 2 - 100);
+        
+        // Add victory screen to scene
+        gameOverScreen = FXGL.entityBuilder()
+                .view(new StackPane(overlay, victoryLayout))
+                .zIndex(100) // Above everything else
+                .buildAndAttach();
+    }
+
+    private void showWaveAnnouncement() {
+        // Create semi-transparent overlay that doesn't block input
+        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), Color.color(0, 0, 0, 0.4));
+        
+        // Create wave announcement text
+        Text waveText = new Text("Wave " + currentWave + " of " + MAX_WAVES);
+        waveText.setFont(Font.font(48));
+        waveText.setFill(Color.YELLOW);
+        
+        // Create difficulty text
+        String difficultyLevel;
+        if (currentWave <= 3) {
+            difficultyLevel = "Easy";
+        } else if (currentWave <= 6) {
+            difficultyLevel = "Medium";
+        } else if (currentWave <= 9) {
+            difficultyLevel = "Hard";
+        } else {
+            difficultyLevel = "BOSS WAVE";
+        }
+        
+        Text difficultyText = new Text("Difficulty: " + difficultyLevel);
+        difficultyText.setFont(Font.font(36));
+        difficultyText.setFill(Color.WHITE);
+        
+        // Create layout for announcement
+        VBox announcementLayout = new VBox(20, waveText, difficultyText);
+        announcementLayout.setAlignment(Pos.CENTER);
+        
+        // Set a lower zIndex to ensure it doesn't block interaction with gargoyles
+        waveAnnouncementOverlay = FXGL.entityBuilder()
+                .view(new StackPane(overlay, announcementLayout))
+                .zIndex(50) // Lower z-index so it doesn't block interaction
+                .buildAndAttach();
+        
+        // Reset announcement timer
+        announcementTimer.capture();
+        
+        // Also spawn gargoyles right away to ensure player can interact with them
+        if (!isSpawningWave) {
+            isSpawningWave = true;
+            spawnGargoyleGroup();
+        }
     }
 
     public static void main(String[] args) {
