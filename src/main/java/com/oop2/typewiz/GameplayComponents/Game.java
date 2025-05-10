@@ -10,9 +10,11 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -76,7 +78,7 @@ public class Game extends GameApplication {
     private boolean gameOver = false;
     private Entity gameOverScreen;
     private final Random random = new Random();
-    
+
     // Color constants for word highlighting
     private static final Color SELECTED_COLOR = Color.LIME;
     private static final Color TYPED_COLOR = Color.DEEPSKYBLUE;
@@ -766,6 +768,7 @@ public class Game extends GameApplication {
     }
     
     private void setupUI() {
+
         // Create health bar panel with cool styling
         VBox healthDisplay = new VBox(8);
         healthDisplay.setTranslateX(20);
@@ -791,15 +794,22 @@ public class Game extends GameApplication {
         Rectangle healthBarBg = new Rectangle(200, 20, Color.rgb(50, 50, 50, 0.6));
         healthBarBg.setArcWidth(10);
         healthBarBg.setArcHeight(10);
-        
-        // Stack the health bar on its background
-        StackPane healthBarStack = new StackPane(healthBarBg, healthBar);
+
+//change the health bar from middle to right to left
+        Pane healthBarPane = new Pane();
+        healthBarPane.setPrefSize(200, 20);
+        healthBarPane.setMaxSize(200, 20);
+        healthBarPane.getChildren().addAll(healthBarBg, healthBar);
+
+// Anchor health bar to the left
+        healthBar.setTranslateX(0);
+        healthBar.setTranslateY(0);
         
         healthText = new Text(playerHealth + "/" + MAX_HEALTH);
         healthText.setFill(UI_TEXT_PRIMARY);
         healthText.setFont(Font.font(FONT_FAMILY, 16));
         
-        healthDisplay.getChildren().addAll(healthLabel, healthBarStack, healthText);
+        healthDisplay.getChildren().addAll(healthLabel, healthBarPane, healthText);
         
         // Create top bar with score and wave info
         HBox topBar = new HBox(20);
@@ -915,7 +925,7 @@ public class Game extends GameApplication {
         double healthPercentage = (double) playerHealth / MAX_HEALTH;
         healthBar.setWidth(200 * healthPercentage);
         healthText.setText(playerHealth + "/" + MAX_HEALTH);
-        
+
         // Update color based on health with smoother gradient
         if (healthPercentage > 0.6) {
             healthBar.setFill(Color.rgb(50, 220, 50)); // Bright green
@@ -925,7 +935,7 @@ public class Game extends GameApplication {
             healthBar.setFill(Color.rgb(220, 50, 50)); // Red
         }
     }
-    
+
     private void decreaseHealth() {
         playerHealth = Math.max(0, playerHealth - HEALTH_LOSS_PER_MISS);
         updateHealthBar();
@@ -1361,6 +1371,8 @@ public class Game extends GameApplication {
         // Left side - stats and score in a panel
         VBox leftColumn = new VBox(20, gameOverText, scoreText, waveText, statsPanel);
         leftColumn.setAlignment(Pos.CENTER_LEFT);
+        //added padding sa container - lovely
+        leftColumn.setPadding(new Insets(50));
         
         // Add panel styling to stats side
         Rectangle leftBg = new Rectangle(400, 520);
@@ -1976,7 +1988,7 @@ public class Game extends GameApplication {
     private VBox createStatsPanel(double wpm, double rawWpm, double accuracy, double consistency) {
         // Create stylish stats panel
         VBox statsPanel = new VBox(10);
-        statsPanel.setPadding(new javafx.geometry.Insets(15));
+        statsPanel.setPadding(new Insets(30));
         statsPanel.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         
         // Create section title
