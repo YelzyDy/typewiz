@@ -10,6 +10,7 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import com.almasb.fxgl.input.UserAction;
 import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -102,6 +103,15 @@ public class Game extends GameApplication {
             "architecture", "dependency", "infrastructure", "persistence", "transaction",
             "asynchronous", "development", "integration", "management", "deployment"
     );
+
+    // Add gargoyle control variables after the existing instance variables
+    private Entity gargoyleEntity;
+    private static final double GARGOYLE_SPEED = 300; // Movement speed
+    private static final double GARGOYLE_AUTO_SPEED = 80; // Automatic left movement speed
+    private boolean movingUp = false;
+    private boolean movingDown = false;
+    private boolean movingLeft = false;
+    private boolean movingRight = false;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -216,7 +226,7 @@ public class Game extends GameApplication {
         double gargoyleScale = 0.25; // Scale to 25% of original size
         
         // Create the gargoyle entity positioned on the right side
-        Entity gargoyleEntity = FXGL.entityBuilder()
+        gargoyleEntity = FXGL.entityBuilder()
                 .type(EntityType.GARGOYLE)
                 .at(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80) // Right side position
                 .view(gargoyleTexture)
@@ -241,9 +251,14 @@ public class Game extends GameApplication {
         // Show initial wave message and start first wave
         showWaveStartMessage();
         
-        // Run the game loop
+        // Run the game loop with improved performance
         FXGL.getGameTimer().runAtInterval(() -> {
             if (gameOver) return;
+            
+            // Only update gargoyle if game is running
+            if (!waveCompleted && waveInProgress) {
+                updateGargoylePosition();
+            }
             
             // Handle wave completion
             if (waveCompleted) {
@@ -251,10 +266,8 @@ public class Game extends GameApplication {
                     waveCompleted = false;
                     currentWave++;
                     waveText.setText("Wave: " + currentWave);
-                    blockSpawnTimer.capture(); // Reset spawn timer for next wave
+                    blockSpawnTimer.capture();
                     waveInProgress = false;
-                    
-                    // Show message for next wave
                     showWaveStartMessage();
                 }
                 return;
@@ -272,30 +285,43 @@ public class Game extends GameApplication {
                 return;
             }
             
-            // Update all word blocks
-            List<Entity> blocksToRemove = new ArrayList<>();
+            // Update all word blocks - optimized processing
+            int size = activeWordBlocks.size();
+            if (size == 0) {
+                if (waveInProgress) {
+                    waveCompleted = true;
+                    waveInProgress = false;
+                    waveTimer.capture();
+                    showWaveCompletionMessage();
+                }
+                return;
+            }
             
-            for (Entity entity : activeWordBlocks) {
-                // Increase speed based on current wave
-                double blockSpeedForWave = BLOCK_SPEED + (currentWave * 5);
-                entity.translateX(-blockSpeedForWave * FXGL.tpf());
+            // Pre-calculate wave speed once per frame
+            double blockSpeedForWave = BLOCK_SPEED + (currentWave * 5);
+            double speedFactor = blockSpeedForWave * FXGL.tpf();
+            
+            // Use a more efficient approach to remove blocks
+            for (int i = size - 1; i >= 0; i--) {
+                Entity entity = activeWordBlocks.get(i);
+                entity.translateX(-speedFactor);
                 
                 // If block reaches the left edge, it's a miss
                 if (entity.getX() < 0) {
                     decreaseHealth();
-                    blocksToRemove.add(entity);
-                    entity.removeFromWorld();
+                    Entity removedEntity = activeWordBlocks.remove(i);
+                    
+                    // If the removed block was selected
+                    if (removedEntity == selectedWordBlock) {
+                        selectedWordBlock = null;
+                        // Select a new block if available
+                        if (!activeWordBlocks.isEmpty()) {
+                            selectWordBlock(activeWordBlocks.get(0));
+                        }
+                    }
+                    
+                    removedEntity.removeFromWorld();
                 }
-            }
-            
-            // Remove blocks that have gone off screen
-            activeWordBlocks.removeAll(blocksToRemove);
-            
-            // If the selected block was removed, select the next one
-            if (blocksToRemove.contains(selectedWordBlock) && !activeWordBlocks.isEmpty()) {
-                selectWordBlock(activeWordBlocks.get(0));
-            } else if (blocksToRemove.contains(selectedWordBlock)) {
-                selectedWordBlock = null;
             }
             
             // Check if wave is complete (no blocks left)
@@ -303,7 +329,6 @@ public class Game extends GameApplication {
                 waveCompleted = true;
                 waveInProgress = false;
                 waveTimer.capture();
-                // Show wave completion message
                 showWaveCompletionMessage();
             }
             
@@ -389,9 +414,9 @@ public class Game extends GameApplication {
         instructionText.setFill(Color.YELLOW);
         instructionText.setFont(Font.font(28));
         
-        // Add controls help text
-        Text controlsText = new Text("Controls: SHIFT to switch words | SPACE to destroy word");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        // Add controls help text - updated to include gargoyle controls
+        Text controlsText = new Text("Type: LETTERS | Switch: SHIFT | Complete: SPACE | Gargoyle: ARROW KEYS");
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 250);
         controlsText.setTranslateY(FXGL.getAppHeight() - 20);
         controlsText.setFill(Color.LIGHTGRAY);
         controlsText.setFont(Font.font(16));
@@ -496,6 +521,55 @@ public class Game extends GameApplication {
                 event.consume();
             }
         });
+        
+        // Add arrow key handlers for gargoyle movement
+        FXGL.getInput().addAction(new UserAction("Move Gargoyle Up") {
+            @Override
+            protected void onActionBegin() {
+                movingUp = true;
+            }
+            
+            @Override
+            protected void onActionEnd() {
+                movingUp = false;
+            }
+        }, KeyCode.UP);
+        
+        FXGL.getInput().addAction(new UserAction("Move Gargoyle Down") {
+            @Override
+            protected void onActionBegin() {
+                movingDown = true;
+            }
+            
+            @Override
+            protected void onActionEnd() {
+                movingDown = false;
+            }
+        }, KeyCode.DOWN);
+        
+        FXGL.getInput().addAction(new UserAction("Move Gargoyle Left") {
+            @Override
+            protected void onActionBegin() {
+                movingLeft = true;
+            }
+            
+            @Override
+            protected void onActionEnd() {
+                movingLeft = false;
+            }
+        }, KeyCode.LEFT);
+        
+        FXGL.getInput().addAction(new UserAction("Move Gargoyle Right") {
+            @Override
+            protected void onActionBegin() {
+                movingRight = true;
+            }
+            
+            @Override
+            protected void onActionEnd() {
+                movingRight = false;
+            }
+        }, KeyCode.RIGHT);
     }
     
     private void selectWordBlock(Entity wordBlock) {
@@ -760,6 +834,15 @@ public class Game extends GameApplication {
         score = 0;
         currentWave = 1;
         
+        // Reset gargoyle position to the right side of the screen
+        double gargoyleScale = 0.25;
+        int gargoyleFrameWidth = 288;
+        gargoyleEntity.setPosition(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80);
+        movingUp = false;
+        movingDown = false;
+        movingLeft = false;
+        movingRight = false;
+        
         // Clear all word blocks
         for (Entity entity : activeWordBlocks) {
             entity.removeFromWorld();
@@ -784,6 +867,40 @@ public class Game extends GameApplication {
         // Reset timers
         blockSpawnTimer.capture();
         waveTimer.capture();
+    }
+
+    // Update the gargoyle position method to include automatic movement
+    private void updateGargoylePosition() {
+        double dx = -GARGOYLE_AUTO_SPEED * FXGL.tpf(); // Automatic leftward movement
+        double dy = 0;
+        
+        // Apply manual input if provided
+        if (movingUp) dy -= GARGOYLE_SPEED * FXGL.tpf();
+        if (movingDown) dy += GARGOYLE_SPEED * FXGL.tpf();
+        if (movingLeft) dx -= GARGOYLE_SPEED * FXGL.tpf(); // Extra left speed when pressing left
+        if (movingRight) dx += GARGOYLE_SPEED * FXGL.tpf(); // Right will counter auto-movement
+        
+        // Apply movement
+        gargoyleEntity.translate(dx, dy);
+        
+        // Simple boundary check 
+        double x = gargoyleEntity.getX();
+        double y = gargoyleEntity.getY();
+        double width = gargoyleEntity.getWidth();
+        double height = gargoyleEntity.getHeight();
+        double screenWidth = FXGL.getAppWidth();
+        double screenHeight = FXGL.getAppHeight();
+        
+        // Teleport to right side when reaching left edge
+        if (x < -width) {
+            gargoyleEntity.setX(screenWidth);
+        } else if (x + width > screenWidth) {
+            gargoyleEntity.setX(screenWidth - width);
+        }
+        
+        // Keep vertical position within screen
+        if (y < 0) gargoyleEntity.setY(0);
+        else if (y + height > screenHeight) gargoyleEntity.setY(screenHeight - height);
     }
 
     public static void main(String[] args) {
