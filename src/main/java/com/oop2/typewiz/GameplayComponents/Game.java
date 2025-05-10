@@ -39,15 +39,12 @@ public class Game extends GameApplication {
     public enum EntityType {
         PLATFORM,
         PLAYER,
-        MOVING_BLOCK,
         GARGOYLE
     }
     
-    private LocalTimer blockSpawnTimer;
-    private static final double BLOCK_SPEED = 100; // pixels per second
-    private static final double SPAWN_INTERVAL = 3.0; // seconds between block spawns
-    private static final double ROW_SPACING = 140; // Spacing between rows
-    private static final int NUM_ROWS = 5; // Total number of rows
+    private LocalTimer gargoyleSpawnTimer;
+    private static final double GARGOYLE_SPAWN_INTERVAL = 2.0; // seconds between gargoyle spawns
+    private static final int NUM_GARGOYLES = 5; // Number of gargoyles to spawn
     private static final int MAX_HEALTH = 100;
     private static final int HEALTH_LOSS_PER_MISS = 20;
     private static final double WAVE_PAUSE_TIME = 5.0; // 5 seconds pause between waves
@@ -55,18 +52,10 @@ public class Game extends GameApplication {
     private int playerHealth = MAX_HEALTH;
     private Text healthText;
     private Rectangle healthBar;
-    private List<Entity> activeWordBlocks = new ArrayList<>();
-    private Entity selectedWordBlock = null;
-    private StringBuilder currentInput = new StringBuilder();
-    private Text inputText;
+    private List<Entity> activeGargoyles = new ArrayList<>();
     private boolean gameOver = false;
     private Entity gameOverScreen;
     private final Random random = new Random();
-    
-    // Color constants for word highlighting
-    private static final Color SELECTED_COLOR = Color.YELLOW;
-    private static final Color TYPED_COLOR = Color.BLUE;
-    private static final Color DEFAULT_COLOR = Color.WHITE;
     
     // Add score tracking
     private int score = 0;
@@ -80,38 +69,35 @@ public class Game extends GameApplication {
     private boolean waveInProgress = false;
     private Text instructionText;
     
-    // Word list for typing
-    private final List<String> wordList = Arrays.asList(
-            "code", "java", "type", "game", "block", 
-            "winter", "wizard", "magic", "spell", "potion",
-            "frost", "snow", "ice", "cold", "programming",
-            "keyboard", "screen", "input", "output", "variable",
-            "function", "class", "method", "array", "string"
+    // Typing game variables
+    private List<String> wordList = Arrays.asList(
+        "wizard", "magic", "spell", "potion", "wand", 
+        "dragon", "scroll", "mystic", "arcane", "book",
+        "winter", "frost", "ice", "snow", "cold",
+        "storm", "blizzard", "crystal", "enchant", "rune",
+        "power", "element", "mana", "fireball", "freeze"
     );
-
-    // Add medium and hard word lists for difficulty progression
-    private final List<String> mediumWordList = Arrays.asList(
-            "variable", "function", "method", "algorithm", "interface",
-            "inheritance", "polymorphism", "abstraction", "encapsulation", "iteration",
-            "recursion", "exception", "debugging", "framework", "compiler",
-            "library", "component", "parameter", "structure", "observer"
-    );
+    private int currentTargetIndex = -1;
+    private String currentTypedWord = "";
+    private Text typingFeedbackText;
     
-    private final List<String> hardWordList = Arrays.asList(
-            "synchronization", "multithreading", "serialization", "optimization", "implementation",
-            "initialization", "authentication", "configuration", "virtualization", "documentation",
-            "architecture", "dependency", "infrastructure", "persistence", "transaction",
-            "asynchronous", "development", "integration", "management", "deployment"
-    );
-
-    // Add gargoyle control variables after the existing instance variables
-    private Entity gargoyleEntity;
-    private static final double GARGOYLE_SPEED = 300; // Movement speed
+    // Gargoyle control variables
+    private static final double GARGOYLE_SPEED = 300; // Movement speed for player-controlled gargoyle
     private static final double GARGOYLE_AUTO_SPEED = 80; // Automatic left movement speed
     private boolean movingUp = false;
     private boolean movingDown = false;
     private boolean movingLeft = false;
     private boolean movingRight = false;
+    
+    // Gargoyle animation assets
+    private AnimationChannel gargoyleIdleAnimation;
+    private AnimationChannel gargoyleAttackAnimation;
+    private AnimationChannel gargoyleFlyAnimation;
+    
+    // Gargoyle dimensions
+    private int gargoyleFrameWidth = 288;
+    private int gargoyleFrameHeight = 312;
+    private double gargoyleScale = 0.4;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -190,57 +176,15 @@ public class Game extends GameApplication {
                 .zIndex(25)
                 .buildAndAttach();
         
-        // Add gargoyle animation
-        Image gargoyleImage = FXGL.image("mobs/gargoyle/gargoyle.png");
-        
-        // Calculate frame size based on sprite sheet dimensions
-        int gargoyleFrameWidth = 288;  // 864 ÷ 3 columns
-        int gargoyleFrameHeight = 312; // 936 ÷ 3 rows
-        
-        // Create animation channel for idle animation (first row)
-        AnimationChannel gargoyleIdleAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.8), // Duration for complete animation cycle
-                0, 2); // First row, frames 0-2
-        
-        // Create animation channel for attack animation (second row)
-        AnimationChannel gargoyleAttackAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.6), // Duration for complete animation cycle
-                3, 5); // Second row, frames 3-5
-        
-        // Create animation channel for flying animation (third row)
-        AnimationChannel gargoyleFlyAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.7), // Duration for complete animation cycle
-                6, 8); // Third row, frames 6-8
-        
-        // Create the animated texture with idle animation as default
-        AnimatedTexture gargoyleTexture = new AnimatedTexture(gargoyleIdleAnimation);
-        gargoyleTexture.loop();
-        
-        // Scale the gargoyle to a proper size for the scene
-        double gargoyleScale = 0.25; // Scale to 25% of original size
-        
-        // Create the gargoyle entity positioned on the right side
-        gargoyleEntity = FXGL.entityBuilder()
-                .type(EntityType.GARGOYLE)
-                .at(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80) // Right side position
-                .view(gargoyleTexture)
-                .scale(gargoyleScale, gargoyleScale) // Scale down the gargoyle
-                .bbox(new HitBox(BoundingShape.box(gargoyleFrameWidth * gargoyleScale, gargoyleFrameHeight * gargoyleScale)))
-                .zIndex(25)
-                .buildAndAttach();
+        // Set up gargoyle animations
+        setupGargoyleAnimations();
         
         // Set up UI elements
         setupUI();
         
         // Initialize timers
-        blockSpawnTimer = FXGL.newLocalTimer();
-        blockSpawnTimer.capture();
+        gargoyleSpawnTimer = FXGL.newLocalTimer();
+        gargoyleSpawnTimer.capture();
         
         waveTimer = FXGL.newLocalTimer();
         waveTimer.capture();
@@ -255,18 +199,13 @@ public class Game extends GameApplication {
         FXGL.getGameTimer().runAtInterval(() -> {
             if (gameOver) return;
             
-            // Only update gargoyle if game is running
-            if (!waveCompleted && waveInProgress) {
-                updateGargoylePosition();
-            }
-            
             // Handle wave completion
             if (waveCompleted) {
                 if (waveTimer.elapsed(Duration.seconds(WAVE_PAUSE_TIME))) {
                     waveCompleted = false;
                     currentWave++;
                     waveText.setText("Wave: " + currentWave);
-                    blockSpawnTimer.capture();
+                    gargoyleSpawnTimer.capture();
                     waveInProgress = false;
                     showWaveStartMessage();
                 }
@@ -278,85 +217,87 @@ public class Game extends GameApplication {
                 return;
             }
             
-            // Spawn word blocks for current wave if not in progress
+            // Spawn gargoyles for current wave if not in progress
             if (!waveInProgress) {
                 waveInProgress = true;
                 startWave();
                 return;
             }
             
-            // Update all word blocks - optimized processing
-            int size = activeWordBlocks.size();
-            if (size == 0) {
-                if (waveInProgress) {
-                    waveCompleted = true;
-                    waveInProgress = false;
-                    waveTimer.capture();
-                    showWaveCompletionMessage();
-                }
-                return;
+            // Update all gargoyles
+            updateGargoyles();
+            
+            // Check if we need to spawn more gargoyles
+            if (activeGargoyles.size() < NUM_GARGOYLES && gargoyleSpawnTimer.elapsed(Duration.seconds(GARGOYLE_SPAWN_INTERVAL))) {
+                spawnGargoyle();
+                gargoyleSpawnTimer.capture();
             }
             
-            // Pre-calculate wave speed once per frame
-            double blockSpeedForWave = BLOCK_SPEED + (currentWave * 5);
-            double speedFactor = blockSpeedForWave * FXGL.tpf();
-            
-            // Use a more efficient approach to remove blocks
-            for (int i = size - 1; i >= 0; i--) {
-                Entity entity = activeWordBlocks.get(i);
-                entity.translateX(-speedFactor);
-                
-                // If block reaches the left edge, it's a miss
-                if (entity.getX() < 0) {
-                    decreaseHealth();
-                    Entity removedEntity = activeWordBlocks.remove(i);
-                    
-                    // If the removed block was selected
-                    if (removedEntity == selectedWordBlock) {
-                        selectedWordBlock = null;
-                        // Select a new block if available
-                        if (!activeWordBlocks.isEmpty()) {
-                            selectWordBlock(activeWordBlocks.get(0));
-                        }
-                    }
-                    
-                    removedEntity.removeFromWorld();
-                }
-            }
-            
-            // Check if wave is complete (no blocks left)
-            if (activeWordBlocks.isEmpty() && waveInProgress) {
+            // Check if wave is complete (based on score)
+            if (score >= currentWave * 50 && waveInProgress) {
                 waveCompleted = true;
                 waveInProgress = false;
                 waveTimer.capture();
                 showWaveCompletionMessage();
             }
             
+            // Update typing feedback text position if there's an active target
+            updateTypingFeedbackPosition();
+            
         }, Duration.seconds(0.016)); // ~60 fps
     }
     
+    private void setupGargoyleAnimations() {
+        // Load gargoyle image
+        Image gargoyleImage = FXGL.image("mobs/gargoyle/gargoyle.png");
+        
+        // Create animation channel for idle animation (first row)
+        gargoyleIdleAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.8), // Duration for complete animation cycle
+                0, 2); // First row, frames 0-2
+        
+        // Create animation channel for attack animation (second row)
+        gargoyleAttackAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.6), // Duration for complete animation cycle
+                3, 5); // Second row, frames 3-5
+        
+        // Create animation channel for flying animation (third row)
+        gargoyleFlyAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.7), // Duration for complete animation cycle
+                6, 8); // Third row, frames 6-8
+    }
+    
     private void startWave() {
-        // Keep original bottom row position
-        double bottomRowY = FXGL.getAppHeight() - 120;
-        
-        // Calculate a fixed horizontal position for alignment
-        double fixedX = FXGL.getAppWidth() + 10;
-        
-        // Spawn blocks in all rows with vertical alignment
-        for (int i = 0; i < NUM_ROWS; i++) {
-            // No more skipping rows in early waves
-            double rowY = bottomRowY - (i * ROW_SPACING);
-            Entity wordBlock = spawnWordBlock(rowY, i, fixedX);
-            activeWordBlocks.add(wordBlock);
+        // Clear any remaining gargoyles
+        for (Entity gargoyle : activeGargoyles) {
+            gargoyle.removeFromWorld();
         }
+        activeGargoyles.clear();
         
-        // Select the first word block by default if none is selected
-        if (selectedWordBlock == null && !activeWordBlocks.isEmpty()) {
-            selectWordBlock(activeWordBlocks.get(0));
+        // Spawn initial gargoyles for the wave
+        for (int i = 0; i < NUM_GARGOYLES; i++) {
+            spawnGargoyle();
         }
         
         // Hide instruction text
         instructionText.setVisible(false);
+        
+        // Reset current target index
+        currentTargetIndex = -1;
+        currentTypedWord = "";
+        updateTypingFeedback();
+        
+        // Select first gargoyle as target if available
+        if (!activeGargoyles.isEmpty()) {
+            currentTargetIndex = 0;
+            highlightCurrentTarget();
+        }
     }
     
     private void setupUI() {
@@ -414,9 +355,15 @@ public class Game extends GameApplication {
         instructionText.setFill(Color.YELLOW);
         instructionText.setFont(Font.font(28));
         
-        // Add controls help text - updated to include gargoyle controls
-        Text controlsText = new Text("Type: LETTERS | Switch: SHIFT | Complete: SPACE | Gargoyle: ARROW KEYS");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 250);
+        // Add typing feedback text
+        typingFeedbackText = new Text("");
+        typingFeedbackText.setFill(Color.WHITE);
+        typingFeedbackText.setFont(Font.font(22));
+        typingFeedbackText.setVisible(false);
+        
+        // Add controls help text for typing mechanics
+        Text controlsText = new Text("Type words to destroy gargoyles | SHIFT to switch targets | SPACE to submit | ENTER to restart");
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 320);
         controlsText.setTranslateY(FXGL.getAppHeight() - 20);
         controlsText.setFill(Color.LIGHTGRAY);
         controlsText.setFont(Font.font(16));
@@ -427,6 +374,7 @@ public class Game extends GameApplication {
         FXGL.addUINode(waveDisplay);
         FXGL.addUINode(instructionText);
         FXGL.addUINode(controlsText);
+        FXGL.addUINode(typingFeedbackText);
     }
     
     private void updateHealthBar() {
@@ -449,45 +397,8 @@ public class Game extends GameApplication {
         updateHealthBar();
     }
     
-    private void updateInputDisplay() {
-        // Keep empty implementation since we don't need it anymore
-    }
-    
     private void setupInput() {
-        FXGL.getInput().addEventHandler(KeyEvent.KEY_TYPED, event -> {
-            if (gameOver || waveCompleted) return;
-            if (!waveInProgress) return;
-            
-            char typedChar = event.getCharacter().charAt(0);
-            if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
-                if (selectedWordBlock != null) {
-                    String targetWord = selectedWordBlock.getString("word");
-                    
-                    // Make sure we're not exceeding the word length
-                    if (currentInput.length() >= targetWord.length()) {
-                        return;
-                    }
-                    
-                    // Check if this would be a valid next character
-                    if (typedChar == targetWord.charAt(currentInput.length())) {
-                        // Only add if it's correct (part of error trapping)
-                        currentInput.append(typedChar);
-                        updateLetterColors();
-                        
-                        // Check if we've completed the word
-                        if (currentInput.length() == targetWord.length()) {
-                            // Word is fully typed - make all letters blue for visual feedback
-                            markWordAsComplete();
-                        }
-                    } else {
-                        // Wrong character - clear input and reset
-                        currentInput.setLength(0);
-                        resetToYellowHighlight();
-                    }
-                }
-            }
-        });
-        
+        // Handle keyboard input for typing
         FXGL.getInput().addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             if (gameOver) {
                 // Handle retry on game over screen
@@ -505,250 +416,279 @@ public class Game extends GameApplication {
                 return;
             }
             
-            if (waveCompleted) return;
-            if (!waveInProgress) return;
+            // Only process typing input when wave is in progress
+            if (!waveInProgress || waveCompleted || activeGargoyles.isEmpty()) return;
             
-            if (event.getCode() == KeyCode.BACK_SPACE && currentInput.length() > 0) {
-                currentInput.deleteCharAt(currentInput.length() - 1);
-                updateLetterColors();
-            } else if (event.getCode() == KeyCode.SHIFT) {
-                // Switch between blocks with Shift
-                selectNextWordBlock();
-                event.consume();
-            } else if (event.getCode() == KeyCode.SPACE) {
-                // Complete word with Space
-                checkWordCompletion();
-                event.consume();
+            // Switch target with SHIFT
+            if (event.getCode() == KeyCode.SHIFT) {
+                switchTarget();
+                return;
+            }
+            
+            // Submit word with SPACE
+            if (event.getCode() == KeyCode.SPACE) {
+                submitWord();
+                return;
+            }
+            
+            // Backspace to remove last character
+            if (event.getCode() == KeyCode.BACK_SPACE) {
+                if (!currentTypedWord.isEmpty()) {
+                    currentTypedWord = currentTypedWord.substring(0, currentTypedWord.length() - 1);
+                    updateTypingFeedback();
+                }
+                return;
+            }
+            
+            // Add character to current typed word if it's a letter
+            String character = event.getText();
+            if (!character.isEmpty() && Character.isLetter(character.charAt(0))) {
+                currentTypedWord += character.toLowerCase();
+                updateTypingFeedback();
             }
         });
-        
-        // Add arrow key handlers for gargoyle movement
-        FXGL.getInput().addAction(new UserAction("Move Gargoyle Up") {
-            @Override
-            protected void onActionBegin() {
-                movingUp = true;
-            }
-            
-            @Override
-            protected void onActionEnd() {
-                movingUp = false;
-            }
-        }, KeyCode.UP);
-        
-        FXGL.getInput().addAction(new UserAction("Move Gargoyle Down") {
-            @Override
-            protected void onActionBegin() {
-                movingDown = true;
-            }
-            
-            @Override
-            protected void onActionEnd() {
-                movingDown = false;
-            }
-        }, KeyCode.DOWN);
-        
-        FXGL.getInput().addAction(new UserAction("Move Gargoyle Left") {
-            @Override
-            protected void onActionBegin() {
-                movingLeft = true;
-            }
-            
-            @Override
-            protected void onActionEnd() {
-                movingLeft = false;
-            }
-        }, KeyCode.LEFT);
-        
-        FXGL.getInput().addAction(new UserAction("Move Gargoyle Right") {
-            @Override
-            protected void onActionBegin() {
-                movingRight = true;
-            }
-            
-            @Override
-            protected void onActionEnd() {
-                movingRight = false;
-            }
-        }, KeyCode.RIGHT);
     }
     
-    private void selectWordBlock(Entity wordBlock) {
-        // Deselect the previous block if there is one
-        if (selectedWordBlock != null) {
-            // Reset the previous block's word color to default white
-            resetBlockToDefaultColor(selectedWordBlock);
-        }
+    private void spawnGargoyle() {
+        // Create the animated texture with fly animation
+        AnimatedTexture gargoyleTexture = new AnimatedTexture(gargoyleFlyAnimation);
+        gargoyleTexture.loop();
         
-        // Select the new block
-        selectedWordBlock = wordBlock;
+        // Calculate a random Y position for the gargoyle
+        double yPosition = 50 + random.nextDouble() * (FXGL.getAppHeight() - 150);
         
-        // Always reset input when switching blocks
-        currentInput.setLength(0);
+        // Get a random word for this gargoyle
+        String word = wordList.get(random.nextInt(wordList.size()));
         
-        // Set initial yellow highlight for the selected block
-        resetToYellowHighlight();
-    }
-    
-    // New method to reset block to default white color
-    private void resetBlockToDefaultColor(Entity block) {
-        List<Text> letterNodes = block.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(DEFAULT_COLOR);
-            }
-        }
-    }
-    
-    // New method to reset the current selected block to yellow highlight
-    private void resetToYellowHighlight() {
-        if (selectedWordBlock == null) return;
+        // Create a text object for the word
+        Text wordText = new Text(word);
+        wordText.setFill(Color.WHITE);
+        wordText.setFont(Font.font(18));
+        wordText.setTextOrigin(javafx.geometry.VPos.TOP);
         
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(SELECTED_COLOR);
-            }
-        }
-    }
-    
-    // New method to update letter colors based on typing progress
-    private void updateLetterColors() {
-        if (selectedWordBlock == null) return;
+        // Add a backing rectangle for better visibility
+        Rectangle textBack = new Rectangle(
+                wordText.getLayoutBounds().getWidth() + 10,
+                wordText.getLayoutBounds().getHeight() + 6,
+                Color.color(0, 0, 0, 0.5));
         
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes == null) return;
+        StackPane wordDisplay = new StackPane(textBack, wordText);
+        wordDisplay.setTranslateY(-35); // Position further above gargoyle (adjusted from -25)
         
-        String typed = currentInput.toString();
-        
-        // Update colors - typed letters blue, remaining letters yellow
-        for (int i = 0; i < letterNodes.size(); i++) {
-            if (i < typed.length()) {
-                letterNodes.get(i).setFill(TYPED_COLOR);
-            } else {
-                letterNodes.get(i).setFill(SELECTED_COLOR);
-            }
-        }
-    }
-    
-    // New method to mark all letters in a word as complete (all blue)
-    private void markWordAsComplete() {
-        if (selectedWordBlock == null) return;
-        
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(TYPED_COLOR);
-            }
-        }
-    }
-    
-    private void selectNextWordBlock() {
-        if (activeWordBlocks.isEmpty()) return;
-        
-        int currentIndex = activeWordBlocks.indexOf(selectedWordBlock);
-        int nextIndex = (currentIndex + 1) % activeWordBlocks.size();
-        selectWordBlock(activeWordBlocks.get(nextIndex));
-    }
-    
-    private void checkWordCompletion() {
-        if (selectedWordBlock == null) return;
-        
-        String targetWord = selectedWordBlock.getString("word");
-        String typed = currentInput.toString();
-        
-        // Check if the typed text matches the target word
-        if (typed.equals(targetWord)) {
-            // Word completed successfully
-            Entity completedBlock = selectedWordBlock;
-            activeWordBlocks.remove(completedBlock);
-            completedBlock.removeFromWorld();
-            
-            // Calculate score based on word length and current wave
-            int wordScore = targetWord.length() * 10 * currentWave;
-            score += wordScore;
-            scoreText.setText(Integer.toString(score));
-            
-            // Select next block if available
-            if (!activeWordBlocks.isEmpty()) {
-                selectWordBlock(activeWordBlocks.get(0));
-            } else {
-                selectedWordBlock = null;
-            }
-        }
-    }
-    
-    // Modified to spawn a word block with pre-created TextFlow and letter nodes
-    private Entity spawnWordBlock(double yPosition, int rowIndex, double xPosition) {
-        // Create a block that will move from right to left
-        double blockSize = 40;
-        
-        // Pick a random word from the list based on current wave
-        String word;
-        if (currentWave <= 3) {
-            word = wordList.get(random.nextInt(wordList.size()));
-        } else if (currentWave <= 7) {
-            word = random.nextBoolean() 
-                ? wordList.get(random.nextInt(wordList.size())) 
-                : mediumWordList.get(random.nextInt(mediumWordList.size()));
-        } else {
-            // Higher chance of hard words in later waves
-            double rand = random.nextDouble();
-            if (rand < 0.2) {
-                word = wordList.get(random.nextInt(wordList.size()));
-            } else if (rand < 0.5) {
-                word = mediumWordList.get(random.nextInt(mediumWordList.size()));
-            } else {
-                word = hardWordList.get(random.nextInt(hardWordList.size()));
-            }
-        }
-        
-        // Use slightly different colors for different rows
-        Color blockColor;
-        if (rowIndex == 0) {
-            blockColor = Color.rgb(200, 200, 220); // Original bottom row color
-        } else if (rowIndex == 1) {
-            blockColor = Color.rgb(190, 210, 230); // Slightly bluer
-        } else if (rowIndex == 2) {
-            blockColor = Color.rgb(180, 220, 240); // More blue
-        } else if (rowIndex == 3) {
-            blockColor = Color.rgb(170, 230, 250); // Even more blue
-        } else {
-            blockColor = Color.rgb(160, 240, 255); // Very blue
-        }
-        
-        Rectangle block = new Rectangle(blockSize, blockSize, blockColor);
-        
-        // Create a TextFlow for the word with individual letters
-        TextFlow textFlow = new TextFlow();
-        textFlow.setTextAlignment(TextAlignment.CENTER);
-        textFlow.setTranslateY(-25);
-        
-        // Create and add individual letter nodes, storing them in a list
-        List<Text> letterNodes = new ArrayList<>();
-        for (int i = 0; i < word.length(); i++) {
-            Text letterText = new Text(String.valueOf(word.charAt(i)));
-            letterText.setFont(Font.font(22));
-            letterText.setFill(DEFAULT_COLOR); // Start with white color
-            textFlow.getChildren().add(letterText);
-            letterNodes.add(letterText);
-        }
-        
-        // Create a stack pane to hold both the block and TextFlow
-        StackPane view = new StackPane(block, textFlow);
-        view.setAlignment(Pos.CENTER);
-        
-        Entity blockEntity = FXGL.entityBuilder()
-                .type(EntityType.MOVING_BLOCK)
-                .at(xPosition, yPosition)
-                .view(view)
-                .bbox(new HitBox(BoundingShape.box(blockSize, blockSize)))
-                .with("word", word)
-                .with("letterNodes", letterNodes) // Store references to letter nodes
-                .with("textFlow", textFlow) // Store reference to TextFlow
-                .zIndex(30)
+        // Create the gargoyle entity positioned on the right side
+        Entity gargoyleEntity = FXGL.entityBuilder()
+                .type(EntityType.GARGOYLE)
+                .at(FXGL.getAppWidth(), yPosition) // Right side of screen
+                .view(gargoyleTexture)
+                .view(wordDisplay)
+                .scale(gargoyleScale, gargoyleScale) // Scale down the gargoyle
+                .bbox(new HitBox(BoundingShape.box(gargoyleFrameWidth * gargoyleScale, gargoyleFrameHeight * gargoyleScale)))
+                .with("speed", GARGOYLE_AUTO_SPEED * (1 + (currentWave * 0.2))) // Speed increases with wave
+                .with("word", word) // Store the word with the gargoyle
+                .with("targeted", false) // Track if this gargoyle is the current target
+                .zIndex(25)
                 .buildAndAttach();
         
-        return blockEntity;
+        // Add to active gargoyles list
+        activeGargoyles.add(gargoyleEntity);
+        
+        // If this is the first gargoyle and no target is selected, make it the target
+        if (currentTargetIndex == -1) {
+            currentTargetIndex = 0;
+            highlightCurrentTarget();
+        }
+    }
+    
+    private void updateGargoyles() {
+        // Process all gargoyles
+        for (int i = activeGargoyles.size() - 1; i >= 0; i--) {
+            Entity gargoyle = activeGargoyles.get(i);
+            
+            // Move gargoyle to the left
+            double speed = gargoyle.getDouble("speed");
+            gargoyle.translateX(-speed * FXGL.tpf());
+            
+            // If gargoyle reaches the left edge, it's a miss
+            if (gargoyle.getX() < -gargoyle.getWidth()) {
+                decreaseHealth();
+                
+                // If this was the target, update target index
+                if (i == currentTargetIndex) {
+                    currentTargetIndex = -1;
+                    currentTypedWord = "";
+                    updateTypingFeedback();
+                } else if (i < currentTargetIndex) {
+                    // If a gargoyle before the current target is removed, adjust the index
+                    currentTargetIndex--;
+                }
+                
+                activeGargoyles.remove(i);
+                gargoyle.removeFromWorld();
+                
+                // Find a new target if needed
+                if (currentTargetIndex == -1 && !activeGargoyles.isEmpty()) {
+                    currentTargetIndex = 0;
+                    highlightCurrentTarget();
+                }
+            }
+        }
+    }
+    
+    private void destroyGargoyle(Entity gargoyle) {
+        int index = activeGargoyles.indexOf(gargoyle);
+        
+        // Remove from active list
+        activeGargoyles.remove(gargoyle);
+        
+        // Add to score based on wave and word length
+        String word = gargoyle.getString("word");
+        score += 10 * currentWave * Math.max(1, word.length() / 3);
+        scoreText.setText(Integer.toString(score));
+        
+        // Remove from world
+        gargoyle.removeFromWorld();
+        
+        // Update target index if needed
+        if (index == currentTargetIndex) {
+            // The current target was destroyed
+            currentTypedWord = "";
+            if (activeGargoyles.isEmpty()) {
+                currentTargetIndex = -1;
+                typingFeedbackText.setVisible(false);
+            } else {
+                // Select next target, wrapping around if needed
+                currentTargetIndex = currentTargetIndex % activeGargoyles.size();
+                highlightCurrentTarget();
+            }
+        } else if (index < currentTargetIndex) {
+            // A gargoyle before the current target was destroyed, adjust index
+            currentTargetIndex--;
+        }
+        
+        updateTypingFeedback();
+    }
+    
+    private void switchTarget() {
+        if (activeGargoyles.isEmpty()) return;
+        
+        // Reset current gargoyle targeted status
+        if (currentTargetIndex >= 0 && currentTargetIndex < activeGargoyles.size()) {
+            Entity gargoyle = activeGargoyles.get(currentTargetIndex);
+            gargoyle.getProperties().setValue("targeted", false);
+        }
+        
+        // Move to next target, wrap around if at the end
+        currentTargetIndex = (currentTargetIndex + 1) % activeGargoyles.size();
+        
+        // Reset typed word
+        currentTypedWord = "";
+        
+        // Highlight the new target
+        highlightCurrentTarget();
+        updateTypingFeedback();
+    }
+    
+    private void highlightCurrentTarget() {
+        if (currentTargetIndex < 0 || currentTargetIndex >= activeGargoyles.size()) return;
+        
+        // Reset all gargoyles' targeted status
+        for (Entity gargoyle : activeGargoyles) {
+            gargoyle.getProperties().setValue("targeted", false);
+            
+            // Find the word text and update it to white (non-targeted color)
+            StackPane wordView = (StackPane) gargoyle.getViewComponent().getChildren().get(1);
+            Text wordText = (Text) wordView.getChildren().get(1);
+            wordText.setFill(Color.WHITE);
+            
+            Rectangle backing = (Rectangle) wordView.getChildren().get(0);
+            backing.setFill(Color.color(0, 0, 0, 0.5));
+        }
+        
+        // Set current target
+        Entity targetGargoyle = activeGargoyles.get(currentTargetIndex);
+        targetGargoyle.getProperties().setValue("targeted", true);
+        
+        // Find the word text and update it to yellow (targeted color)
+        StackPane wordView = (StackPane) targetGargoyle.getViewComponent().getChildren().get(1);
+        Text wordText = (Text) wordView.getChildren().get(1);
+        wordText.setFill(Color.YELLOW);
+        
+        Rectangle backing = (Rectangle) wordView.getChildren().get(0);
+        backing.setFill(Color.color(0.2, 0.2, 0.6, 0.7));
+        
+        updateTypingFeedback();
+    }
+    
+    private void updateTypingFeedback() {
+        if (currentTargetIndex < 0 || currentTargetIndex >= activeGargoyles.size()) {
+            typingFeedbackText.setVisible(false);
+            return;
+        }
+        
+        Entity targetGargoyle = activeGargoyles.get(currentTargetIndex);
+        String targetWord = targetGargoyle.getString("word");
+        
+        // Create highlighted text for typed portion
+        TextFlow textFlow = new TextFlow();
+        
+        // Check if what's been typed so far matches the target word
+        boolean isCorrect = targetWord.startsWith(currentTypedWord);
+        
+        // Show the typed part in green if correct, red if incorrect
+        if (!currentTypedWord.isEmpty()) {
+            Text typedPart = new Text(currentTypedWord);
+            typedPart.setFont(Font.font(22));
+            typedPart.setFill(isCorrect ? Color.LIGHTGREEN : Color.RED);
+            textFlow.getChildren().add(typedPart);
+        }
+        
+        // Show the rest of the word if any is left to type
+        if (currentTypedWord.length() < targetWord.length() && isCorrect) {
+            Text remainingPart = new Text(targetWord.substring(currentTypedWord.length()));
+            remainingPart.setFont(Font.font(22));
+            remainingPart.setFill(Color.LIGHTGRAY);
+            textFlow.getChildren().add(remainingPart);
+        }
+        
+        // Update the typing feedback UI
+        typingFeedbackText = new Text(textFlow.toString());
+        typingFeedbackText.setVisible(true);
+        
+        // Position the feedback text below the target gargoyle
+        updateTypingFeedbackPosition();
+    }
+    
+    private void updateTypingFeedbackPosition() {
+        if (currentTargetIndex < 0 || currentTargetIndex >= activeGargoyles.size()) {
+            typingFeedbackText.setVisible(false);
+            return;
+        }
+        
+        Entity targetGargoyle = activeGargoyles.get(currentTargetIndex);
+        
+        // Position the typing feedback below the gargoyle
+        double offsetX = targetGargoyle.getX() + (gargoyleFrameWidth * gargoyleScale) / 2 - 50;
+        double offsetY = targetGargoyle.getY() + (gargoyleFrameHeight * gargoyleScale) + 20;
+        
+        typingFeedbackText.setTranslateX(offsetX);
+        typingFeedbackText.setTranslateY(offsetY);
+        typingFeedbackText.setVisible(true);
+    }
+    
+    private void submitWord() {
+        if (currentTargetIndex < 0 || currentTargetIndex >= activeGargoyles.size()) return;
+        
+        Entity targetGargoyle = activeGargoyles.get(currentTargetIndex);
+        String targetWord = targetGargoyle.getString("word");
+        
+        // Check if the typed word matches the target
+        if (currentTypedWord.equals(targetWord)) {
+            destroyGargoyle(targetGargoyle);
+        } else {
+            // Reset typed word on incorrect submission
+            currentTypedWord = "";
+            updateTypingFeedback();
+        }
     }
     
     private void showWaveStartMessage() {
@@ -830,25 +770,16 @@ public class Game extends GameApplication {
         gameOver = false;
         waveCompleted = false;
         waveInProgress = false;
-        currentInput.setLength(0);
         score = 0;
         currentWave = 1;
+        currentTargetIndex = -1;
+        currentTypedWord = "";
         
-        // Reset gargoyle position to the right side of the screen
-        double gargoyleScale = 0.25;
-        int gargoyleFrameWidth = 288;
-        gargoyleEntity.setPosition(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80);
-        movingUp = false;
-        movingDown = false;
-        movingLeft = false;
-        movingRight = false;
-        
-        // Clear all word blocks
-        for (Entity entity : activeWordBlocks) {
+        // Clear all gargoyles
+        for (Entity entity : activeGargoyles) {
             entity.removeFromWorld();
         }
-        activeWordBlocks.clear();
-        selectedWordBlock = null;
+        activeGargoyles.clear();
         
         // Remove game over screen
         if (gameOverScreen != null) {
@@ -860,47 +791,14 @@ public class Game extends GameApplication {
         updateHealthBar();
         scoreText.setText("0");
         waveText.setText("1");
+        typingFeedbackText.setVisible(false);
         
         // Show message for first wave
         showWaveStartMessage();
         
         // Reset timers
-        blockSpawnTimer.capture();
+        gargoyleSpawnTimer.capture();
         waveTimer.capture();
-    }
-
-    // Update the gargoyle position method to include automatic movement
-    private void updateGargoylePosition() {
-        double dx = -GARGOYLE_AUTO_SPEED * FXGL.tpf(); // Automatic leftward movement
-        double dy = 0;
-        
-        // Apply manual input if provided
-        if (movingUp) dy -= GARGOYLE_SPEED * FXGL.tpf();
-        if (movingDown) dy += GARGOYLE_SPEED * FXGL.tpf();
-        if (movingLeft) dx -= GARGOYLE_SPEED * FXGL.tpf(); // Extra left speed when pressing left
-        if (movingRight) dx += GARGOYLE_SPEED * FXGL.tpf(); // Right will counter auto-movement
-        
-        // Apply movement
-        gargoyleEntity.translate(dx, dy);
-        
-        // Simple boundary check 
-        double x = gargoyleEntity.getX();
-        double y = gargoyleEntity.getY();
-        double width = gargoyleEntity.getWidth();
-        double height = gargoyleEntity.getHeight();
-        double screenWidth = FXGL.getAppWidth();
-        double screenHeight = FXGL.getAppHeight();
-        
-        // Teleport to right side when reaching left edge
-        if (x < -width) {
-            gargoyleEntity.setX(screenWidth);
-        } else if (x + width > screenWidth) {
-            gargoyleEntity.setX(screenWidth - width);
-        }
-        
-        // Keep vertical position within screen
-        if (y < 0) gargoyleEntity.setY(0);
-        else if (y + height > screenHeight) gargoyleEntity.setY(screenHeight - height);
     }
 
     public static void main(String[] args) {
