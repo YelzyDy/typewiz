@@ -31,6 +31,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.Line;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -203,16 +204,16 @@ public class Game extends GameApplication {
     
     // Word display constants
     private static final double WORD_FONT_SIZE = 40;
-    private static final double WORD_HEIGHT = WORD_FONT_SIZE + 10; // Font size plus padding
+    private static final double WORD_HEIGHT = WORD_FONT_SIZE + 15; // Increased padding
     private static final double WORD_VERTICAL_OFFSET = 160;
     
     // Total height of a gargoyle including its word
     private static final double TOTAL_ENTITY_HEIGHT = (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) + Math.abs(WORD_VERTICAL_OFFSET) + WORD_HEIGHT;
     
     // Update spacing constants for strict enforcement including word heights
-    private static final double MIN_VERTICAL_SPACING = TOTAL_ENTITY_HEIGHT * 1.1; // Reduced from 1.2 to 1.1 to allow more spawns
-    private static final double MIN_HORIZONTAL_SPACING = GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 2.0; // Reduced from 2.5 to 2.0
-    private static final double SPAWN_BUFFER = 20; // Reduced from 30 to 20 to allow closer spawns
+    private static final double MIN_VERTICAL_SPACING = TOTAL_ENTITY_HEIGHT * 0.3; // Drastically reduced to allow more crowding
+    private static final double MIN_HORIZONTAL_SPACING = GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 1.5;
+    private static final double SPAWN_BUFFER = 10;
 
     // Add animation state tracking
     private static final double ANIMATION_TRANSITION_TIME = 0.2; // 200ms transition
@@ -220,12 +221,12 @@ public class Game extends GameApplication {
     private static final double ANIMATION_FADE_TIME = 0.1; // 100ms fade
 
     // Add wave spawning constants
-    private static final double WAVE_SPAWN_DELAY = 10.0; // 3 seconds between spawn groups
+    private static final double WAVE_SPAWN_DELAY = 7.0; // Reduced from 10.0 to 7.0 seconds between spawn groups
     private static final int MIN_SPAWNS_PER_GROUP = 2;
     private static final int MAX_SPAWNS_PER_GROUP = 3;
     private static final int MIN_SPAWNS_PER_WAVE = 10;
     private static final int MAX_SPAWNS_PER_WAVE = 15;
-    private static final double SPAWN_SPEED_INCREASE = 0.85; // Each group spawns 15% faster than the last
+    private static final double SPAWN_SPEED_INCREASE = 0.9; // Adjusted from 0.85 to 0.9 (each group spawns 10% faster than the last)
     private LocalTimer waveSpawnTimer;
     private boolean isSpawningWave = false;
     private int currentGroupSize = 0;
@@ -658,7 +659,19 @@ public class Game extends GameApplication {
         // Apply wave-specific difficulty settings
         int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
         int maxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-        currentGroupSize = random.nextInt(maxSpawns - minSpawns + 1) + minSpawns;
+        
+        // Cap max spawns based on screen height to prevent overcrowding
+        double minY = SCREEN_MARGIN;
+        double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
+        double availableHeight = maxY - minY;
+        int maxPossibleSpawns = Math.max(1, (int)(availableHeight / MIN_VERTICAL_SPACING));
+        
+        // Adjust group size if necessary
+        maxSpawns = Math.min(maxSpawns, maxPossibleSpawns);
+        minSpawns = Math.min(minSpawns, maxSpawns);
+        
+        // Set the current group size
+        currentGroupSize = Math.max(1, random.nextInt(maxSpawns - minSpawns + 1) + minSpawns);
         
         // Set total spawns for this wave
         totalWaveSpawns = WAVE_SPAWNS_PER_WAVE[waveIndex];
@@ -671,7 +684,7 @@ public class Game extends GameApplication {
         System.out.println("Starting wave " + currentWave + " with " + totalWaveSpawns + " total spawns");
         System.out.println("Wave " + currentWave + " settings: Speed multiplier " + 
                 WAVE_SPEED_MULTIPLIERS[waveIndex] + ", Delay multiplier " + 
-                SPAWN_DELAY_MULTIPLIERS[waveIndex]);
+                SPAWN_DELAY_MULTIPLIERS[waveIndex] + ", Max group size: " + maxSpawns);
     }
     
     private void spawnGargoyleGroup() {
@@ -683,17 +696,21 @@ public class Game extends GameApplication {
         // Calculate spawn area
         double minY = SCREEN_MARGIN;
         double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
+        double availableHeight = maxY - minY;
         
-        // Get random Y positions
+        // Generate random positions with minimal spacing checks
         List<Double> spawnPositions = new ArrayList<>();
+        
+        // Original behavior - generate random positions
         for (int i = 0; i < currentGroupSize; i++) {
-            spawnPositions.add(minY + random.nextDouble() * (maxY - minY));
+            double yPos = minY + random.nextDouble() * (maxY - minY);
+            spawnPositions.add(yPos);
         }
         
-        // Sort positions to maintain some visual order
+        // Sort positions to keep some visual order
         Collections.sort(spawnPositions);
         
-        // Spawn gargoyles
+        // Spawn gargoyles at positions
         int spawned = 0;
         for (double yPos : spawnPositions) {
             String word = getRandomWordForWave();
@@ -724,6 +741,8 @@ public class Game extends GameApplication {
         // Prepare for next group with wave-specific parameters
         int waveMinSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
         int waveMaxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        
+        // Do not limit based on vertical spacing - allow full spawn groups
         currentGroupSize = random.nextInt(waveMaxSpawns - waveMinSpawns + 1) + waveMinSpawns;
         
         // Apply wave-specific delay reduction for next spawn
@@ -736,37 +755,93 @@ public class Game extends GameApplication {
         // Get wave index (0-based) and ensure it's within bounds
         int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
         
+        // Get recently used words from active gargoyles to avoid repetition
+        List<String> recentlyUsedWords = new ArrayList<>();
+        for (Entity gargoyle : activeGargoyles) {
+            try {
+                String word = gargoyle.getString("word");
+                if (word != null && !word.isEmpty()) {
+                    recentlyUsedWords.add(word);
+                }
+            } catch (Exception e) {
+                // Ignore errors
+            }
+        }
+        
+        // Count how many long words are already active
+        int activeLongWords = 0;
+        for (String word : recentlyUsedWords) {
+            if (word.length() >= 8) {
+                activeLongWords++;
+            }
+        }
+        
+        // Determine if we should avoid long words based on active count
+        boolean avoidLongWords = activeLongWords >= 2;
+        
+        // Set up a list of candidate words based on wave difficulty
+        List<String> candidateWords = new ArrayList<>();
+        double rand = random.nextDouble();
+        
         // Early waves (1-3) - mostly easy words
         if (waveIndex < 3) {
-            double rand = random.nextDouble();
             if (rand < 0.7) { // 70% easy words
-                return wordList.get(random.nextInt(wordList.size()));
+                candidateWords.addAll(wordList);
             } else { // 30% medium words
-                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+                candidateWords.addAll(mediumWordList);
             }
         } 
         // Mid waves (4-6) - mix of easy and medium words, few hard words
         else if (waveIndex < 6) {
-            double rand = random.nextDouble();
             if (rand < 0.3) { // 30% easy words
-                return wordList.get(random.nextInt(wordList.size()));
+                candidateWords.addAll(wordList);
             } else if (rand < 0.8) { // 50% medium words
-                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+                candidateWords.addAll(mediumWordList);
             } else { // 20% hard words
-                return hardWordList.get(random.nextInt(hardWordList.size()));
+                candidateWords.addAll(hardWordList);
             }
         } 
         // Late waves (7-10) - mostly medium and hard words
         else {
-            double rand = random.nextDouble();
             if (rand < 0.1) { // 10% easy words
-                return wordList.get(random.nextInt(wordList.size()));
+                candidateWords.addAll(wordList);
             } else if (rand < 0.5) { // 40% medium words
-                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+                candidateWords.addAll(mediumWordList);
             } else { // 50% hard words
+                candidateWords.addAll(hardWordList);
+            }
+        }
+        
+        // Filter out recently used words
+        candidateWords.removeAll(recentlyUsedWords);
+        
+        // Filter out long words if there are already too many active
+        if (avoidLongWords) {
+            candidateWords = candidateWords.stream()
+                .filter(word -> word.length() < 8)
+                .collect(Collectors.toList());
+            
+            // If we filtered out all candidates, add back the short words
+            if (candidateWords.isEmpty()) {
+                candidateWords.addAll(wordList.stream()
+                    .filter(word -> word.length() < 6)
+                    .collect(Collectors.toList()));
+            }
+        }
+        
+        // If still no candidates, use any word from appropriate list
+        if (candidateWords.isEmpty()) {
+            if (waveIndex < 3) {
+                return wordList.get(random.nextInt(wordList.size()));
+            } else if (waveIndex < 6) {
+                return mediumWordList.get(random.nextInt(mediumWordList.size()));
+            } else {
                 return hardWordList.get(random.nextInt(hardWordList.size()));
             }
         }
+        
+        // Return a random word from candidates
+        return candidateWords.get(random.nextInt(candidateWords.size()));
     }
 
     private void setupUI() {
@@ -1689,35 +1764,50 @@ public class Game extends GameApplication {
         // Create container for word with background
         StackPane wordContainer = new StackPane();
         
+        // Determine font size based on word length - longer words get smaller font
+        double fontSize = WORD_FONT_SIZE;
+        if (word.length() > 8) {
+            fontSize *= 0.8; // 20% smaller for long words
+        } else if (word.length() > 12) {
+            fontSize *= 0.7; // 30% smaller for very long words
+        }
+        
         // Create word background for better visibility
         Rectangle wordBackground = new Rectangle();
-        double padding = 15;
-        double wordLength = word.length() * WORD_FONT_SIZE * 0.6 + padding * 2;  
-        wordBackground.setWidth(Math.max(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 0.8, wordLength));
-        wordBackground.setHeight(WORD_FONT_SIZE + padding);
-        wordBackground.setArcWidth(15);
-        wordBackground.setArcHeight(15);
-        wordBackground.setFill(Color.rgb(0, 0, 0, 0.6));
-        wordBackground.setStroke(Color.rgb(180, 180, 180, 0.4));
-        wordBackground.setStrokeWidth(1.5);
+        double padding = 10;
+        double wordLength = word.length() * fontSize * 0.55 + padding * 2;  // Even more compact width
+        wordBackground.setWidth(Math.max(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 0.6, wordLength));
+        wordBackground.setHeight(fontSize + padding);  // Compact height
+        wordBackground.setArcWidth(10);  // Smaller corners
+        wordBackground.setArcHeight(10);
+        wordBackground.setFill(Color.rgb(0, 0, 0, 0.8));
+        wordBackground.setStroke(Color.rgb(200, 200, 200, 0.6));
+        wordBackground.setStrokeWidth(1.0);
         
-        // Create HBox to hold all letter Text nodes with proper spacing
-        HBox wordBox = new HBox(2); // Small spacing between letters
+        // Smaller drop shadow 
+        DropShadow dropShadow = new DropShadow();
+        dropShadow.setColor(Color.BLACK);
+        dropShadow.setRadius(5);
+        dropShadow.setSpread(0.2);
+        wordBackground.setEffect(dropShadow);
+        
+        // Create compact HBox for text
+        HBox wordBox = new HBox(1); // Minimal spacing between letters
         wordBox.setAlignment(Pos.CENTER);
         
         // Create letter nodes
         List<Text> letterNodes = new ArrayList<>();
         for (char c : word.toCharArray()) {
             Text letterText = new Text(String.valueOf(c));
-            letterText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, WORD_FONT_SIZE));
+            letterText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, fontSize));
             letterText.setFill(Color.WHITE);
             
-            // Add stroke to make text more visible
+            // Add minimal stroke
             letterText.setStroke(Color.BLACK);
-            letterText.setStrokeWidth(1.5);
+            letterText.setStrokeWidth(0.5);
             
-            // Add a slight glow effect for better visibility
-            javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.3);
+            // Less glow
+            javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.2);
             letterText.setEffect(glow);
             
             letterNodes.add(letterText);
@@ -1732,6 +1822,19 @@ public class Game extends GameApplication {
 
         // Store letter nodes for later use
         gargoyle.setProperty("letterNodes", letterNodes);
+        
+        // Add simpler connecting line 
+        Line connectionLine = new Line();
+        connectionLine.setStartX(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE / 2);
+        connectionLine.setStartY(GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE / 2);
+        connectionLine.setEndX(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE / 2);
+        connectionLine.setEndY(WORD_VERTICAL_OFFSET);
+        connectionLine.setStroke(Color.rgb(200, 200, 200, 0.3));
+        connectionLine.setStrokeWidth(0.75);
+        connectionLine.getStrokeDashArray().addAll(2.0, 2.0);  // Smaller dashes
+        
+        // Add to view before the text to keep text on top
+        view.getChildren().add(1, connectionLine);
     }
 
     // Add methods to calculate and update typing statistics
