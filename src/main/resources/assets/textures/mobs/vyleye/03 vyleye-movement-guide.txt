@@ -1,0 +1,13 @@
+vyleye movement guide ;>
+
+00 - 23 -> flying forward
+
+24 - 36 -> fully facing left
+
+37 - 39 -> attack movement (39 strike attack)
+
+40 - 45 - about to get hit
+
+46 - about to burst
+
+47 - 54 - complete deadburst animation PIGSAT HAHHAAHHA
