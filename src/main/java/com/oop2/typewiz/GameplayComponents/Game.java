@@ -10,24 +10,26 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.time.LocalTimer;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.text.*;
 import javafx.util.Duration;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.paint.ImagePattern;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Node;
-import javafx.scene.text.TextFlow;
 import javafx.scene.layout.HBox;
 
 import java.util.ArrayList;
@@ -766,7 +768,7 @@ public class Game extends GameApplication {
             }
         }
     }
-    
+
     private void setupUI() {
 
         // Create health bar panel with cool styling
@@ -774,91 +776,91 @@ public class Game extends GameApplication {
         healthDisplay.setTranslateX(20);
         healthDisplay.setTranslateY(20);
         healthDisplay.setPadding(new javafx.geometry.Insets(10, 15, 10, 15));
-        
+
         // Add background and styling to health panel
         healthDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(healthDisplay, UI_PRIMARY_COLOR, UI_CORNER_RADIUS);
-        
+
         Text healthLabel = new Text("HEALTH");
         healthLabel.setFill(UI_PRIMARY_COLOR);
         healthLabel.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 18));
         addTextGlow(healthLabel, UI_PRIMARY_COLOR, 0.4);
-        
+
         healthBar = new Rectangle(200, 20, Color.GREEN);
         healthBar.setArcWidth(10);
         healthBar.setArcHeight(10);
         // Add drop shadow to health bar
         healthBar.setEffect(new javafx.scene.effect.DropShadow(5, Color.BLACK));
-        
+
         // Add background for health bar
         Rectangle healthBarBg = new Rectangle(200, 20, Color.rgb(50, 50, 50, 0.6));
         healthBarBg.setArcWidth(10);
         healthBarBg.setArcHeight(10);
 
-//change the health bar from middle to right to left
+        // Change the health bar from middle to right to left
         Pane healthBarPane = new Pane();
         healthBarPane.setPrefSize(200, 20);
         healthBarPane.setMaxSize(200, 20);
         healthBarPane.getChildren().addAll(healthBarBg, healthBar);
 
-// Anchor health bar to the left
+        // Anchor health bar to the left
         healthBar.setTranslateX(0);
         healthBar.setTranslateY(0);
-        
+
         healthText = new Text(playerHealth + "/" + MAX_HEALTH);
         healthText.setFill(UI_TEXT_PRIMARY);
         healthText.setFont(Font.font(FONT_FAMILY, 16));
-        
+
         healthDisplay.getChildren().addAll(healthLabel, healthBarPane, healthText);
-        
+
         // Create top bar with score and wave info
         HBox topBar = new HBox(20);
         topBar.setTranslateX(FXGL.getAppWidth() / 2 - 200);
         topBar.setTranslateY(20);
         topBar.setPadding(new javafx.geometry.Insets(10, 15, 10, 15));
         topBar.setAlignment(Pos.CENTER);
-        
+
         // Add background and styling to top bar
         topBar.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(topBar, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
-        
+
         // Create score display with cool styling
         VBox scoreDisplay = new VBox(5);
         scoreDisplay.setPadding(new javafx.geometry.Insets(5, 10, 5, 10));
         scoreDisplay.setAlignment(Pos.CENTER);
-        
+
         Text scoreLabel = new Text("SCORE");
         scoreLabel.setFill(UI_SECONDARY_COLOR);
         scoreLabel.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 18));
         addTextGlow(scoreLabel, UI_SECONDARY_COLOR, 0.4);
-        
+
         scoreText = new Text("0");
         scoreText.setFill(Color.WHITE);
         scoreText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 28));
         addTextGlow(scoreText, UI_SECONDARY_COLOR, 0.3);
-        
+
         scoreDisplay.getChildren().addAll(scoreLabel, scoreText);
-        
+
         // Create wave display with cool styling
         VBox waveDisplay = new VBox(5);
         waveDisplay.setPadding(new javafx.geometry.Insets(5, 10, 5, 10));
         waveDisplay.setAlignment(Pos.CENTER);
-        
+
         Text waveLabel = new Text("WAVE");
         waveLabel.setFill(UI_ACCENT_COLOR);
         waveLabel.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 18));
         addTextGlow(waveLabel, UI_ACCENT_COLOR, 0.4);
-        
+
         waveText = new Text("1/" + MAX_WAVES);
         waveText.setFill(Color.WHITE);
         waveText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 28));
         addTextGlow(waveText, UI_ACCENT_COLOR, 0.3);
-        
+
         waveDisplay.getChildren().addAll(waveLabel, waveText);
-        
+
         // Add score and wave displays to top bar
         topBar.getChildren().addAll(scoreDisplay, waveDisplay);
-        
+
         // Create instruction text (invisible by default)
         instructionText = new Text("");
         instructionText.setTranslateX(FXGL.getAppWidth() / 2 - 150);
@@ -867,7 +869,7 @@ public class Game extends GameApplication {
         instructionText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 28));
         instructionText.setVisible(false);
         addTextGlow(instructionText, Color.ORANGE, 0.6);
-        
+
         // Add controls help text
         Text controlsText = new Text("Controls: Type words | SHIFT to switch targets | SPACE to destroy word");
         controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 240);
@@ -875,35 +877,35 @@ public class Game extends GameApplication {
         controlsText.setFill(UI_TEXT_SECONDARY);
         controlsText.setFont(Font.font(FONT_FAMILY, 16));
         addTextGlow(controlsText, Color.WHITE, 0.2);
-        
+
         // Add UI elements to the scene
         FXGL.addUINode(healthDisplay);
         FXGL.addUINode(topBar);
         FXGL.addUINode(instructionText);
         FXGL.addUINode(controlsText);
     }
-    
+
     // Helper methods for UI styling
     private javafx.scene.layout.Background createPanelBackground(Color color, double cornerRadius) {
         return new javafx.scene.layout.Background(
-            new javafx.scene.layout.BackgroundFill(
-                color, 
-                new javafx.scene.layout.CornerRadii(cornerRadius), 
-                javafx.geometry.Insets.EMPTY
-            )
+                new javafx.scene.layout.BackgroundFill(
+                        color,
+                        new javafx.scene.layout.CornerRadii(cornerRadius),
+                        javafx.geometry.Insets.EMPTY
+                )
         );
     }
-    
+
     private void addPanelBorder(javafx.scene.layout.Region panel, Color color, double cornerRadius) {
         panel.setBorder(new javafx.scene.layout.Border(
-            new javafx.scene.layout.BorderStroke(
-                color,
-                javafx.scene.layout.BorderStrokeStyle.SOLID,
-                new javafx.scene.layout.CornerRadii(cornerRadius),
-                new javafx.scene.layout.BorderWidths(UI_BORDER_WIDTH)
-            )
+                new javafx.scene.layout.BorderStroke(
+                        color,
+                        javafx.scene.layout.BorderStrokeStyle.SOLID,
+                        new javafx.scene.layout.CornerRadii(cornerRadius),
+                        new javafx.scene.layout.BorderWidths(UI_BORDER_WIDTH)
+                )
         ));
-        
+
         // Add a subtle glow around the panel
         javafx.scene.effect.DropShadow glow = new javafx.scene.effect.DropShadow();
         glow.setColor(color);
@@ -911,7 +913,7 @@ public class Game extends GameApplication {
         glow.setSpread(0.4);
         panel.setEffect(glow);
     }
-    
+
     private void addTextGlow(Text text, Color color, double intensity) {
         javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(intensity);
         javafx.scene.effect.DropShadow shadow = new javafx.scene.effect.DropShadow();
@@ -940,7 +942,8 @@ public class Game extends GameApplication {
         playerHealth = Math.max(0, playerHealth - HEALTH_LOSS_PER_MISS);
         updateHealthBar();
     }
-    
+
+
     private void updateInputDisplay() {
         // Keep empty implementation since we don't need it anymore
     }
@@ -1291,261 +1294,241 @@ public class Game extends GameApplication {
     private void showWaveCompletionMessage() {
         // Do nothing - waves transition immediately
     }
-    
+
     private void showGameOverScreen(String message) {
         gameOver = true;
-        
-        // Create semi-transparent overlay with gradient
+
+        // Wizardy overlay with violet-gold magical gradient
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
-        javafx.scene.paint.LinearGradient gradient = new javafx.scene.paint.LinearGradient(
-            0, 0, 0, 1, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
-            new javafx.scene.paint.Stop(0, Color.rgb(80, 0, 0, 0.8)),
-            new javafx.scene.paint.Stop(1, Color.rgb(30, 0, 0, 0.8))
+        LinearGradient gradient = new LinearGradient(
+                0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(60, 0, 90, 0.85)),   // Top: mystical violet
+                new Stop(1, Color.rgb(20, 0, 40, 0.85))    // Bottom: deep arcane purple
         );
         overlay.setFill(gradient);
-        
-        // Create game over text with effects
+
+        // Game Over text with wizardy golden glow
         Text gameOverText = new Text(message);
-        gameOverText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 60));
-        gameOverText.setFill(Color.rgb(255, 50, 50));
-        
-        // Add dramatic pulsing glow effect
-        javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.8);
-        javafx.scene.effect.DropShadow shadow = new javafx.scene.effect.DropShadow();
-        shadow.setColor(Color.rgb(255, 0, 0));
-        shadow.setRadius(15);
+        gameOverText.setFont(Font.font(FONT_FAMILY, FontWeight.EXTRA_BOLD, 60));
+        gameOverText.setFill(Color.web("#FFD700")); // Golden yellow
+
+        Glow glow = new Glow(0.7);
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.web("#9B59B6")); // Enchanted violet shadow
+        shadow.setRadius(25);
         shadow.setInput(glow);
         gameOverText.setEffect(shadow);
-        
-        // Add pulsing animation to game over text
-        javafx.animation.FadeTransition pulse = new javafx.animation.FadeTransition(Duration.seconds(1.5), gameOverText);
-        pulse.setFromValue(0.7);
+
+        // Pulsing animation for magical effect
+        FadeTransition pulse = new FadeTransition(Duration.seconds(1.5), gameOverText);
+        pulse.setFromValue(0.65);
         pulse.setToValue(1.0);
-        pulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        pulse.setCycleCount(Animation.INDEFINITE);
         pulse.setAutoReverse(true);
         pulse.play();
-        
-        // Calculate final typing statistics
+
+        // Calculate stats
         double finalWPM = calculateWPM();
         double finalRawWPM = calculateRawWPM();
         double finalAccuracy = calculateAccuracy();
         double finalConsistency = calculateConsistency();
-        
-        // Create stats panel with enhanced styling
+
         VBox statsPanel = createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
-        addPanelBorder(statsPanel, UI_SECONDARY_COLOR, UI_CORNER_RADIUS);
-        
-        // Create typing graph
-        javafx.scene.canvas.Canvas graphCanvas = createTypingGraph();
-        
-        // Create stylish score text
+        addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light golden border
+
+        Canvas graphCanvas = createTypingGraph();
+
+        // Score Text
         Text scoreText = new Text("FINAL SCORE: " + score);
-        scoreText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 34));
-        scoreText.setFill(UI_ACCENT_COLOR);
-        addTextGlow(scoreText, UI_ACCENT_COLOR, 0.5);
-        
-        // Create wave text
+        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 34));
+        scoreText.setFill(Color.web("#FFD700"));
+        addTextGlow(scoreText, Color.web("#FFD700"), 0.5);
+
+        // Wave Text
         Text waveText = new Text("Waves completed: " + (currentWave - 1));
-        waveText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 24));
-        waveText.setFill(UI_TEXT_PRIMARY);
-        addTextGlow(waveText, UI_PRIMARY_COLOR, 0.3);
-        
-        // Create retry text with button-like styling
-        StackPane retryButton = createStylishButton("RETRY", 180, 50, UI_PRIMARY_COLOR);
-        
-        // Add pulsing animation to retry button
-        javafx.animation.ScaleTransition buttonPulse = new javafx.animation.ScaleTransition(Duration.seconds(1.2), retryButton);
+        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
+        waveText.setFill(Color.web("#E6DAF0")); // Pale wizardy text
+        addTextGlow(waveText, Color.web("#9B59B6"), 0.3);
+
+        // Retry Button
+        StackPane retryButton = createStylishButton("ENTER to Retry", 200, 50, Color.web("#FFD700"));
+        ScaleTransition buttonPulse = new ScaleTransition(Duration.seconds(1.2), retryButton);
         buttonPulse.setFromX(0.95);
         buttonPulse.setFromY(0.95);
         buttonPulse.setToX(1.05);
         buttonPulse.setToY(1.05);
-        buttonPulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        buttonPulse.setCycleCount(Animation.INDEFINITE);
         buttonPulse.setAutoReverse(true);
         buttonPulse.play();
-        
-        // Create game stats layout - split horizontally
+
+        // Layouts
         HBox gameStatsLayout = new HBox(40);
         gameStatsLayout.setAlignment(Pos.CENTER);
-        gameStatsLayout.setPadding(new javafx.geometry.Insets(20));
-        
-        // Left side - stats and score in a panel
+        gameStatsLayout.setPadding(new Insets(20));
+
         VBox leftColumn = new VBox(20, gameOverText, scoreText, waveText, statsPanel);
         leftColumn.setAlignment(Pos.CENTER_LEFT);
-        //added padding sa container - lovely
         leftColumn.setPadding(new Insets(50));
-        
-        // Add panel styling to stats side
+
         Rectangle leftBg = new Rectangle(400, 520);
         leftBg.setArcWidth(UI_CORNER_RADIUS);
         leftBg.setArcHeight(UI_CORNER_RADIUS);
-        leftBg.setFill(Color.rgb(40, 40, 60, 0.7));
-        leftBg.setStroke(UI_SECONDARY_COLOR);
+        leftBg.setFill(Color.rgb(50, 0, 80, 0.75)); // Violet panel
+        leftBg.setStroke(Color.web("#FFD700"));    // Golden border
         leftBg.setStrokeWidth(2);
-        
-        // Right side - graph in a panel
+
         VBox rightColumn = new VBox(15, graphCanvas);
         rightColumn.setAlignment(Pos.CENTER);
-        rightColumn.setPadding(new javafx.geometry.Insets(10));
-        
-        // Add panel styling to graph side
+        rightColumn.setPadding(new Insets(10));
+
         Rectangle rightBg = new Rectangle(420, 340);
         rightBg.setArcWidth(UI_CORNER_RADIUS);
         rightBg.setArcHeight(UI_CORNER_RADIUS);
-        rightBg.setFill(Color.rgb(40, 40, 60, 0.7));
-        rightBg.setStroke(UI_PRIMARY_COLOR);
+        rightBg.setFill(Color.rgb(50, 0, 80, 0.75)); // Same violet glass
+        rightBg.setStroke(Color.web("#E1C16E"));     // Light gold border
         rightBg.setStrokeWidth(2);
-        
+
         StackPane leftStack = new StackPane(leftBg, leftColumn);
         StackPane rightStack = new StackPane(rightBg, rightColumn);
-        
+
         gameStatsLayout.getChildren().addAll(leftStack, rightStack);
-        
-        // Add retry button at bottom
+
         VBox fullLayout = new VBox(30, gameStatsLayout, retryButton);
         fullLayout.setAlignment(Pos.CENTER);
-        
-        // Add game over screen to scene
+
         gameOverScreen = FXGL.entityBuilder()
                 .view(new StackPane(overlay, fullLayout))
-                .zIndex(100) // Above everything else
+                .zIndex(100)
                 .buildAndAttach();
     }
-    
+
     private void showVictoryScreen() {
         gameCompleted = true;
-        
-        // Create semi-transparent overlay with celebratory gradient
+
+        // Violet-Gold celebratory magical overlay
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
-        javafx.scene.paint.LinearGradient gradient = new javafx.scene.paint.LinearGradient(
-            0, 0, 0, 1, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
-            new javafx.scene.paint.Stop(0, Color.rgb(80, 60, 0, 0.8)),
-            new javafx.scene.paint.Stop(1, Color.rgb(40, 20, 80, 0.8))
+        LinearGradient gradient = new LinearGradient(
+                0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(70, 0, 120, 0.8)),  // Deep violet top
+                new Stop(1, Color.rgb(30, 0, 60, 0.8))    // Midnight purple bottom
         );
         overlay.setFill(gradient);
-        
-        // Create victory text with effects
+
+        // Victory text
         Text victoryText = new Text("VICTORY!");
-        victoryText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 72));
-        victoryText.setFill(Color.rgb(255, 215, 0)); // Gold
-        
-        // Add dramatic glow effect
-        javafx.scene.effect.Glow victoryGlow = new javafx.scene.effect.Glow(0.9);
-        javafx.scene.effect.DropShadow victoryShadow = new javafx.scene.effect.DropShadow();
-        victoryShadow.setColor(Color.rgb(255, 180, 0));
-        victoryShadow.setRadius(20);
-        victoryShadow.setInput(victoryGlow);
-        victoryText.setEffect(victoryShadow);
-        
-        // Add celebratory animation to victory text
-        javafx.animation.ScaleTransition celebrateScale = new javafx.animation.ScaleTransition(Duration.seconds(1.0), victoryText);
+        victoryText.setFont(Font.font(FONT_FAMILY, FontWeight.EXTRA_BOLD, 72));
+        victoryText.setFill(Color.web("#FFD700")); // Golden yellow
+
+        Glow glow = new Glow(0.9);
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.web("#D4AF37")); // Gold shadow
+        shadow.setRadius(25);
+        shadow.setInput(glow);
+        victoryText.setEffect(shadow);
+
+        // Magical pulsing animation
+        ScaleTransition celebrateScale = new ScaleTransition(Duration.seconds(1.0), victoryText);
         celebrateScale.setFromX(1.0);
         celebrateScale.setFromY(1.0);
         celebrateScale.setToX(1.1);
         celebrateScale.setToY(1.1);
-        celebrateScale.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        celebrateScale.setCycleCount(Animation.INDEFINITE);
         celebrateScale.setAutoReverse(true);
         celebrateScale.play();
-        
-        // Add subtitle text
+
+        // Subtitle
         Text subtitleText = new Text("All Waves Completed!");
         subtitleText.setFont(Font.font(FONT_FAMILY, 28));
-        subtitleText.setFill(Color.WHITE);
-        addTextGlow(subtitleText, Color.WHITE, 0.3);
-        
-        // Calculate final typing statistics
+        subtitleText.setFill(Color.web("#EDE6FF")); // Light violet-white
+        addTextGlow(subtitleText, Color.web("#B388EB"), 0.4);
+
+        // Stats
         double finalWPM = calculateWPM();
         double finalRawWPM = calculateRawWPM();
         double finalAccuracy = calculateAccuracy();
         double finalConsistency = calculateConsistency();
-        
-        // Create enhanced stats panel
+
         VBox statsPanel = createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
-        addPanelBorder(statsPanel, UI_SECONDARY_COLOR, UI_CORNER_RADIUS);
-        
-        // Create typing graph
-        javafx.scene.canvas.Canvas graphCanvas = createTypingGraph();
-        
-        // Create stylish score text
+        addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light gold border
+
+        Canvas graphCanvas = createTypingGraph();
+
+        // Final score text
         Text scoreText = new Text("FINAL SCORE: " + score);
-        scoreText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 34));
-        scoreText.setFill(UI_ACCENT_COLOR);
-        addTextGlow(scoreText, UI_ACCENT_COLOR, 0.5);
-        
-        // Create health text
+        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 34));
+        scoreText.setFill(Color.web("#FFD700"));
+        addTextGlow(scoreText, Color.web("#FFD700"), 0.5);
+
+        // Health text
         Text healthText = new Text("Health remaining: " + playerHealth);
-        healthText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 24));
-        healthText.setFill(UI_TEXT_PRIMARY);
-        addTextGlow(healthText, UI_PRIMARY_COLOR, 0.3);
-        
-        // Create waves completed text
+        healthText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
+        healthText.setFill(Color.web("#F0EFFF"));
+        addTextGlow(healthText, Color.web("#9B59B6"), 0.3);
+
+        // Waves text
         Text waveText = new Text("All " + MAX_WAVES + " waves completed!");
-        waveText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, 24));
+        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
         waveText.setFill(Color.LIGHTGREEN);
-        addTextGlow(waveText, Color.GREEN, 0.4);
-        
-        // Create restart button with button-like styling
-        StackPane restartButton = createStylishButton("PLAY AGAIN", 180, 50, UI_PRIMARY_COLOR);
-        
-        // Add pulsing animation to restart button
-        javafx.animation.ScaleTransition buttonPulse = new javafx.animation.ScaleTransition(Duration.seconds(1.2), restartButton);
+        addTextGlow(waveText, Color.LIGHTGREEN, 0.4);
+
+        // Play again button
+        StackPane restartButton = createStylishButton("PLAY AGAIN", 180, 50, Color.web("#FFD700"));
+        ScaleTransition buttonPulse = new ScaleTransition(Duration.seconds(1.2), restartButton);
         buttonPulse.setFromX(0.95);
         buttonPulse.setFromY(0.95);
         buttonPulse.setToX(1.05);
         buttonPulse.setToY(1.05);
-        buttonPulse.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        buttonPulse.setCycleCount(Animation.INDEFINITE);
         buttonPulse.setAutoReverse(true);
         buttonPulse.play();
-        
-        // Create header with title and subtitle
+
+        // Title layout
         VBox titleBox = new VBox(10, victoryText, subtitleText);
         titleBox.setAlignment(Pos.CENTER);
-        
-        // Create game stats layout - split horizontally
+
+        // Layout for stats and graph
         HBox gameStatsLayout = new HBox(40);
         gameStatsLayout.setAlignment(Pos.CENTER);
-        gameStatsLayout.setPadding(new javafx.geometry.Insets(20));
-        
-        // Left side - stats and score in a panel
+        gameStatsLayout.setPadding(new Insets(20));
+
+        // Left column (score and stats)
         VBox leftColumn = new VBox(15, scoreText, healthText, waveText, statsPanel);
         leftColumn.setAlignment(Pos.CENTER_LEFT);
-        
-        // Add panel styling to stats side
+
         Rectangle leftBg = new Rectangle(400, 520);
         leftBg.setArcWidth(UI_CORNER_RADIUS);
         leftBg.setArcHeight(UI_CORNER_RADIUS);
-        leftBg.setFill(Color.rgb(40, 40, 60, 0.7));
-        leftBg.setStroke(UI_SECONDARY_COLOR);
+        leftBg.setFill(Color.rgb(50, 0, 80, 0.75)); // Violet panel
+        leftBg.setStroke(Color.web("#FFD700"));     // Golden stroke
         leftBg.setStrokeWidth(2);
-        
-        // Right side - graph in a panel
+
+        // Right column (graph)
         VBox rightColumn = new VBox(15, graphCanvas);
         rightColumn.setAlignment(Pos.CENTER);
-        rightColumn.setPadding(new javafx.geometry.Insets(10));
-        
-        // Add panel styling to graph side
+        rightColumn.setPadding(new Insets(10));
+
         Rectangle rightBg = new Rectangle(420, 340);
         rightBg.setArcWidth(UI_CORNER_RADIUS);
         rightBg.setArcHeight(UI_CORNER_RADIUS);
-        rightBg.setFill(Color.rgb(40, 40, 60, 0.7));
-        rightBg.setStroke(UI_PRIMARY_COLOR);
+        rightBg.setFill(Color.rgb(50, 0, 80, 0.75));
+        rightBg.setStroke(Color.web("#E1C16E"));
         rightBg.setStrokeWidth(2);
-        
+
         StackPane leftStack = new StackPane(leftBg, leftColumn);
         StackPane rightStack = new StackPane(rightBg, rightColumn);
-        
+
         gameStatsLayout.getChildren().addAll(leftStack, rightStack);
-        
-        // Add victory elements in vertical layout
+
         VBox fullLayout = new VBox(15, titleBox, gameStatsLayout, restartButton);
         fullLayout.setAlignment(Pos.CENTER);
-        
-        // Add victory screen to scene
+
         gameOverScreen = FXGL.entityBuilder()
                 .view(new StackPane(overlay, fullLayout))
-                .zIndex(100) // Above everything else
+                .zIndex(100)
                 .buildAndAttach();
     }
-    
+
+
     // Helper method to create stylish button-like UI elements
     private StackPane createStylishButton(String text, double width, double height, Color color) {
         // Create button background with rounded corners
