@@ -105,6 +105,17 @@ public class BatchRenderer {
             // Add to render group
             renderView.getChildren().addAll(renderRect, renderTextFlow);
             renderGroup.getChildren().add(renderView);
+
+            Boolean entered = entity.getPropertyOptional("hasEnteredScreen").map(v -> (Boolean) v).orElse(false);
+            if (!entered && entity.getX() < FXGL.getAppWidth()) {
+                entity.setProperty("hasEnteredScreen", true);
+                entered = true;
+            }
+
+            if (entity.getX() < 0 && entered) {
+                // decreaseHealth();
+                // ... rest of removal logic ...
+            }
         }
     }
 

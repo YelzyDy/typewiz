@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class Game extends GameApplication {
     // Define EntityType enum inside the Game class
@@ -60,7 +61,7 @@ public class Game extends GameApplication {
     private static final int PERFORMANCE_HISTORY_SIZE = 60;
     
     // Movement constants
-    private static final double WAVE_SPEED_INCREMENT = 10.0; // Speed increase per wave in pixels per second
+    private static final double WAVE_SPEED_INCREMENT = 20.0; // Doubled speed increment
     private static final double MIN_MOVEMENT = 1.0; // Increased to prevent micro-stuttering
     
     private int playerHealth = MAX_HEALTH;
@@ -75,7 +76,7 @@ public class Game extends GameApplication {
     private final Random random = new Random();
     
     // Color constants for word highlighting
-    private static final Color SELECTED_COLOR = Color.YELLOW;
+    private static final Color SELECTED_COLOR = Color.LIME;
     private static final Color TYPED_COLOR = Color.BLUE;
     private static final Color DEFAULT_COLOR = Color.WHITE;
     
@@ -144,6 +145,50 @@ public class Game extends GameApplication {
     private final List<Entity> activeBlocks = new ArrayList<>(BATCH_SIZE);
     private final List<Entity> newBlocks = new ArrayList<>(NUM_ROWS);
 
+    // Add gargoyle pool and tracking
+    private static final int MAX_GARGOYLES = 10;
+    private static final int MAX_SIMULTANEOUS_GARGOYLES = 5;
+    private List<Entity> gargoylePool = new ArrayList<>(MAX_GARGOYLES);
+    private List<Entity> activeGargoyles = new ArrayList<>(MAX_GARGOYLES);
+    private static final double GARGOYLE_SPEED = 100.0; // Doubled base speed
+    private static final double WING_FLAP_SPEED = 0.2;
+    private AnimationChannel gargoyleIdleAnimation;
+    private AnimationChannel gargoyleFlyAnimation;
+    private static final int GARGOYLE_FRAME_WIDTH = 288;
+    private static final int GARGOYLE_FRAME_HEIGHT = 312;
+    private static final double GARGOYLE_SCALE = 0.6;
+    private static final double GARGOYLE_SPACING = 400;
+    private static final double SCREEN_MARGIN = 150;
+    
+    // Word display constants
+    private static final double WORD_FONT_SIZE = 40;
+    private static final double WORD_HEIGHT = WORD_FONT_SIZE + 10; // Font size plus padding
+    private static final double WORD_VERTICAL_OFFSET = -120;
+    
+    // Total height of a gargoyle including its word
+    private static final double TOTAL_ENTITY_HEIGHT = (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) + Math.abs(WORD_VERTICAL_OFFSET) + WORD_HEIGHT;
+    
+    // Update spacing constants for strict enforcement including word heights
+    private static final double MIN_VERTICAL_SPACING = TOTAL_ENTITY_HEIGHT * 1.2; // Reduced from 1.5 to 1.2
+    private static final double MIN_HORIZONTAL_SPACING = GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 2.0; // Reduced from 2.5 to 2.0
+    private static final double SPAWN_BUFFER = 30; // Reduced from 50 to 30
+
+    // Add animation state tracking
+    private static final double ANIMATION_TRANSITION_TIME = 0.2; // 200ms transition
+    private static final double ANIMATION_FRAME_TIME = 0.016; // 60 FPS
+    private static final double ANIMATION_FADE_TIME = 0.1; // 100ms fade
+
+    // Add wave spawning constants
+    private static final double WAVE_SPAWN_DELAY = 7.0; // 7 seconds between spawns
+    private static final int MAX_SPAWNS_PER_WAVE = 5;
+    private LocalTimer waveSpawnTimer;
+    private int currentSpawnCount = 0;
+    private boolean isSpawningWave = false;
+
+    // Update spawn constants
+    private double spawnPerimeterRight;
+    private double visibleThreshold;
+
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(1280);
@@ -160,6 +205,10 @@ public class Game extends GameApplication {
 
     @Override
     protected void initGame() {
+        // Initialize spawn constants first
+        spawnPerimeterRight = 100; // Distance from right edge where gargoyles spawn
+        visibleThreshold = FXGL.getAppWidth() - spawnPerimeterRight; // Point where gargoyles become visible
+
         // Set up the winter background
         Image backgroundImage = FXGL.image("background-and-platforms/bg-winter_1280_720.png");
         Rectangle background = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
@@ -228,50 +277,64 @@ public class Game extends GameApplication {
                 .zIndex(25)
                 .buildAndAttach();
         
-        // Add gargoyle animation
+        // Initialize word block pool with enough blocks for maximum concurrent blocks
+        wordBlockPool = new WordBlockPool(NUM_ROWS * 2, 40); // Double the number of rows to ensure we have enough blocks
+        
+        // Initialize spatial partitioning with cell size of 100 pixels
+        spatialPartitioning = new SpatialPartitioning(100, FXGL.getAppWidth(), FXGL.getAppHeight());
+        
+        // Initialize batch renderer
+        batchRenderer = new BatchRenderer(spatialPartitioning);
+        
+        // Add performance monitoring UI
+        setupPerformanceUI();
+        
+        // Create animation channels for gargoyles
         Image gargoyleImage = FXGL.image("mobs/gargoyle/gargoyle.png");
         
-        // Calculate frame size based on sprite sheet dimensions
-        int gargoyleFrameWidth = 288;  // 864 ÷ 3 columns
-        int gargoyleFrameHeight = 312; // 936 ÷ 3 rows
-        
         // Create animation channel for idle animation (first row)
-        AnimationChannel gargoyleIdleAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.2), // 5 frames per second (matching 144 FPS)
-                0, 2); // First row, frames 0-2
+        gargoyleIdleAnimation = new AnimationChannel(gargoyleImage, 
+                4, // 4 frames per row
+                GARGOYLE_FRAME_WIDTH, GARGOYLE_FRAME_HEIGHT, 
+                Duration.seconds(WING_FLAP_SPEED * 1.5), // Even slower for idle
+                0, 3); // First row, frames 0-3
         
-        // Create animation channel for attack animation (second row)
-        AnimationChannel gargoyleAttackAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.15), // ~6.67 frames per second (matching 144 FPS)
-                3, 5); // Second row, frames 3-5
-        
-        // Create animation channel for flying animation (third row)
-        AnimationChannel gargoyleFlyAnimation = new AnimationChannel(gargoyleImage, 
-                3, // 3 frames per row
-                gargoyleFrameWidth, gargoyleFrameHeight, 
-                Duration.seconds(0.18), // ~5.56 frames per second (matching 144 FPS)
-                6, 8); // Third row, frames 6-8
-        
-        // Create the animated texture with idle animation as default
-        AnimatedTexture gargoyleTexture = new AnimatedTexture(gargoyleIdleAnimation);
-        gargoyleTexture.loop();
-        
-        // Scale the gargoyle to a proper size for the scene
-        double gargoyleScale = 0.25; // Scale to 25% of original size
-        
-        // Create the gargoyle entity positioned on the right side
-        Entity gargoyleEntity = FXGL.entityBuilder()
-                .type(EntityType.GARGOYLE)
-                .at(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80) // Right side position
-                .view(gargoyleTexture)
-                .scale(gargoyleScale, gargoyleScale) // Scale down the gargoyle
-                .bbox(new HitBox(BoundingShape.box(gargoyleFrameWidth * gargoyleScale, gargoyleFrameHeight * gargoyleScale)))
-                .zIndex(25)
-                .buildAndAttach();
+        // Create animation channel for flying animation (second row)
+        gargoyleFlyAnimation = new AnimationChannel(gargoyleImage, 
+                4, // 4 frames per row
+                GARGOYLE_FRAME_WIDTH, GARGOYLE_FRAME_HEIGHT, 
+                Duration.seconds(WING_FLAP_SPEED), // Slower for flying
+                4, 7); // Second row, frames 4-7
+
+        // Initialize gargoyle pool
+        for (int i = 0; i < MAX_GARGOYLES; i++) {
+            // Create a new texture instance for each gargoyle
+            AnimatedTexture individualTexture = new AnimatedTexture(gargoyleFlyAnimation);
+            individualTexture.loop();
+            
+            // Create the gargoyle entity
+            Entity gargoyleEntity = FXGL.entityBuilder()
+                    .type(EntityType.GARGOYLE)
+                    .view(individualTexture)
+                    .scale(GARGOYLE_SCALE, GARGOYLE_SCALE)
+                    .bbox(new HitBox(BoundingShape.box(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE, GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE)))
+                    .zIndex(25)
+                    .build();
+            
+            // Add animation state tracking
+            gargoyleEntity.setProperty("currentAnimation", gargoyleFlyAnimation);
+            gargoyleEntity.setProperty("targetAnimation", gargoyleFlyAnimation);
+            gargoyleEntity.setProperty("transitionProgress", 1.0);
+            gargoyleEntity.setProperty("animationTime", 0.0);
+            
+            // Add to pool
+            gargoylePool.add(gargoyleEntity);
+        }
+
+        // Spawn initial gargoyles
+        for (int i = 0; i < 5; i++) {
+            spawnGargoyle(i);
+        }
         
         // Set up UI elements
         setupUI();
@@ -288,94 +351,10 @@ public class Game extends GameApplication {
         
         // Show initial wave message and start first wave
         showWaveStartMessage();
-        
-        // Initialize word block pool with enough blocks for maximum concurrent blocks
-        wordBlockPool = new WordBlockPool(NUM_ROWS * 2, 40); // Double the number of rows to ensure we have enough blocks
-        
-        // Initialize spatial partitioning with cell size of 100 pixels
-        spatialPartitioning = new SpatialPartitioning(100, FXGL.getAppWidth(), FXGL.getAppHeight());
-        
-        // Initialize batch renderer
-        batchRenderer = new BatchRenderer(spatialPartitioning);
-        
-        // Add performance monitoring UI
-        setupPerformanceUI();
-        
-        // Run the game loop
-        FXGL.getGameTimer().runAtInterval(() -> {
-            if (gameOver) return;
-            
-            // Handle wave completion
-            if (waveCompleted) {
-                if (waveTimer.elapsed(Duration.seconds(WAVE_PAUSE_TIME))) {
-                    waveCompleted = false;
-                    currentWave++;
-                    waveText.setText("Wave: " + currentWave);
-                    blockSpawnTimer.capture(); // Reset spawn timer for next wave
-                    waveInProgress = false;
-                    
-                    // Show message for next wave
-                    showWaveStartMessage();
-                }
-                return;
-            }
-            
-            if (playerHealth <= 0) {
-                showGameOverScreen("Game Over!");
-                return;
-            }
-            
-            // Spawn word blocks for current wave if not in progress
-            if (!waveInProgress) {
-                waveInProgress = true;
-                startWave();
-                return;
-            }
-            
-            // Update all word blocks
-            List<Entity> blocksToRemove = new ArrayList<>();
-            
-            for (Entity entity : wordBlockPool.getActiveBlocks()) {
-                // Calculate movement based on fixed time step with synchronized wave speed
-                double blockSpeedForWave = BLOCK_SPEED + (currentWave * WAVE_SPEED_INCREMENT);
-                double movement = blockSpeedForWave * FXGL.tpf();
-                entity.translateX(-movement);
-                
-                // Update spatial partitioning
-                spatialPartitioning.updateEntity(entity);
-                
-                // If block reaches the left edge, it's a miss
-                if (entity.getX() < 0) {
-                    decreaseHealth();
-                    blocksToRemove.add(entity);
-                }
-            }
-            
-            // Release blocks that have gone off screen
-            for (Entity block : blocksToRemove) {
-                wordBlockPool.release(block);
-                spatialPartitioning.removeEntity(block);
-            }
-            
-            // If the selected block was removed, select the next one
-            if (blocksToRemove.contains(selectedWordBlock) && !wordBlockPool.getActiveBlocks().isEmpty()) {
-                selectWordBlock(wordBlockPool.getActiveBlocks().get(0));
-            } else if (blocksToRemove.contains(selectedWordBlock)) {
-                selectedWordBlock = null;
-            }
-            
-            // Check if wave is complete (no blocks left)
-            if (wordBlockPool.getActiveCount() == 0 && waveInProgress) {
-                waveCompleted = true;
-                waveInProgress = false;
-                waveTimer.capture();
-                // Show wave completion message
-                showWaveCompletionMessage();
-            }
-            
-            // Update batch renderer
-            batchRenderer.update();
-        }, Duration.seconds(0.016)); // ~60 fps
+
+        // Initialize wave spawn timer
+        waveSpawnTimer = FXGL.newLocalTimer();
+        waveSpawnTimer.capture();
     }
     
     @Override
@@ -403,6 +382,40 @@ public class Game extends GameApplication {
             return;
         }
         
+        // Handle wave spawning
+        if (isSpawningWave && waveSpawnTimer.elapsed(Duration.seconds(WAVE_SPAWN_DELAY))) {
+            if (currentSpawnCount < MAX_SPAWNS_PER_WAVE) {
+                // Only spawn if we haven't reached the maximum simultaneous gargoyles
+                if (activeGargoyles.size() < MAX_SIMULTANEOUS_GARGOYLES) {
+                    // Spawn only one gargoyle at a time to prevent overlaps
+                    double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
+                    double minY = SCREEN_MARGIN;
+                    double rowY = calculateVerticalPosition(minY, maxY);
+                    
+                    // Only spawn if we found a valid position
+                    if (rowY >= 0) {
+                        String word = getRandomWordForWave();
+                        spawnGargoyle(currentSpawnCount);
+                        Entity gargoyle = activeGargoyles.get(activeGargoyles.size() - 1);
+                        configureGargoyleWord(gargoyle, word, rowY);
+                        newBlocks.add(gargoyle);
+                        
+                        currentSpawnCount++;
+                    }
+                }
+                
+                waveSpawnTimer.capture();
+                
+                // Batch update spatial partitioning
+                if (!newBlocks.isEmpty()) {
+                    spatialPartitioning.batchUpdate(newBlocks);
+                    newBlocks.clear();
+                }
+            } else {
+                isSpawningWave = false;
+            }
+        }
+        
         // Spawn word blocks for current wave if not in progress
         if (!waveInProgress) {
             waveInProgress = true;
@@ -410,78 +423,102 @@ public class Game extends GameApplication {
             return;
         }
         
-        // Clear lists for reuse
-        blocksToRemove.clear();
-        activeBlocks.clear();
-        
-        // Safely get active blocks
-        List<Entity> activeBlocksList = wordBlockPool.getActiveBlocks();
-        if (activeBlocksList != null && !activeBlocksList.isEmpty()) {
-            activeBlocks.addAll(activeBlocksList);
-        }
-        
         // Calculate current wave speed in pixels per second
-        double currentSpeed = BLOCK_SPEED + (currentWave * WAVE_SPEED_INCREMENT);
+        double currentSpeed = GARGOYLE_SPEED + (currentWave * WAVE_SPEED_INCREMENT);
         
-        // Process blocks in batches with improved performance
-        int totalBlocks = activeBlocks.size();
-        for (int i = 0; i < totalBlocks; i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, totalBlocks);
+        // Process gargoyles in batches
+        if (!activeGargoyles.isEmpty()) {
+            List<Entity> gargoylesToProcess = new ArrayList<>(activeGargoyles);
             
-            for (int j = i; j < end; j++) {
-                Entity entity = activeBlocks.get(j);
+            int totalGargoyles = gargoylesToProcess.size();
+            for (int i = 0; i < totalGargoyles; i += BATCH_SIZE) {
+                int end = Math.min(i + BATCH_SIZE, totalGargoyles);
                 
-                // Skip processing if entity is already out of bounds
-                if (entity.getX() < -200) {
-                    blocksToRemove.add(entity);
-                    continue;
-                }
-                
-                // Calculate movement using FXGL's timing
-                double movement = currentSpeed * frameTime;
-                
-                // Ensure minimum movement to prevent stuttering
-                movement = Math.max(movement, MIN_MOVEMENT);
-                
-                // Update position using FXGL's entity methods
-                entity.translateX(-movement);
-                
-                // Only update spatial partitioning if entity is still visible
-                if (isEntityVisible(entity)) {
-                    spatialPartitioning.updateEntity(entity);
-                } else {
-                    // If entity is no longer visible, mark it for removal
-                    blocksToRemove.add(entity);
-                }
-                
-                // Check if block should be removed
-                if (entity.getX() < 0) {
-                    decreaseHealth();
-                    blocksToRemove.add(entity);
-                }
-            }
-        }
-        
-        // Batch process removals
-        if (!blocksToRemove.isEmpty()) {
-            for (Entity block : blocksToRemove) {
-                wordBlockPool.release(block);
-                spatialPartitioning.removeEntity(block);
-            }
-            
-            // Update selection if needed
-            if (blocksToRemove.contains(selectedWordBlock)) {
-                List<Entity> remainingBlocks = wordBlockPool.getActiveBlocks();
-                if (remainingBlocks != null && !remainingBlocks.isEmpty()) {
-                    selectWordBlock(remainingBlocks.get(0));
-                } else {
-                    selectedWordBlock = null;
+                for (int j = i; j < end; j++) {
+                    if (j >= gargoylesToProcess.size()) break;
+                    
+                    Entity gargoyle = gargoylesToProcess.get(j);
+                    if (gargoyle == null) continue;
+                    
+                    // Check visibility and activity state
+                    boolean isVisible = isEntityVisible(gargoyle);
+                    boolean hasBeenVisible = gargoyle.getBoolean("hasBeenVisible");
+                    boolean isActive = gargoyle.getBoolean("isActive");
+                    
+                    // Mark as visible once it enters the screen
+                    if (isVisible && !hasBeenVisible) {
+                        gargoyle.setProperty("hasBeenVisible", true);
+                        hasBeenVisible = true;
+                    }
+                    
+                    // Activate when fully visible
+                    if (isVisible && !isActive) {
+                        gargoyle.setProperty("isActive", true);
+                        isActive = true;
+                    }
+                    
+                    // Only move and check for removal if the gargoyle is active
+                    if (isActive) {
+                        // Update position
+                        double movement = currentSpeed * frameTime;
+                        movement = Math.max(movement, MIN_MOVEMENT);
+                        gargoyle.translateX(-movement);
+                        
+                        // Check if gargoyle has left the screen
+                        if (gargoyle.getX() < 0) {
+                            if (hasBeenVisible) {
+                                decreaseHealth();
+                            }
+                            gargoyle.removeFromWorld();
+                            spatialPartitioning.removeEntity(gargoyle);
+                            activeGargoyles.remove(gargoyle);
+                            gargoylePool.add(gargoyle);
+                            
+                            // Update selection if needed
+                            if (gargoyle == selectedWordBlock) {
+                                List<Entity> remainingGargoyles = new ArrayList<>(activeGargoyles);
+                                if (!remainingGargoyles.isEmpty()) {
+                                    Entity closest = findClosestGargoyle(gargoyle);
+                                    if (closest != null) {
+                                        selectWordBlock(closest);
+                                    }
+                                } else {
+                                    selectedWordBlock = null;
+                                }
+                            }
+                            continue;
+                        }
+                    }
+                    
+                    // Update animation
+                    if (gargoyle.getViewComponent() != null && !gargoyle.getViewComponent().getChildren().isEmpty()) {
+                        StackPane view = (StackPane) gargoyle.getViewComponent().getChildren().get(0);
+                        if (view != null && !view.getChildren().isEmpty()) {
+                            Node viewNode = view.getChildren().get(0);
+                            if (viewNode instanceof AnimatedTexture) {
+                                AnimatedTexture texture = (AnimatedTexture) viewNode;
+                                double animationTime = gargoyle.getDouble("animationTime") + frameTime;
+                                gargoyle.setProperty("animationTime", animationTime);
+                                
+                                // Ensure flying animation is playing
+                                if (texture.getAnimationChannel() != gargoyleFlyAnimation) {
+                                    texture.loopAnimationChannel(gargoyleFlyAnimation);
+                                }
+                                
+                                // Update animation frame
+                                texture.onUpdate(frameTime);
+                            }
+                        }
+                    }
+                    
+                    // Update spatial partitioning
+                    spatialPartitioning.updateEntity(gargoyle);
                 }
             }
         }
         
         // Check wave completion
-        if (wordBlockPool.getActiveCount() == 0 && waveInProgress) {
+        if (activeGargoyles.isEmpty() && waveInProgress && !isSpawningWave) {
             waveCompleted = true;
             waveInProgress = false;
             waveTimer.capture();
@@ -489,61 +526,77 @@ public class Game extends GameApplication {
         }
         
         // Update performance display using FXGL's timing
-        if (frameCount++ % 30 == 0) { // Update every 30 frames
+        if (frameCount++ % 30 == 0) {
             fps = 1.0 / frameTime;
             updatePerformanceDisplay();
             
-            // Log performance warnings
             if (fps < TARGET_FPS * 0.9) {
                 System.out.println("Performance Warning: FPS dropped to " + String.format("%.1f", fps));
                 System.out.println("Frame time: " + String.format("%.3f", frameTime * 1000) + "ms");
             }
         }
         
-        // Only update batch renderer if there are active blocks
-        if (batchRenderer != null && !activeBlocks.isEmpty()) {
+        // Update batch renderer for all visible entities
+        if (batchRenderer != null) {
             batchRenderer.update();
         }
     }
     
     private boolean isEntityVisible(Entity entity) {
         double x = entity.getX();
-        return x >= -200 && x <= FXGL.getAppWidth() + 200; // Increased padding for smoother transitions
+        // Consider entity visible only when it's within the actual screen bounds
+        return x >= 0 && x <= FXGL.getAppWidth();
     }
     
     private void startWave() {
+        // Remove all existing gargoyles before starting a new wave
+        for (Entity g : new ArrayList<>(activeGargoyles)) {
+            g.removeFromWorld();
+            spatialPartitioning.removeEntity(g);
+            gargoylePool.add(g);
+        }
+        activeGargoyles.clear();
+        
         // Clear and reuse the newBlocks list
         newBlocks.clear();
         
-        // Keep original bottom row position
-        double bottomRowY = FXGL.getAppHeight() - 120;
-        double fixedX = FXGL.getAppWidth() + 10;
-        
-        // Spawn blocks in all rows with vertical alignment
-        for (int i = 0; i < NUM_ROWS; i++) {
-            double rowY = bottomRowY - (i * ROW_SPACING);
-            
-            // Pick a random word from the list based on current wave
-            String word = getRandomWordForWave();
-            
-            // Acquire a block from the pool
-            Entity wordBlock = wordBlockPool.acquire(fixedX, rowY, word, i);
-            newBlocks.add(wordBlock);
-        }
-        
-        // Batch update spatial partitioning with improved performance
-        if (!newBlocks.isEmpty()) {
-            spatialPartitioning.batchUpdate(newBlocks);
-        }
-        
-        // Select the first word block by default if none is selected
-        if (selectedWordBlock == null && !newBlocks.isEmpty()) {
-            selectWordBlock(newBlocks.get(0));
-        }
+        // Reset wave spawning state
+        currentSpawnCount = 0;
+        isSpawningWave = true;
+        waveSpawnTimer.capture();
         
         // Hide instruction text
         if (instructionText != null) {
             instructionText.setVisible(false);
+        }
+        
+        // Spawn first gargoyle immediately
+        spawnInitialGargoyle();
+    }
+    
+    private void spawnInitialGargoyle() {
+        // Calculate safe spawn area
+        double minY = SCREEN_MARGIN;
+        double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
+        
+        // Get random word and spawn position
+        String word = getRandomWordForWave();
+        spawnGargoyle(0);
+        
+        if (!activeGargoyles.isEmpty()) {
+            Entity gargoyle = activeGargoyles.get(activeGargoyles.size() - 1);
+            configureGargoyleWord(gargoyle, word, minY);
+            newBlocks.add(gargoyle);
+            
+            // Update spatial partitioning
+            spatialPartitioning.batchUpdate(newBlocks);
+            newBlocks.clear();
+            
+            // Select the first gargoyle
+            selectWordBlock(gargoyle);
+            
+            // Start the wave
+            currentSpawnCount = 1;
         }
     }
     
@@ -801,11 +854,11 @@ public class Game extends GameApplication {
     }
     
     private void selectNextWordBlock() {
-        if (wordBlockPool.getActiveBlocks().isEmpty()) return;
+        if (activeGargoyles.isEmpty()) return;
         
-        int currentIndex = wordBlockPool.getActiveBlocks().indexOf(selectedWordBlock);
-        int nextIndex = (currentIndex + 1) % wordBlockPool.getActiveBlocks().size();
-        selectWordBlock(wordBlockPool.getActiveBlocks().get(nextIndex));
+        int currentIndex = activeGargoyles.indexOf(selectedWordBlock);
+        int nextIndex = (currentIndex + 1) % activeGargoyles.size();
+        selectWordBlock(activeGargoyles.get(nextIndex));
     }
     
     private void checkWordCompletion() {
@@ -818,20 +871,57 @@ public class Game extends GameApplication {
         if (typed.equals(targetWord)) {
             // Word completed successfully
             Entity completedBlock = selectedWordBlock;
-            wordBlockPool.release(completedBlock);
             
             // Calculate score based on word length and current wave
             int wordScore = targetWord.length() * 10 * currentWave;
             score += wordScore;
             scoreText.setText(Integer.toString(score));
             
-            // Select next block if available
-            if (!wordBlockPool.getActiveBlocks().isEmpty()) {
-                selectWordBlock(wordBlockPool.getActiveBlocks().get(0));
+            // Remove the completed block
+            completedBlock.removeFromWorld();
+            spatialPartitioning.removeEntity(completedBlock);
+            activeGargoyles.remove(completedBlock);
+            gargoylePool.add(completedBlock);
+            
+            // Always select the closest gargoyle (if any)
+            if (!activeGargoyles.isEmpty()) {
+                Entity closest = findClosestGargoyle(completedBlock);
+                if (closest != null) {
+                    selectWordBlock(closest);
+                }
             } else {
                 selectedWordBlock = null;
             }
+        } else {
+            // Word not completed - reset input and maintain green highlight
+            currentInput.setLength(0);
+            resetToYellowHighlight();
         }
+    }
+    
+    private Entity findClosestGargoyle(Entity referenceGargoyle) {
+        if (activeGargoyles.isEmpty()) return null;
+        
+        Entity closest = null;
+        double minDistance = Double.MAX_VALUE;
+        
+        for (Entity gargoyle : activeGargoyles) {
+            if (gargoyle == referenceGargoyle) continue;
+            
+            double distance = calculateDistance(referenceGargoyle, gargoyle);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closest = gargoyle;
+            }
+        }
+        
+        return closest;
+    }
+
+    private double calculateDistance(Entity a, Entity b) {
+        double dx = a.getX() - b.getX();
+        double dy = a.getY() - b.getY();
+        return Math.sqrt(dx * dx + dy * dy);
     }
     
     private void showWaveStartMessage() {
@@ -990,6 +1080,210 @@ public class Game extends GameApplication {
             sum += frameTime;
         }
         return (sum / PERFORMANCE_HISTORY_SIZE) * 1000; // Convert to milliseconds
+    }
+
+    private void spawnGargoyle(int index) {
+        if (gargoylePool.isEmpty() || spatialPartitioning == null) return;
+
+        // Use instance variable instead of static constant
+        double xPos = FXGL.getAppWidth() - spawnPerimeterRight;
+        
+        // Calculate vertical position based on current active gargoyles
+        double minY = SCREEN_MARGIN;
+        double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
+        double yPos = calculateVerticalPosition(minY, maxY);
+
+        // Don't spawn if no valid position found
+        if (yPos < 0) return;
+
+        StackPane wordBlockView = new StackPane();
+        AnimatedTexture texture = new AnimatedTexture(gargoyleFlyAnimation);
+        texture.loop();
+        texture.setScaleX(GARGOYLE_SCALE);
+        texture.setScaleY(GARGOYLE_SCALE);
+        TextFlow textFlow = new TextFlow();
+        textFlow.setMaxWidth(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE);
+        textFlow.setMaxHeight(GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE);
+        wordBlockView.getChildren().addAll(texture, textFlow);
+
+        Entity gargoyle = FXGL.entityBuilder()
+                .type(EntityType.GARGOYLE)
+                .at(xPos, yPos)
+                .view(wordBlockView)
+                .scale(GARGOYLE_SCALE, GARGOYLE_SCALE)
+                .bbox(new HitBox(BoundingShape.box(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE, GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE)))
+                .zIndex(25)
+                .build();
+
+        String word = getRandomWordForWave();
+        gargoyle.setProperty("word", word);
+        gargoyle.setProperty("letterNodes", new ArrayList<Text>());
+        gargoyle.setProperty("row", index);
+        gargoyle.setProperty("animationTime", 0.0);
+        gargoyle.setProperty("textFlow", textFlow);
+        gargoyle.setProperty("hasBeenVisible", false);
+        gargoyle.setProperty("isActive", false);
+        configureGargoyleWord(gargoyle, word, yPos);
+
+        FXGL.getGameWorld().addEntity(gargoyle);
+        activeGargoyles.add(gargoyle);
+        spatialPartitioning.updateEntity(gargoyle);
+    }
+
+    private double calculateVerticalPosition(double minY, double maxY) {
+        // If no active gargoyles, start from the top
+        if (activeGargoyles.isEmpty()) {
+            return minY;
+        }
+
+        // Get all current Y positions
+        List<Double> usedPositions = activeGargoyles.stream()
+                .map(Entity::getY)
+                .sorted()
+                .collect(Collectors.toList());
+
+        // If we've reached the maximum simultaneous gargoyles, don't spawn
+        if (usedPositions.size() >= MAX_SIMULTANEOUS_GARGOYLES) {
+            return -1;
+        }
+
+        // Calculate available space considering word height
+        double availableHeight = maxY - minY;
+        double totalEntityHeight = GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE + Math.abs(WORD_VERTICAL_OFFSET) + WORD_HEIGHT;
+        double totalSpaceNeeded = totalEntityHeight * MAX_SIMULTANEOUS_GARGOYLES;
+
+        // If we don't have enough space for proper spacing, don't spawn
+        if (availableHeight < totalSpaceNeeded) {
+            return -1;
+        }
+
+        // Calculate ideal spacing between entities (including words)
+        double idealSpacing = availableHeight / MAX_SIMULTANEOUS_GARGOYLES;
+        idealSpacing = Math.max(idealSpacing, MIN_VERTICAL_SPACING);
+
+        // Check top position if empty
+        if (usedPositions.isEmpty()) {
+            return minY;
+        }
+
+        // Check gap at the top
+        double firstEntityY = usedPositions.get(0);
+        double firstEntityWordTop = firstEntityY + WORD_VERTICAL_OFFSET;
+        double topGap = firstEntityWordTop - minY;
+        if (topGap >= MIN_VERTICAL_SPACING) {
+            return minY;
+        }
+
+        // Check gaps between positions
+        for (int i = 0; i < usedPositions.size() - 1; i++) {
+            double currentY = usedPositions.get(i);
+            double nextY = usedPositions.get(i + 1);
+            
+            // Calculate the actual gap considering words
+            double currentEntityBottom = Math.max(
+                currentY + (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE),
+                currentY + WORD_VERTICAL_OFFSET + WORD_HEIGHT
+            );
+            double nextEntityTop = Math.min(
+                nextY,
+                nextY + WORD_VERTICAL_OFFSET
+            );
+            
+            double gap = nextEntityTop - currentEntityBottom;
+
+            if (gap >= MIN_VERTICAL_SPACING) {
+                double newPos = currentY + (gap / 2);
+                if (isPositionSafe(newPos, usedPositions)) {
+                    return newPos;
+                }
+            }
+        }
+
+        // Check bottom position
+        double lastEntityY = usedPositions.get(usedPositions.size() - 1);
+        double lastEntityBottom = Math.max(
+            lastEntityY + (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE),
+            lastEntityY + WORD_VERTICAL_OFFSET + WORD_HEIGHT
+        );
+        double bottomGap = maxY - lastEntityBottom;
+        
+        if (bottomGap >= MIN_VERTICAL_SPACING) {
+            double newPos = lastEntityY + MIN_VERTICAL_SPACING;
+            if (isPositionSafe(newPos, usedPositions) && 
+                newPos + (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) <= maxY &&
+                newPos + WORD_VERTICAL_OFFSET + WORD_HEIGHT <= maxY) {
+                return newPos;
+            }
+        }
+
+        return -1; // No suitable position found
+    }
+
+    private boolean isPositionSafe(double newPos, List<Double> usedPositions) {
+        // Calculate the complete area taken by the gargoyle and its word
+        double wordTop = newPos + WORD_VERTICAL_OFFSET; // Word is above gargoyle
+        double wordBottom = wordTop + WORD_HEIGHT;
+        double gargoyleTop = newPos;
+        double gargoyleBottom = newPos + (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE);
+        
+        // Total area from top of word to bottom of gargoyle
+        double entityTopEdge = Math.min(wordTop, gargoyleTop);
+        double entityBottomEdge = Math.max(wordBottom, gargoyleBottom);
+
+        for (Double usedPos : usedPositions) {
+            // Calculate the complete area of existing gargoyle and its word
+            double usedWordTop = usedPos + WORD_VERTICAL_OFFSET;
+            double usedWordBottom = usedWordTop + WORD_HEIGHT;
+            double usedGargoyleTop = usedPos;
+            double usedGargoyleBottom = usedPos + (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE);
+            
+            // Total area of existing entity
+            double usedEntityTopEdge = Math.min(usedWordTop, usedGargoyleTop);
+            double usedEntityBottomEdge = Math.max(usedWordBottom, usedGargoyleBottom);
+
+            // Check if there's any overlap between the total areas
+            if (!(entityBottomEdge < usedEntityTopEdge - SPAWN_BUFFER || 
+                  entityTopEdge > usedEntityBottomEdge + SPAWN_BUFFER)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void configureGargoyleWord(Entity gargoyle, String word, double yPos) {
+        if (gargoyle == null || word == null || word.isEmpty()) return;
+        
+        // Don't spawn if position is invalid
+        if (yPos < 0) {
+            gargoyle.removeFromWorld();
+            activeGargoyles.remove(gargoyle);
+            gargoylePool.add(gargoyle);
+            return;
+        }
+        
+        gargoyle.setProperty("word", word);
+        TextFlow textFlow = gargoyle.getObject("textFlow");
+        if (textFlow == null) return;
+        
+        textFlow.getChildren().clear();
+        List<Text> letterNodes = new ArrayList<>();
+        
+        // Create text with consistent font size
+        for (char c : word.toCharArray()) {
+            Text letter = new Text(String.valueOf(c));
+            letter.setFill(DEFAULT_COLOR);
+            letter.setFont(Font.font(WORD_FONT_SIZE));
+            letterNodes.add(letter);
+            textFlow.getChildren().add(letter);
+        }
+        
+        gargoyle.setProperty("letterNodes", letterNodes);
+        textFlow.setTranslateY(WORD_VERTICAL_OFFSET);
+        gargoyle.setY(yPos);
+        
+        if (selectedWordBlock == null) {
+            selectWordBlock(gargoyle);
+        }
     }
 
     public static void main(String[] args) {
