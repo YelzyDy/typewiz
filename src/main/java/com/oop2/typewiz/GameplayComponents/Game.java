@@ -26,6 +26,7 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Node;
 import javafx.scene.text.TextFlow;
+import javafx.scene.layout.HBox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -224,6 +225,32 @@ public class Game extends GameApplication {
     private LocalTimer announcementTimer;
     private static final double ANNOUNCEMENT_DURATION = 2.0; // seconds to show the announcement
 
+    // Add typing statistics tracking
+    private int totalKeystrokes = 0;
+    private int correctKeystrokes = 0;
+    private int incorrectKeystrokes = 0;
+    private int totalCharactersTyped = 0;
+    private int totalWords = 0;
+    private long typingStartTime = 0;
+    private long totalTypingTime = 0;
+    private List<Double> wpmOverTime = new ArrayList<>();
+    private List<Double> accuracyOverTime = new ArrayList<>();
+    private static final int STATS_UPDATE_INTERVAL = 5000; // 5 seconds
+    private long lastStatsUpdate = 0;
+    
+    // Keep track of all the consistency of typing (time between keystrokes)
+    private List<Long> keystrokeTimings = new ArrayList<>();
+    private long lastKeystrokeTime = 0;
+    
+    // Add color constants for statistics
+    private static final Color STAT_TITLE_COLOR = Color.GOLD;
+    private static final Color STAT_VALUE_COLOR = Color.WHITE;
+    private static final Color STAT_GOOD_COLOR = Color.LIMEGREEN;
+    private static final Color STAT_MEDIUM_COLOR = Color.YELLOW;
+    private static final Color STAT_POOR_COLOR = Color.RED;
+    private static final Color GRAPH_LINE_COLOR = Color.DEEPSKYBLUE;
+    private static final Color GRAPH_BACKGROUND_COLOR = Color.rgb(20, 20, 50, 0.7);
+
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(1280);
@@ -395,6 +422,10 @@ public class Game extends GameApplication {
         // Initialize announcement timer
         announcementTimer = FXGL.newLocalTimer();
         announcementTimer.capture();
+
+        // Initialize typing statistics
+        typingStartTime = System.currentTimeMillis();
+        lastStatsUpdate = typingStartTime;
     }
     
     @Override
@@ -817,10 +848,20 @@ public class Game extends GameApplication {
     
     private void setupInput() {
         FXGL.getInput().addEventHandler(KeyEvent.KEY_TYPED, event -> {
-            if (gameOver || waveCompleted) return;
+            if (gameOver || gameCompleted || waveCompleted) return;
             
             char typedChar = event.getCharacter().charAt(0);
             if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
+                // Update keystroke timing for consistency calculation
+                long currentTime = System.currentTimeMillis();
+                if (lastKeystrokeTime > 0) {
+                    keystrokeTimings.add(currentTime - lastKeystrokeTime);
+                }
+                lastKeystrokeTime = currentTime;
+                
+                // Track total keystrokes
+                totalKeystrokes++;
+                
                 if (selectedWordBlock != null) {
                     try {
                         String targetWord = selectedWordBlock.getString("word");
@@ -836,6 +877,10 @@ public class Game extends GameApplication {
                             currentInput.append(typedChar);
                             updateLetterColors();
                             
+                            // Record correct keystroke and character typed
+                            correctKeystrokes++;
+                            totalCharactersTyped++;
+                            
                             // Check if we've completed the word
                             if (currentInput.length() == targetWord.length()) {
                                 // Word is fully typed - make all letters blue for visual feedback
@@ -845,12 +890,18 @@ public class Game extends GameApplication {
                             // Wrong character - clear input and reset
                             currentInput.setLength(0);
                             resetToYellowHighlight();
+                            
+                            // Record incorrect keystroke
+                            incorrectKeystrokes++;
                         }
                     } catch (IllegalArgumentException e) {
                         // If word property doesn't exist, ignore and wait for next update
                         currentInput.setLength(0);
                     }
                 }
+                
+                // Update typing statistics periodically
+                updateTypingStats();
             }
         });
         
@@ -1047,6 +1098,9 @@ public class Game extends GameApplication {
                 score += wordScore;
                 scoreText.setText(Integer.toString(score));
                 
+                // Update total words completed
+                totalWords++;
+                
                 // Clear the selection before we remove the entity
                 selectedWordBlock = null;
                 
@@ -1149,43 +1203,320 @@ public class Game extends GameApplication {
         Text gameOverText = new Text(message);
         gameOverText.setFont(Font.font(48));
         gameOverText.setFill(Color.WHITE);
-        gameOverText.setTranslateY(-70);
+        
+        // Calculate final typing statistics
+        double finalWPM = calculateWPM();
+        double finalRawWPM = calculateRawWPM();
+        double finalAccuracy = calculateAccuracy();
+        double finalConsistency = calculateConsistency();
+        
+        // Create stats panel
+        VBox statsPanel = createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
+        
+        // Create typing graph
+        javafx.scene.canvas.Canvas graphCanvas = createTypingGraph();
         
         // Create score text
         Text scoreText = new Text("Final Score: " + score);
         scoreText.setFont(Font.font(30));
-        scoreText.setFill(Color.WHITE);
-        scoreText.setTranslateY(-20);
-        
-        // Create health text
-        Text healthText = new Text("Health remaining: " + playerHealth);
-        healthText.setFont(Font.font(24));
-        healthText.setFill(Color.WHITE);
-        healthText.setTranslateY(20);
+        scoreText.setFill(STAT_TITLE_COLOR);
         
         // Create wave text
         Text waveText = new Text("Waves completed: " + (currentWave - 1));
         waveText.setFont(Font.font(24));
         waveText.setFill(Color.WHITE);
-        waveText.setTranslateY(50);
         
         // Create retry text
         Text retryText = new Text("Press ENTER to retry");
         retryText.setFont(Font.font(20));
         retryText.setFill(Color.YELLOW);
-        retryText.setTranslateY(90);
         
-        // Create layout for game over screen
-        VBox gameOverLayout = new VBox(10, gameOverText, scoreText, healthText, waveText, retryText);
-        gameOverLayout.setAlignment(Pos.CENTER);
-        gameOverLayout.setTranslateX(FXGL.getAppWidth() / 2 - 150);
-        gameOverLayout.setTranslateY(FXGL.getAppHeight() / 2 - 100);
+        // Create game stats layout - split horizontally
+        HBox gameStatsLayout = new HBox(40);
+        gameStatsLayout.setAlignment(Pos.CENTER);
+        
+        // Left side - stats and score
+        VBox leftColumn = new VBox(15, gameOverText, scoreText, waveText, statsPanel);
+        leftColumn.setAlignment(Pos.CENTER_LEFT);
+        
+        // Right side - graph
+        VBox rightColumn = new VBox(15, graphCanvas);
+        rightColumn.setAlignment(Pos.CENTER);
+        
+        gameStatsLayout.getChildren().addAll(leftColumn, rightColumn);
+        
+        // Add retry text at bottom
+        VBox fullLayout = new VBox(25, gameStatsLayout, retryText);
+        fullLayout.setAlignment(Pos.CENTER);
+        fullLayout.setPadding(new javafx.geometry.Insets(20, 20, 20, 20));
         
         // Add game over screen to scene
         gameOverScreen = FXGL.entityBuilder()
-                .view(new StackPane(overlay, gameOverLayout))
+                .view(new StackPane(overlay, fullLayout))
                 .zIndex(100) // Above everything else
                 .buildAndAttach();
+    }
+    
+    private void showVictoryScreen() {
+        gameCompleted = true;
+        
+        // Create semi-transparent overlay
+        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), Color.color(0, 0, 0, 0.7));
+        
+        // Create victory text
+        Text victoryText = new Text("Victory! All Waves Completed!");
+        victoryText.setFont(Font.font(48));
+        victoryText.setFill(Color.GOLD);
+        
+        // Calculate final typing statistics
+        double finalWPM = calculateWPM();
+        double finalRawWPM = calculateRawWPM();
+        double finalAccuracy = calculateAccuracy();
+        double finalConsistency = calculateConsistency();
+        
+        // Create stats panel
+        VBox statsPanel = createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
+        
+        // Create typing graph
+        javafx.scene.canvas.Canvas graphCanvas = createTypingGraph();
+        
+        // Create score text
+        Text scoreText = new Text("Final Score: " + score);
+        scoreText.setFont(Font.font(30));
+        scoreText.setFill(STAT_TITLE_COLOR);
+        
+        // Create health text
+        Text healthText = new Text("Health remaining: " + playerHealth);
+        healthText.setFont(Font.font(24));
+        healthText.setFill(Color.WHITE);
+        
+        // Create waves completed text
+        Text waveText = new Text("All " + MAX_WAVES + " waves completed!");
+        waveText.setFont(Font.font(24));
+        waveText.setFill(Color.LIGHTGREEN);
+        
+        // Create retry text
+        Text retryText = new Text("Press ENTER to restart");
+        retryText.setFont(Font.font(20));
+        retryText.setFill(Color.YELLOW);
+        
+        // Create game stats layout - split horizontally
+        HBox gameStatsLayout = new HBox(40);
+        gameStatsLayout.setAlignment(Pos.CENTER);
+        
+        // Left side - stats and score
+        VBox leftColumn = new VBox(15, victoryText, scoreText, healthText, waveText, statsPanel);
+        leftColumn.setAlignment(Pos.CENTER_LEFT);
+        
+        // Right side - graph
+        VBox rightColumn = new VBox(15, graphCanvas);
+        rightColumn.setAlignment(Pos.CENTER);
+        
+        gameStatsLayout.getChildren().addAll(leftColumn, rightColumn);
+        
+        // Add retry text at bottom
+        VBox fullLayout = new VBox(25, gameStatsLayout, retryText);
+        fullLayout.setAlignment(Pos.CENTER);
+        fullLayout.setPadding(new javafx.geometry.Insets(20, 20, 20, 20));
+        
+        // Add victory screen to scene
+        gameOverScreen = FXGL.entityBuilder()
+                .view(new StackPane(overlay, fullLayout))
+                .zIndex(100) // Above everything else
+                .buildAndAttach();
+    }
+    
+    private VBox createStatsPanel(double wpm, double rawWPM, double accuracy, double consistency) {
+        VBox statsPanel = new VBox(10);
+        statsPanel.setAlignment(Pos.CENTER_LEFT);
+        statsPanel.setPadding(new javafx.geometry.Insets(15, 15, 15, 15));
+        statsPanel.setBackground(new javafx.scene.layout.Background(
+                new javafx.scene.layout.BackgroundFill(
+                        GRAPH_BACKGROUND_COLOR, 
+                        new javafx.scene.layout.CornerRadii(10), 
+                        javafx.geometry.Insets.EMPTY)));
+        statsPanel.setMinWidth(300);
+        
+        // Statistics title
+        Text statsTitle = new Text("Typing Statistics");
+        statsTitle.setFont(Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 24));
+        statsTitle.setFill(STAT_TITLE_COLOR);
+        
+        // Create stats rows (label + value)
+        HBox wpmRow = createStatRow("Words Per Minute:", String.format("%.1f WPM", wpm), getColorForWPM(wpm));
+        HBox rawWpmRow = createStatRow("Raw WPM:", String.format("%.1f WPM", rawWPM), getColorForWPM(rawWPM));
+        HBox accuracyRow = createStatRow("Accuracy:", String.format("%.1f%%", accuracy), getColorForAccuracy(accuracy));
+        HBox consistencyRow = createStatRow("Consistency:", String.format("%.1f%%", consistency), getColorForConsistency(consistency));
+        HBox charsRow = createStatRow("Characters Typed:", String.valueOf(totalCharactersTyped), STAT_VALUE_COLOR);
+        HBox wordsRow = createStatRow("Words Completed:", String.valueOf(totalWords), STAT_VALUE_COLOR);
+        HBox timeRow = createStatRow("Time:", formatTime(totalTypingTime), STAT_VALUE_COLOR);
+        
+        // Add all rows to the panel
+        statsPanel.getChildren().addAll(
+                statsTitle,
+                new javafx.scene.shape.Line(0, 0, 270, 0), // Divider line
+                wpmRow, 
+                rawWpmRow, 
+                accuracyRow, 
+                consistencyRow, 
+                charsRow, 
+                wordsRow, 
+                timeRow
+        );
+        
+        return statsPanel;
+    }
+    
+    private HBox createStatRow(String label, String value, Color valueColor) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+        
+        Text labelText = new Text(label);
+        labelText.setFont(Font.font("Arial", javafx.scene.text.FontWeight.NORMAL, 16));
+        labelText.setFill(STAT_VALUE_COLOR);
+        
+        Text valueText = new Text(value);
+        valueText.setFont(Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 16));
+        valueText.setFill(valueColor);
+        
+        // Add a glow effect to the value
+        javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.4);
+        valueText.setEffect(glow);
+        
+        row.getChildren().addAll(labelText, valueText);
+        
+        return row;
+    }
+    
+    private Color getColorForWPM(double wpm) {
+        if (wpm >= 60) return STAT_GOOD_COLOR;
+        if (wpm >= 40) return STAT_MEDIUM_COLOR;
+        return STAT_POOR_COLOR;
+    }
+    
+    private Color getColorForAccuracy(double accuracy) {
+        if (accuracy >= 95) return STAT_GOOD_COLOR;
+        if (accuracy >= 85) return STAT_MEDIUM_COLOR;
+        return STAT_POOR_COLOR;
+    }
+    
+    private Color getColorForConsistency(double consistency) {
+        if (consistency >= 80) return STAT_GOOD_COLOR;
+        if (consistency >= 60) return STAT_MEDIUM_COLOR;
+        return STAT_POOR_COLOR;
+    }
+    
+    private String formatTime(long timeMs) {
+        long seconds = timeMs / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+        
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+    
+    private javafx.scene.canvas.Canvas createTypingGraph() {
+        int graphWidth = 400;
+        int graphHeight = 300;
+        javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(graphWidth, graphHeight);
+        javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+        
+        // Draw graph background
+        gc.setFill(GRAPH_BACKGROUND_COLOR);
+        gc.fillRoundRect(0, 0, graphWidth, graphHeight, 10, 10);
+        
+        // Draw graph title
+        gc.setFill(STAT_TITLE_COLOR);
+        gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 18));
+        gc.fillText("Typing Performance Over Time", 80, 30);
+        
+        // Draw axes
+        gc.setStroke(Color.LIGHTGRAY);
+        gc.setLineWidth(2);
+        int margin = 50;
+        int chartWidth = graphWidth - 2 * margin;
+        int chartHeight = graphHeight - 2 * margin;
+        
+        // X-axis
+        gc.strokeLine(margin, graphHeight - margin, graphWidth - margin, graphHeight - margin);
+        // Y-axis
+        gc.strokeLine(margin, margin, margin, graphHeight - margin);
+        
+        // Draw WPM and accuracy data if available
+        if (!wpmOverTime.isEmpty()) {
+            drawPerformanceLine(gc, wpmOverTime, GRAPH_LINE_COLOR, margin, graphHeight - margin, chartWidth, chartHeight, 100);
+            
+            // Draw legend for WPM
+            gc.setFill(GRAPH_LINE_COLOR);
+            gc.fillRect(margin + 10, margin + 10, 15, 10);
+            gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.NORMAL, 14));
+            gc.fillText("WPM", margin + 30, margin + 20);
+        }
+        
+        if (!accuracyOverTime.isEmpty()) {
+            drawPerformanceLine(gc, accuracyOverTime, Color.LIMEGREEN, margin, graphHeight - margin, chartWidth, chartHeight, 100);
+            
+            // Draw legend for Accuracy
+            gc.setFill(Color.LIMEGREEN);
+            gc.fillRect(margin + 10, margin + 30, 15, 10);
+            gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.NORMAL, 14));
+            gc.fillText("Accuracy", margin + 30, margin + 40);
+        }
+        
+        // Draw labels on the axes
+        gc.setFill(Color.LIGHTGRAY);
+        gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.NORMAL, 12));
+        
+        // X-axis labels (time)
+        gc.fillText("Time", graphWidth - margin - 20, graphHeight - margin + 20);
+        
+        // Y-axis labels (WPM/Accuracy percentage)
+        gc.fillText("100", margin - 30, margin);
+        gc.fillText("75", margin - 25, margin + chartHeight * 0.25);
+        gc.fillText("50", margin - 25, margin + chartHeight * 0.5);
+        gc.fillText("25", margin - 25, margin + chartHeight * 0.75);
+        gc.fillText("0", margin - 15, graphHeight - margin);
+        
+        return canvas;
+    }
+    
+    private void drawPerformanceLine(
+            javafx.scene.canvas.GraphicsContext gc, 
+            List<Double> data, 
+            Color color, 
+            int startX, 
+            int startY, 
+            int width, 
+            int height,
+            double maxValue) {
+        
+        if (data.isEmpty()) return;
+        
+        gc.setStroke(color);
+        gc.setLineWidth(3);
+        
+        int points = data.size();
+        double xStep = (double) width / (points - 1 > 0 ? points - 1 : 1);
+        
+        double prevX = startX;
+        double prevY = startY - (data.get(0) / maxValue) * height;
+        
+        // Draw dots at each data point
+        gc.setFill(color);
+        gc.fillOval(prevX - 3, prevY - 3, 6, 6);
+        
+        for (int i = 1; i < points; i++) {
+            double x = startX + i * xStep;
+            double y = startY - (data.get(i) / maxValue) * height;
+            
+            // Draw line
+            gc.strokeLine(prevX, prevY, x, y);
+            
+            // Draw dot
+            gc.fillOval(x - 3, y - 3, 6, 6);
+            
+            prevX = x;
+            prevY = y;
+        }
     }
     
     private void restartGame() {
@@ -1198,6 +1529,20 @@ public class Game extends GameApplication {
         currentInput.setLength(0);
         score = 0;
         currentWave = 1;
+        
+        // Reset typing statistics
+        totalKeystrokes = 0;
+        correctKeystrokes = 0;
+        incorrectKeystrokes = 0;
+        totalCharactersTyped = 0;
+        totalWords = 0;
+        typingStartTime = System.currentTimeMillis();
+        totalTypingTime = 0;
+        wpmOverTime.clear();
+        accuracyOverTime.clear();
+        lastStatsUpdate = typingStartTime;
+        keystrokeTimings.clear();
+        lastKeystrokeTime = 0;
         
         // Reset announcement state
         shouldShowWaveAnnouncement = true;
@@ -1391,53 +1736,74 @@ public class Game extends GameApplication {
         gargoyle.setProperty("letterNodes", letterNodes);
     }
 
-    private void showVictoryScreen() {
-        gameCompleted = true;
+    // Add methods to calculate and update typing statistics
+    private void updateTypingStats() {
+        long currentTime = System.currentTimeMillis();
         
-        // Create semi-transparent overlay
-        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight(), Color.color(0, 0, 0, 0.7));
+        // Only update stats periodically to avoid overhead
+        if (currentTime - lastStatsUpdate < STATS_UPDATE_INTERVAL) {
+            return;
+        }
         
-        // Create victory text
-        Text victoryText = new Text("Victory! All Waves Completed!");
-        victoryText.setFont(Font.font(48));
-        victoryText.setFill(Color.GOLD);
-        victoryText.setTranslateY(-70);
+        // Update total typing time
+        totalTypingTime = currentTime - typingStartTime;
         
-        // Create score text
-        Text scoreText = new Text("Final Score: " + score);
-        scoreText.setFont(Font.font(30));
-        scoreText.setFill(Color.WHITE);
-        scoreText.setTranslateY(-20);
+        // Calculate current WPM and accuracy
+        double currentWPM = calculateWPM();
+        double currentAccuracy = calculateAccuracy();
         
-        // Create health text
-        Text healthText = new Text("Health remaining: " + playerHealth);
-        healthText.setFont(Font.font(24));
-        healthText.setFill(Color.WHITE);
-        healthText.setTranslateY(20);
+        // Store in history for graph
+        wpmOverTime.add(currentWPM);
+        accuracyOverTime.add(currentAccuracy);
         
-        // Create waves completed text
-        Text waveText = new Text("All " + MAX_WAVES + " waves completed!");
-        waveText.setFont(Font.font(24));
-        waveText.setFill(Color.LIGHTGREEN);
-        waveText.setTranslateY(50);
+        // Update last stats update time
+        lastStatsUpdate = currentTime;
+    }
+    
+    private double calculateWPM() {
+        // If no time has elapsed, return 0
+        if (totalTypingTime <= 0) return 0;
         
-        // Create retry text
-        Text retryText = new Text("Press ENTER to restart");
-        retryText.setFont(Font.font(20));
-        retryText.setFill(Color.YELLOW);
-        retryText.setTranslateY(90);
+        // WPM = (characters typed / 5) / (time in minutes)
+        // 5 characters is the standard word length
+        double minutes = totalTypingTime / 60000.0;
+        return (totalCharactersTyped / 5.0) / minutes;
+    }
+    
+    private double calculateRawWPM() {
+        // If no time has elapsed, return 0
+        if (totalTypingTime <= 0) return 0;
         
-        // Create layout for victory screen
-        VBox victoryLayout = new VBox(10, victoryText, scoreText, healthText, waveText, retryText);
-        victoryLayout.setAlignment(Pos.CENTER);
-        victoryLayout.setTranslateX(FXGL.getAppWidth() / 2 - 200);
-        victoryLayout.setTranslateY(FXGL.getAppHeight() / 2 - 100);
+        // Raw WPM = (total keystrokes / 5) / (time in minutes)
+        double minutes = totalTypingTime / 60000.0;
+        return (totalKeystrokes / 5.0) / minutes;
+    }
+    
+    private double calculateAccuracy() {
+        // If no keystrokes, return 0
+        if (totalKeystrokes <= 0) return 0;
         
-        // Add victory screen to scene
-        gameOverScreen = FXGL.entityBuilder()
-                .view(new StackPane(overlay, victoryLayout))
-                .zIndex(100) // Above everything else
-                .buildAndAttach();
+        return (double) correctKeystrokes / totalKeystrokes * 100.0;
+    }
+    
+    private double calculateConsistency() {
+        // If less than 2 keystroke timings, return 0
+        if (keystrokeTimings.size() < 2) return 0;
+        
+        // Calculate standard deviation of keystroke timings
+        double mean = keystrokeTimings.stream().mapToLong(Long::valueOf).average().getAsDouble();
+        double variance = keystrokeTimings.stream()
+                .mapToDouble(timing -> Math.pow(timing - mean, 2))
+                .average()
+                .getAsDouble();
+        double stdDev = Math.sqrt(variance);
+        
+        // Calculate coefficient of variation (lower is more consistent)
+        double cv = stdDev / mean;
+        
+        // Convert to a percentage (100% = perfect consistency, 0% = terrible)
+        // Cap at 100% for very consistent typing
+        return Math.max(0, Math.min(100, (1 - cv) * 100));
     }
 
     private void showWaveAnnouncement() {
