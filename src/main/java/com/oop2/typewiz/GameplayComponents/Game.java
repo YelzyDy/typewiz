@@ -151,7 +151,7 @@ public class Game extends GameApplication {
     private static final int MAX_SIMULTANEOUS_GARGOYLES = 5;
     private List<Entity> gargoylePool = new ArrayList<>(MAX_GARGOYLES);
     private List<Entity> activeGargoyles = new ArrayList<>(MAX_GARGOYLES);
-    private static final double GARGOYLE_SPEED = 100.0; // Doubled base speed
+    private static final double GARGOYLE_SPEED = 50.0; // Doubled base speed
     private static final double WING_FLAP_SPEED = 0.2;
     private AnimationChannel gargoyleIdleAnimation;
     private AnimationChannel gargoyleFlyAnimation;
@@ -164,7 +164,7 @@ public class Game extends GameApplication {
     // Word display constants
     private static final double WORD_FONT_SIZE = 40;
     private static final double WORD_HEIGHT = WORD_FONT_SIZE + 10; // Font size plus padding
-    private static final double WORD_VERTICAL_OFFSET = -120;
+    private static final double WORD_VERTICAL_OFFSET = 160;
     
     // Total height of a gargoyle including its word
     private static final double TOTAL_ENTITY_HEIGHT = (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) + Math.abs(WORD_VERTICAL_OFFSET) + WORD_HEIGHT;
@@ -374,19 +374,6 @@ public class Game extends GameApplication {
         // Use FXGL's built-in timing
         double frameTime = FXGL.tpf();
         
-        // Handle wave completion
-        if (waveCompleted) {
-            if (waveTimer.elapsed(Duration.seconds(WAVE_PAUSE_TIME))) {
-                waveCompleted = false;
-                currentWave++;
-                waveText.setText("Wave: " + currentWave);
-                blockSpawnTimer.capture();
-                waveInProgress = false;
-                showWaveStartMessage();
-            }
-            return;
-        }
-        
         if (playerHealth <= 0) {
             showGameOverScreen("Game Over!");
             return;
@@ -399,17 +386,17 @@ public class Game extends GameApplication {
                 if (totalWaveSpawns > 0) {
                     spawnGargoyleGroup();
                 } else if (activeGargoyles.isEmpty()) {
-                    // Wave completed only when all gargoyles are defeated
-                    waveCompleted = true;
+                    // Wave completed - start next wave immediately
+                    currentWave++;
+                    waveText.setText("Wave: " + currentWave);
                     waveInProgress = false;
-                    waveTimer.capture();
-                    showWaveCompletionMessage();
+                    startWave();
                 }
             }
         }
         
         // Spawn word blocks for current wave if not in progress
-        if (!waveInProgress) {
+        if (!waveInProgress && !gameOver) {
             waveInProgress = true;
             startWave();
             return;
@@ -470,14 +457,12 @@ public class Game extends GameApplication {
                             
                             // Update selection if needed
                             if (gargoyle == selectedWordBlock) {
-                                List<Entity> remainingGargoyles = new ArrayList<>(activeGargoyles);
-                                if (!remainingGargoyles.isEmpty()) {
-                                    Entity closest = findClosestGargoyle(gargoyle);
+                                selectedWordBlock = null;
+                                if (!activeGargoyles.isEmpty()) {
+                                    Entity closest = findClosestGargoyleToCenter();
                                     if (closest != null) {
                                         selectWordBlock(closest);
                                     }
-                                } else {
-                                    selectedWordBlock = null;
                                 }
                             }
                             continue;
@@ -560,10 +545,6 @@ public class Game extends GameApplication {
         currentSpawnDelay = WAVE_SPAWN_DELAY;
         
         waveSpawnTimer.capture();
-        
-        if (instructionText != null) {
-            instructionText.setVisible(false);
-        }
         
         System.out.println("Starting wave " + currentWave + " with " + totalWaveSpawns + " total spawns");
         spawnGargoyleGroup();
@@ -735,33 +716,37 @@ public class Game extends GameApplication {
     private void setupInput() {
         FXGL.getInput().addEventHandler(KeyEvent.KEY_TYPED, event -> {
             if (gameOver || waveCompleted) return;
-            if (!waveInProgress) return;
             
             char typedChar = event.getCharacter().charAt(0);
             if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
                 if (selectedWordBlock != null) {
-                    String targetWord = selectedWordBlock.getString("word");
-                    
-                    // Make sure we're not exceeding the word length
-                    if (currentInput.length() >= targetWord.length()) {
-                        return;
-                    }
-                    
-                    // Check if this would be a valid next character
-                    if (typedChar == targetWord.charAt(currentInput.length())) {
-                        // Only add if it's correct (part of error trapping)
-                        currentInput.append(typedChar);
-                        updateLetterColors();
+                    try {
+                        String targetWord = selectedWordBlock.getString("word");
                         
-                        // Check if we've completed the word
-                        if (currentInput.length() == targetWord.length()) {
-                            // Word is fully typed - make all letters blue for visual feedback
-                            markWordAsComplete();
+                        // Make sure we're not exceeding the word length
+                        if (currentInput.length() >= targetWord.length()) {
+                            return;
                         }
-                    } else {
-                        // Wrong character - clear input and reset
+                        
+                        // Check if this would be a valid next character
+                        if (typedChar == targetWord.charAt(currentInput.length())) {
+                            // Only add if it's correct (part of error trapping)
+                            currentInput.append(typedChar);
+                            updateLetterColors();
+                            
+                            // Check if we've completed the word
+                            if (currentInput.length() == targetWord.length()) {
+                                // Word is fully typed - make all letters blue for visual feedback
+                                markWordAsComplete();
+                            }
+                        } else {
+                            // Wrong character - clear input and reset
+                            currentInput.setLength(0);
+                            resetToYellowHighlight();
+                        }
+                    } catch (IllegalArgumentException e) {
+                        // If word property doesn't exist, ignore and wait for next update
                         currentInput.setLength(0);
-                        resetToYellowHighlight();
                     }
                 }
             }
@@ -778,14 +763,7 @@ public class Game extends GameApplication {
                 return;
             }
             
-            // Start wave when Enter is pressed
-            if (!waveInProgress && !waveCompleted && event.getCode() == KeyCode.ENTER) {
-                startWave();
-                return;
-            }
-            
             if (waveCompleted) return;
-            if (!waveInProgress) return;
             
             if (event.getCode() == KeyCode.BACK_SPACE && currentInput.length() > 0) {
                 currentInput.deleteCharAt(currentInput.length() - 1);
@@ -803,10 +781,16 @@ public class Game extends GameApplication {
     }
     
     private void selectWordBlock(Entity wordBlock) {
+        if (wordBlock == null) return;
+        
         // Deselect the previous block if there is one
         if (selectedWordBlock != null) {
-            // Reset the previous block's word color to default white
-            resetBlockToDefaultColor(selectedWordBlock);
+            try {
+                // Reset the previous block's word color to default white
+                resetBlockToDefaultColor(selectedWordBlock);
+            } catch (Exception e) {
+                // Ignore errors when resetting colors
+            }
         }
         
         // Select the new block
@@ -816,16 +800,26 @@ public class Game extends GameApplication {
         currentInput.setLength(0);
         
         // Set initial yellow highlight for the selected block
-        resetToYellowHighlight();
+        try {
+            resetToYellowHighlight();
+        } catch (Exception e) {
+            // If we can't highlight, just continue
+        }
     }
     
     // New method to reset block to default white color
     private void resetBlockToDefaultColor(Entity block) {
-        List<Text> letterNodes = block.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(DEFAULT_COLOR);
+        if (block == null) return;
+        
+        try {
+            List<Text> letterNodes = block.getObject("letterNodes");
+            if (letterNodes != null) {
+                for (Text letter : letterNodes) {
+                    letter.setFill(DEFAULT_COLOR);
+                }
             }
+        } catch (Exception e) {
+            // Property may not exist yet, ignore the error
         }
     }
     
@@ -833,11 +827,15 @@ public class Game extends GameApplication {
     private void resetToYellowHighlight() {
         if (selectedWordBlock == null) return;
         
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(SELECTED_COLOR);
+        try {
+            List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
+            if (letterNodes != null) {
+                for (Text letter : letterNodes) {
+                    letter.setFill(SELECTED_COLOR);
+                }
             }
+        } catch (Exception e) {
+            // Property may not exist yet, ignore the error
         }
     }
     
@@ -845,18 +843,22 @@ public class Game extends GameApplication {
     private void updateLetterColors() {
         if (selectedWordBlock == null) return;
         
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes == null) return;
-        
-        String typed = currentInput.toString();
-        
-        // Update colors - typed letters blue, remaining letters yellow
-        for (int i = 0; i < letterNodes.size(); i++) {
-            if (i < typed.length()) {
-                letterNodes.get(i).setFill(TYPED_COLOR);
-            } else {
-                letterNodes.get(i).setFill(SELECTED_COLOR);
+        try {
+            List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
+            if (letterNodes == null) return;
+            
+            String typed = currentInput.toString();
+            
+            // Update colors - typed letters blue, remaining letters yellow
+            for (int i = 0; i < letterNodes.size(); i++) {
+                if (i < typed.length()) {
+                    letterNodes.get(i).setFill(TYPED_COLOR);
+                } else {
+                    letterNodes.get(i).setFill(SELECTED_COLOR);
+                }
             }
+        } catch (Exception e) {
+            // Property may not exist yet, ignore the error
         }
     }
     
@@ -864,11 +866,15 @@ public class Game extends GameApplication {
     private void markWordAsComplete() {
         if (selectedWordBlock == null) return;
         
-        List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
-        if (letterNodes != null) {
-            for (Text letter : letterNodes) {
-                letter.setFill(TYPED_COLOR);
+        try {
+            List<Text> letterNodes = selectedWordBlock.getObject("letterNodes");
+            if (letterNodes != null) {
+                for (Text letter : letterNodes) {
+                    letter.setFill(TYPED_COLOR);
+                }
             }
+        } catch (Exception e) {
+            // Property may not exist yet, ignore the error
         }
     }
     
@@ -876,71 +882,126 @@ public class Game extends GameApplication {
         if (activeGargoyles.isEmpty()) return;
         
         int currentIndex = activeGargoyles.indexOf(selectedWordBlock);
-        int nextIndex = (currentIndex + 1) % activeGargoyles.size();
-        selectWordBlock(activeGargoyles.get(nextIndex));
+        if (currentIndex == -1) {
+            // Current selection not found, select first valid one
+            for (Entity gargoyle : activeGargoyles) {
+                try {
+                    gargoyle.getString("word"); // Check if it has the word property
+                    selectWordBlock(gargoyle);
+                    return;
+                } catch (Exception e) {
+                    continue;
+                }
+            }
+            return;
+        }
+        
+        // Try to find the next valid gargoyle
+        for (int i = 1; i <= activeGargoyles.size(); i++) {
+            int nextIndex = (currentIndex + i) % activeGargoyles.size();
+            Entity nextGargoyle = activeGargoyles.get(nextIndex);
+            
+            try {
+                nextGargoyle.getString("word"); // Check if it has the word property
+                selectWordBlock(nextGargoyle);
+                return;
+            } catch (Exception e) {
+                continue;
+            }
+        }
     }
     
     private void checkWordCompletion() {
         if (selectedWordBlock == null) return;
         
-        String targetWord = selectedWordBlock.getString("word");
-        String typed = currentInput.toString();
-        
-        // Check if the typed text matches the target word
-        if (typed.equals(targetWord)) {
-            // Word completed successfully
-            Entity completedBlock = selectedWordBlock;
+        try {
+            String targetWord = selectedWordBlock.getString("word");
+            String typed = currentInput.toString();
             
-            // Calculate score based on word length and current wave
-            int wordScore = targetWord.length() * 10 * currentWave;
-            score += wordScore;
-            scoreText.setText(Integer.toString(score));
-            
-            // Remove the completed block
-            completedBlock.removeFromWorld();
-            spatialPartitioning.removeEntity(completedBlock);
-            activeGargoyles.remove(completedBlock);
-            gargoylePool.add(completedBlock);
-            
-            // Always select the closest gargoyle (if any)
-            if (!activeGargoyles.isEmpty()) {
-                Entity closest = findClosestGargoyle(completedBlock);
-                if (closest != null) {
-                    selectWordBlock(closest);
+            // Check if the typed text matches the target word
+            if (typed.equals(targetWord)) {
+                // Word completed successfully
+                Entity completedBlock = selectedWordBlock;
+                
+                // Calculate score based on word length and current wave
+                int wordScore = targetWord.length() * 10 * currentWave;
+                score += wordScore;
+                scoreText.setText(Integer.toString(score));
+                
+                // Clear the selection before we remove the entity
+                selectedWordBlock = null;
+                
+                // Remove the completed block
+                completedBlock.removeFromWorld();
+                spatialPartitioning.removeEntity(completedBlock);
+                activeGargoyles.remove(completedBlock);
+                gargoylePool.add(completedBlock);
+                
+                // Select a new gargoyle if any available
+                if (!activeGargoyles.isEmpty()) {
+                    // Find the closest one to the center of the screen
+                    Entity closest = findClosestGargoyleToCenter();
+                    if (closest != null) {
+                        selectWordBlock(closest);
+                    }
                 }
             } else {
-                selectedWordBlock = null;
+                // Word not completed - reset input and maintain green highlight
+                currentInput.setLength(0);
+                resetToYellowHighlight();
             }
-        } else {
-            // Word not completed - reset input and maintain green highlight
+        } catch (IllegalArgumentException e) {
+            // Handle missing property gracefully
             currentInput.setLength(0);
-            resetToYellowHighlight();
+            
+            // Try to select another entity if available
+            if (!activeGargoyles.isEmpty() && selectedWordBlock != null) {
+                // Try to find any valid gargoyle to select
+                for (Entity gargoyle : activeGargoyles) {
+                    try {
+                        // Verify this gargoyle has the word property
+                        gargoyle.getString("word");
+                        selectWordBlock(gargoyle);
+                        break;
+                    } catch (Exception ex) {
+                        // Skip this one if it has errors
+                        continue;
+                    }
+                }
+            }
         }
     }
     
-    private Entity findClosestGargoyle(Entity referenceGargoyle) {
+    // New method to find closest gargoyle to center of screen
+    private Entity findClosestGargoyleToCenter() {
         if (activeGargoyles.isEmpty()) return null;
+        
+        double centerX = FXGL.getAppWidth() / 2.0;
+        double centerY = FXGL.getAppHeight() / 2.0;
         
         Entity closest = null;
         double minDistance = Double.MAX_VALUE;
         
         for (Entity gargoyle : activeGargoyles) {
-            if (gargoyle == referenceGargoyle) continue;
-            
-            double distance = calculateDistance(referenceGargoyle, gargoyle);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closest = gargoyle;
+            try {
+                // Make sure it has the required property
+                gargoyle.getString("word");
+                
+                double dx = gargoyle.getX() - centerX;
+                double dy = gargoyle.getY() - centerY;
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closest = gargoyle;
+                }
+            } catch (Exception e) {
+                // Skip entities with issues
+                continue;
             }
         }
         
         return closest;
-    }
-
-    private double calculateDistance(Entity a, Entity b) {
-        double dx = a.getX() - b.getX();
-        double dy = a.getY() - b.getY();
-        return Math.sqrt(dx * dx + dy * dy);
     }
     
     private void showWaveStartMessage() {
@@ -949,22 +1010,7 @@ public class Game extends GameApplication {
     }
     
     private void showWaveCompletionMessage() {
-        Text waveCompleteText = new Text("Wave " + currentWave + " Complete!");
-        waveCompleteText.setFont(Font.font(48));
-        waveCompleteText.setFill(Color.YELLOW);
-        waveCompleteText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
-        waveCompleteText.setTranslateY(FXGL.getAppHeight() / 2);
-        
-        Entity waveMessageEntity = FXGL.entityBuilder()
-                .view(waveCompleteText)
-                .with("removeAfter", WAVE_PAUSE_TIME) // Remove after pause time
-                .zIndex(90)
-                .buildAndAttach();
-        
-        // Schedule removal
-        FXGL.getGameTimer().runOnceAfter(() -> {
-            waveMessageEntity.removeFromWorld();
-        }, Duration.seconds(WAVE_PAUSE_TIME));
+        // Do nothing - waves transition immediately
     }
     
     private void showGameOverScreen(String message) {
@@ -1122,6 +1168,7 @@ public class Game extends GameApplication {
         textFlow.setMaxHeight(GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE);
         wordBlockView.getChildren().addAll(texture, textFlow);
 
+        // Create new entity with all required properties
         Entity gargoyle = FXGL.entityBuilder()
                 .type(EntityType.GARGOYLE)
                 .at(xPos, yPos)
@@ -1129,18 +1176,19 @@ public class Game extends GameApplication {
                 .scale(GARGOYLE_SCALE, GARGOYLE_SCALE)
                 .bbox(new HitBox(BoundingShape.box(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE, GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE)))
                 .zIndex(25)
-                .build();
+                .with("word", "") // Initialize with empty string
+                .with("letterNodes", new ArrayList<Text>())
+                .with("row", index)
+                .with("animationTime", 0.0)
+                .with("textFlow", textFlow)
+                .with("hasBeenVisible", false)
+                .with("isActive", false)
+                .with("movingRight", !fromRight)
+                .buildAndAttach();
 
-        gargoyle.setProperty("word", "");
-        gargoyle.setProperty("letterNodes", new ArrayList<Text>());
-        gargoyle.setProperty("row", index);
-        gargoyle.setProperty("animationTime", 0.0);
-        gargoyle.setProperty("textFlow", textFlow);
-        gargoyle.setProperty("hasBeenVisible", false);
-        gargoyle.setProperty("isActive", false);
-        gargoyle.setProperty("movingRight", !fromRight); // Set movement direction
-
-        FXGL.getGameWorld().addEntity(gargoyle);
+        // Remove one from pool to maintain count
+        gargoylePool.remove(gargoylePool.size() - 1);
+        
         activeGargoyles.add(gargoyle);
         spatialPartitioning.updateEntity(gargoyle);
     }
@@ -1175,6 +1223,14 @@ public class Game extends GameApplication {
 
         // Clear existing text
         textFlow.getChildren().clear();
+        
+        // Adjust width for longer words
+        double wordLength = word.length() * WORD_FONT_SIZE * 0.6;  // Approximate width based on character count
+        textFlow.setMaxWidth(Math.max(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 1.5, wordLength));
+        textFlow.setPrefWidth(Math.max(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE * 1.5, wordLength));
+        
+        // Disable wrapping to keep text in one line
+        textFlow.setLineSpacing(0);
 
         // Create letter nodes
         List<Text> letterNodes = new ArrayList<>();
