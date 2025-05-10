@@ -4,6 +4,7 @@ import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
 import com.oop2.typewiz.util.ThreadManager;
+import javafx.animation.ScaleTransition;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.*;
@@ -15,6 +16,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.control.Button;
+import javafx.util.Duration;
 
 public class DifficultyMenuScreen extends FXGLMenu {
     public Pane getAsPane() {
@@ -112,38 +114,43 @@ public class DifficultyMenuScreen extends FXGLMenu {
                 new BorderWidths(3))
         ));
 
-        // Hover effects
+
+        // Hover effects (Scale Animation)
         button.setOnMouseEntered(e -> {
-            button.setBackground(new Background(new BackgroundFill(
-                    Color.web("rgba(179, 136, 255, 0.1)"),
-                    new CornerRadii(10),
-                    javafx.geometry.Insets.EMPTY
-            )));
-            button.setEffect(new javafx.scene.effect.Glow(0.3));
+            ThreadManager.runAsyncThenUI(
+                    () -> {
+                        ScaleTransition scaleUp = new ScaleTransition(Duration.seconds(0.2), button);
+                        scaleUp.setToX(1.1);
+                        scaleUp.setToY(1.1);
+                        scaleUp.play();
+                    },
+                    () -> {} // UI thread callback
+            );
         });
 
         button.setOnMouseExited(e -> {
-            button.setBackground(new Background(new BackgroundFill(
-                    Color.TRANSPARENT,
-                    new CornerRadii(10),
-                    javafx.geometry.Insets.EMPTY
-            )));
-            button.setEffect(null);
-        });
-
-        button.setOnAction(e -> {
-            button.setDisable(true); // Prevent multiple clicks
             ThreadManager.runAsyncThenUI(
                     () -> {
-                        // background work (optional): simulate delay or load
-                        try {
-                            Thread.sleep(200); // Optional: simulate loading
-                        } catch (InterruptedException ignored) {}
+                        ScaleTransition scaleDown = new ScaleTransition(Duration.seconds(0.2), button);
+                        scaleDown.setToX(1);
+                        scaleDown.setToY(1);
+                        scaleDown.play();
                     },
+                    () -> {} // UI thread callback
+            );
+        });
+
+        // Click effect (Scale Animation)
+        button.setOnAction(e -> {
+            ThreadManager.runAsyncThenUI(
                     () -> {
-                        action.run();
-                        button.setDisable(false);
-                    }
+                        ScaleTransition scaleClick = new ScaleTransition(Duration.seconds(0.1), button);
+                        scaleClick.setToX(0.9);
+                        scaleClick.setToY(0.9);
+                        scaleClick.setOnFinished(event -> action.run());
+                        scaleClick.play();
+                    },
+                    () -> {} // UI thread callback
             );
         });
 
