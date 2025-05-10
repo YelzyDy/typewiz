@@ -33,14 +33,15 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// Define EntityType enum
-enum EntityType {
-    PLATFORM,
-    PLAYER,
-    MOVING_BLOCK
-}
-
 public class Game extends GameApplication {
+    // Define EntityType enum inside the Game class
+    public enum EntityType {
+        PLATFORM,
+        PLAYER,
+        MOVING_BLOCK,
+        GARGOYLE
+    }
+    
     private LocalTimer blockSpawnTimer;
     private static final double BLOCK_SPEED = 100; // pixels per second
     private static final double SPAWN_INTERVAL = 3.0; // seconds between block spawns
@@ -176,6 +177,51 @@ public class Game extends GameApplication {
                 .view(wizardTexture)
                 .scale(wizardScale, wizardScale) // Scale down the wizard
                 .bbox(new HitBox(BoundingShape.box(frameWidth * wizardScale, frameHeight * wizardScale)))
+                .zIndex(25)
+                .buildAndAttach();
+        
+        // Add gargoyle animation
+        Image gargoyleImage = FXGL.image("mobs/gargoyle/gargoyle.png");
+        
+        // Calculate frame size based on sprite sheet dimensions
+        int gargoyleFrameWidth = 288;  // 864 ÷ 3 columns
+        int gargoyleFrameHeight = 312; // 936 ÷ 3 rows
+        
+        // Create animation channel for idle animation (first row)
+        AnimationChannel gargoyleIdleAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.8), // Duration for complete animation cycle
+                0, 2); // First row, frames 0-2
+        
+        // Create animation channel for attack animation (second row)
+        AnimationChannel gargoyleAttackAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.6), // Duration for complete animation cycle
+                3, 5); // Second row, frames 3-5
+        
+        // Create animation channel for flying animation (third row)
+        AnimationChannel gargoyleFlyAnimation = new AnimationChannel(gargoyleImage, 
+                3, // 3 frames per row
+                gargoyleFrameWidth, gargoyleFrameHeight, 
+                Duration.seconds(0.7), // Duration for complete animation cycle
+                6, 8); // Third row, frames 6-8
+        
+        // Create the animated texture with idle animation as default
+        AnimatedTexture gargoyleTexture = new AnimatedTexture(gargoyleIdleAnimation);
+        gargoyleTexture.loop();
+        
+        // Scale the gargoyle to a proper size for the scene
+        double gargoyleScale = 0.25; // Scale to 25% of original size
+        
+        // Create the gargoyle entity positioned on the right side
+        Entity gargoyleEntity = FXGL.entityBuilder()
+                .type(EntityType.GARGOYLE)
+                .at(FXGL.getAppWidth() - (gargoyleFrameWidth * gargoyleScale) - 10, 80) // Right side position
+                .view(gargoyleTexture)
+                .scale(gargoyleScale, gargoyleScale) // Scale down the gargoyle
+                .bbox(new HitBox(BoundingShape.box(gargoyleFrameWidth * gargoyleScale, gargoyleFrameHeight * gargoyleScale)))
                 .zIndex(25)
                 .buildAndAttach();
         
