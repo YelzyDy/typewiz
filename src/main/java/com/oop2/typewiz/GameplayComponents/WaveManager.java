@@ -365,47 +365,4 @@ public class WaveManager {
         waveInProgress = false;
         isSpawningWave = false;
     }
-
-    /**
-     * Returns a random word appropriate for the current wave's difficulty
-     * @param currentWave The current wave number
-     * @param easyWords List of easy words
-     * @param mediumWords List of medium words
-     * @param hardWords List of hard words
-     * @return A randomly selected word with difficulty appropriate for the current wave
-     */
-    public static String getRandomWordForCurrentWave(int currentWave, List<String> easyWords, 
-                                                        List<String> mediumWords, List<String> hardWords) {
-        // Get wave index and calculate difficulty level
-        int waveIndex = currentWave - 1;
-        double rand = Math.random();
-        
-        // Choose words based on wave number and randomness
-        if (waveIndex < 3) {
-            // Early waves - mostly easy words
-            if (rand < 0.7) return getRandomWord(easyWords);
-            else return getRandomWord(mediumWords);
-        } 
-        else if (waveIndex < 6) {
-            // Middle waves - mix of easy and medium words
-            if (rand < 0.3) return getRandomWord(easyWords);
-            else if (rand < 0.8) return getRandomWord(mediumWords);
-            else return getRandomWord(hardWords);
-        }
-        else {
-            // Late waves - mostly medium and hard words
-            if (rand < 0.1) return getRandomWord(easyWords);
-            else if (rand < 0.5) return getRandomWord(mediumWords);
-            else return getRandomWord(hardWords);
-        }
-    }
-
-    /**
-     * Helper method to get a random word from a list
-     * @param words List of words to choose from
-     * @return A randomly selected word from the list
-     */
-    private static String getRandomWord(List<String> words) {
-        return words.get((int)(Math.random() * words.size()));
-    }
 } 

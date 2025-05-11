@@ -133,31 +133,8 @@ public class Game extends GameApplication {
      * Word generator based on wave difficulty
      */
     private String getRandomWordForWave() {
-        return WaveManager.getRandomWordForCurrentWave(
-            waveManager.getCurrentWave(),
-            Arrays.asList(
-                // Easy words
-                "code", "java", "type", "game", "block",
-                "winter", "wizard", "magic", "spell", "potion",
-                "frost", "snow", "ice", "cold", "programming",
-                "keyboard", "screen", "input", "output", "variable",
-                "function", "class", "method", "array", "string"
-            ),
-            Arrays.asList(
-                // Medium words
-                "variable", "function", "method", "algorithm", "interface",
-                "inheritance", "polymorphism", "abstraction", "encapsulation", "iteration",
-                "recursion", "exception", "debugging", "framework", "compiler",
-                "library", "component", "parameter", "structure", "observer"
-            ),
-            Arrays.asList(
-                // Hard words
-                "synchronization", "multithreading", "serialization", "optimization", "implementation",
-                "initialization", "authentication", "configuration", "virtualization", "documentation",
-                "architecture", "dependency", "infrastructure", "persistence", "transaction",
-                "asynchronous", "development", "integration", "management", "deployment"
-            )
-        );
+        // Use the WordFactory to generate an appropriate word
+        return WordFactory.getInstance().getWordForWave(waveManager.getCurrentWave());
     }
 
     /**
