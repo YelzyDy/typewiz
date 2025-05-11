@@ -152,46 +152,6 @@ public class StatsUIFactory {
         return statsPanel;
     }
 
-    static void setupPerformanceUI() {
-        // Create performance display
-        VBox performanceDisplay = new VBox(5);
-        performanceDisplay.setTranslateX(FXGL.getAppWidth() - 200);
-        performanceDisplay.setTranslateY(20);
-
-        Text performanceLabel = new Text("Performance:");
-        performanceLabel.setFill(Color.WHITE);
-        performanceLabel.setFont(Font.font(16));
-
-        performanceBar = new Rectangle(150, 10, GOOD_PERFORMANCE);
-
-        performanceText = new Text("FPS: 144");
-        performanceText.setFill(Color.WHITE);
-        performanceText.setFont(Font.font(14));
-
-        performanceDisplay.getChildren().addAll(performanceLabel, performanceBar, performanceText);
-        FXGL.addUINode(performanceDisplay);
-    }
-
-    static void updatePerformanceDisplay() {
-        // Update FPS text
-        performanceText.setText(String.format("FPS: %.1f", fps));
-
-        // Calculate performance percentage
-        double performancePercentage = Math.min(fps / TARGET_FPS, 1.0);
-
-        // Update performance bar
-        performanceBar.setWidth(150 * performancePercentage);
-
-        // Update performance bar color
-        if (performancePercentage >= 0.9) {
-            performanceBar.setFill(GOOD_PERFORMANCE);
-        } else if (performancePercentage >= 0.7) {
-            performanceBar.setFill(MEDIUM_PERFORMANCE);
-        } else {
-            performanceBar.setFill(POOR_PERFORMANCE);
-        }
-    }
-
     // Make these methods static so they can be used in static context
     public static javafx.scene.layout.Background createPanelBackground(Color color, double cornerRadius) {
         return new javafx.scene.layout.Background(
@@ -353,75 +313,51 @@ public class StatsUIFactory {
         return canvas;
     }
 
-    // Add methods to calculate and update typing statistics
-    static void updateTypingStats() {
-        long currentTime = System.currentTimeMillis();
-
-        // Only update stats periodically to avoid overhead
-        if (currentTime - lastStatsUpdate < STATS_UPDATE_INTERVAL) {
-            return;
-        }
-
-        // Update total typing time
-        totalTypingTime = currentTime - typingStartTime;
-
-        // Calculate current WPM and accuracy
-        double currentWPM = calculateWPM();
-        double currentAccuracy = calculateAccuracy();
-
-        // Store in history for graph
-        wpmOverTime.add(currentWPM);
-        accuracyOverTime.add(currentAccuracy);
-
-        // Update last stats update time
-        lastStatsUpdate = currentTime;
-    }
-
-    static double calculateWPM() {
-        // If no time has elapsed, return 0
-        if (totalTypingTime <= 0) return 0;
-
-        // WPM = (characters typed / 5) / (time in minutes)
-        // 5 characters is the standard word length
-        double minutes = totalTypingTime / 60000.0;
-        return (totalCharactersTyped / 5.0) / minutes;
-    }
-
-    static double calculateRawWPM() {
-        // If no time has elapsed, return 0
-        if (totalTypingTime <= 0) return 0;
-
-        // Raw WPM = (total keystrokes / 5) / (time in minutes)
-        double minutes = totalTypingTime / 60000.0;
-        return (totalKeystrokes / 5.0) / minutes;
-    }
-
-    static double calculateAccuracy() {
-        // If no keystrokes, return 0
-        if (totalKeystrokes <= 0) return 0;
-
-        return (double) correctKeystrokes / totalKeystrokes * 100.0;
-    }
-
-    static double calculateConsistency() {
-        // If less than 2 keystroke timings, return 0
-        if (keystrokeTimings.size() < 2) return 0;
-
-        // Calculate standard deviation of keystroke timings
-        double mean = keystrokeTimings.stream().mapToLong(Long::valueOf).average().getAsDouble();
-        double variance = keystrokeTimings.stream()
-                .mapToDouble(timing -> Math.pow(timing - mean, 2))
-                .average()
-                .getAsDouble();
-        double stdDev = Math.sqrt(variance);
-
-        // Calculate coefficient of variation (lower is more consistent)
-        double cv = stdDev / mean;
-
-        // Convert to a percentage (100% = perfect consistency, 0% = terrible)
-        // Cap at 100% for very consistent typing
-        return Math.max(0, Math.min(100, (1 - cv) * 100));
-    }
+//    static double calculateWPM() {
+//        // If no time has elapsed, return 0
+//        if (totalTypingTime <= 0) return 0;
+//
+//        // WPM = (characters typed / 5) / (time in minutes)
+//        // 5 characters is the standard word length
+//        double minutes = totalTypingTime / 60000.0;
+//        return (totalCharactersTyped / 5.0) / minutes;
+//    }
+//
+//    static double calculateRawWPM() {
+//        // If no time has elapsed, return 0
+//        if (totalTypingTime <= 0) return 0;
+//
+//        // Raw WPM = (total keystrokes / 5) / (time in minutes)
+//        double minutes = totalTypingTime / 60000.0;
+//        return (totalKeystrokes / 5.0) / minutes;
+//    }
+//
+//    static double calculateAccuracy() {
+//        // If no keystrokes, return 0
+//        if (totalKeystrokes <= 0) return 0;
+//
+//        return (double) correctKeystrokes / totalKeystrokes * 100.0;
+//    }
+//
+//    static double calculateConsistency() {
+//        // If less than 2 keystroke timings, return 0
+//        if (keystrokeTimings.size() < 2) return 0;
+//
+//        // Calculate standard deviation of keystroke timings
+//        double mean = keystrokeTimings.stream().mapToLong(Long::valueOf).average().getAsDouble();
+//        double variance = keystrokeTimings.stream()
+//                .mapToDouble(timing -> Math.pow(timing - mean, 2))
+//                .average()
+//                .getAsDouble();
+//        double stdDev = Math.sqrt(variance);
+//
+//        // Calculate coefficient of variation (lower is more consistent)
+//        double cv = stdDev / mean;
+//
+//        // Convert to a percentage (100% = perfect consistency, 0% = terrible)
+//        // Cap at 100% for very consistent typing
+//        return Math.max(0, Math.min(100, (1 - cv) * 100));
+//    }
 
     private static Color getColorForWPM(double wpm) {
         if (wpm >= 60) return STAT_GOOD_COLOR;
