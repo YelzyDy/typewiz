@@ -670,23 +670,23 @@ public class Game extends GameApplication {
         // Calculate spawn area
         double minY = SCREEN_MARGIN;
         double maxY = FXGL.getAppHeight() - (GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE) - SCREEN_MARGIN;
-        
+
         // Use GargoyleFactory to spawn a group of gargoyles
         List<Entity> spawnedGargoyles = GargoyleFactory.spawnGargoyleGroup(
-            currentGroupSize,
-            minY,
-            maxY,
-            spawnFromRight, // Always spawn from right
-            spawnPerimeterRight,
-            this::getRandomWordForWave, // Method reference to get random words
-            EntityType.GARGOYLE
+                currentGroupSize,
+                minY,
+                maxY,
+                spawnFromRight, // Always spawn from right
+                spawnPerimeterRight,
+                this::getRandomWordForWave, // Method reference to get random words
+                EntityType.GARGOYLE
         );
-        
+
         // Add spawned gargoyles to active list and update counts
         activeGargoyles.addAll(spawnedGargoyles);
         newBlocks.addAll(spawnedGargoyles);
         totalWaveSpawns -= spawnedGargoyles.size();
-        
+
         System.out.println("Successfully spawned " + spawnedGargoyles.size() + " gargoyles");
 
         // Update spatial partitioning
@@ -715,7 +715,7 @@ public class Game extends GameApplication {
 
     private void selectWordBlock(Entity wordBlock) {
         if (wordBlock == null) return;
-        
+
         // Deselect the previous block if there is one
         if (selectedWordBlock != null) {
             try {
@@ -725,13 +725,13 @@ public class Game extends GameApplication {
                 // Ignore errors when resetting colors
             }
         }
-        
+
         // Select the new block
         selectedWordBlock = wordBlock;
-        
+
         // Always reset input when switching blocks
         currentInput.setLength(0);
-        
+
         // Set initial yellow highlight for the selected block
         try {
             GargoyleFactory.selectWordBlock(selectedWordBlock);
@@ -742,7 +742,7 @@ public class Game extends GameApplication {
 
     private void updateLetterColors() {
         if (selectedWordBlock == null) return;
-        
+
         try {
             GargoyleFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
         } catch (Exception e) {
@@ -752,7 +752,7 @@ public class Game extends GameApplication {
 
     private void markWordAsComplete() {
         if (selectedWordBlock == null) return;
-        
+
         try {
             GargoyleFactory.markWordAsComplete(selectedWordBlock);
         } catch (Exception e) {
@@ -763,20 +763,20 @@ public class Game extends GameApplication {
     private void showWaveAnnouncement() {
         // Create wave announcement using GamePromptFactory
         Node announcementNode = GamePromptFactory.createWaveAnnouncement(currentWave, MAX_WAVES);
-        
+
         // Set a lower zIndex to ensure it doesn't block interaction with gargoyles
         waveAnnouncementOverlay = FXGL.entityBuilder()
                 .view(announcementNode)
                 .zIndex(50) // Lower z-index so it doesn't block interaction
                 .buildAndAttach();
-        
+
         // Reset announcement timer
         announcementTimer.capture();
-        
+
         // Initialize totalWaveSpawns here to ensure it's set properly
         int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
         totalWaveSpawns = WAVE_SPAWNS_PER_WAVE[waveIndex];
-        
+
         // Also spawn gargoyles right away to ensure player can interact with them
         if (!isSpawningWave) {
             isSpawningWave = true;
@@ -791,19 +791,19 @@ public class Game extends GameApplication {
     private void showGameOverScreen(String message) {
         // Set game over flag
         gameOver = true;
-        
+
         // Use GamePromptFactory to create the game over screen
         Node screenView = GamePromptFactory.createGameOverScreen(
-            message, 
-            score, 
-            calculateWPM(), 
-            calculateRawWPM(), 
-            calculateAccuracy(), 
-            calculateConsistency(),
-            wpmOverTime,
-            accuracyOverTime
+                message,
+                score,
+                calculateWPM(),
+                calculateRawWPM(),
+                calculateAccuracy(),
+                calculateConsistency(),
+                wpmOverTime,
+                accuracyOverTime
         );
-        
+
         gameOverScreen = FXGL.entityBuilder()
                 .view(screenView)
                 .zIndex(100)
@@ -813,19 +813,19 @@ public class Game extends GameApplication {
     private void showVictoryScreen() {
         // Set game completed flag
         gameCompleted = true;
-        
+
         // Use GamePromptFactory to create the victory screen (reusing the game over screen with a different message)
         Node screenView = GamePromptFactory.createGameOverScreen(
-            "Victory! Game Complete!", 
-            score, 
-            calculateWPM(), 
-            calculateRawWPM(), 
-            calculateAccuracy(), 
-            calculateConsistency(),
-            wpmOverTime,
-            accuracyOverTime
+                "Victory! Game Complete!",
+                score,
+                calculateWPM(),
+                calculateRawWPM(),
+                calculateAccuracy(),
+                calculateConsistency(),
+                wpmOverTime,
+                accuracyOverTime
         );
-        
+
         gameOverScreen = FXGL.entityBuilder()
                 .view(screenView)
                 .zIndex(100)
@@ -859,7 +859,7 @@ public class Game extends GameApplication {
                 }
             }
         }
-        
+
         // Only update if we found the performance display
         if (performanceDisplay != null) {
             UIFactory.updatePerformanceDisplay(performanceDisplay, fps);
@@ -1112,14 +1112,14 @@ public class Game extends GameApplication {
             if (node instanceof VBox && node.getUserData() != null) {
                 VBox vbox = (VBox) node;
                 if (!vbox.getChildren().isEmpty() &&
-                    vbox.getChildren().get(0) instanceof Text &&
-                    "HEALTH".equals(((Text)vbox.getChildren().get(0)).getText())) {
+                        vbox.getChildren().get(0) instanceof Text &&
+                        "HEALTH".equals(((Text)vbox.getChildren().get(0)).getText())) {
                     healthDisplay = vbox;
                     break;
                 }
             }
         }
-        
+
         // Only update if we found the health display
         if (healthDisplay != null) {
             UIFactory.updateHealthBar(healthDisplay, playerHealth);
@@ -1360,10 +1360,10 @@ public class Game extends GameApplication {
     private void setupUI() {
         // Create health display using UIFactory
         VBox healthDisplay = UIFactory.createHealthDisplay(playerHealth, MAX_HEALTH);
-        
+
         // Create top bar using UIFactory
         HBox topBar = UIFactory.createTopBar(score, currentWave, MAX_WAVES);
-        
+
         // Store references to score and wave text
         // Use utility methods to find the elements instead of direct casting
         for (Node child : topBar.getChildren()) {
@@ -1379,13 +1379,13 @@ public class Game extends GameApplication {
                 }
             }
         }
-        
+
         // Create instruction text
         instructionText = UIFactory.createInstructionText();
-        
+
         // Create controls help text
         Text controlsText = UIFactory.createControlsText();
-        
+
         // Add UI elements to the scene
         FXGL.addUINode(healthDisplay);
         FXGL.addUINode(topBar);
@@ -1397,11 +1397,11 @@ public class Game extends GameApplication {
     private void showWaveStartMessage() {
         // Reset and hide instruction text
         instructionText.setVisible(false);
-        
+
         // Set wave in progress and prepare for announcement
         waveInProgress = true;
         shouldShowWaveAnnouncement = true;
-        
+
         // Start the wave initialization without spawning yet
         startWave();
     }
