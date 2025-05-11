@@ -28,6 +28,7 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Main container with magical gradient background
         StackPane root = new StackPane();
+        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
         root.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #2a0845, #4a148c);");
         root.setStyle("-fx-background-image: url('assets/textures/background-and-platforms/purplebg.png');");
@@ -80,8 +81,10 @@ public class MainMenuScreen extends FXGLMenu {
                 () -> {} // UI thread callback
         );
 
+
         // Buttons with wizard theme
         Button startButton = createWizardButton("START QUEST", () -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
             executorService.submit(() -> {
 
                 preloadAssetsInBackground();
@@ -104,6 +107,7 @@ public class MainMenuScreen extends FXGLMenu {
         });
 
         Button helpButton = createWizardButton("SPELLBOOK", () -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
             FXGL.getDialogService().showMessageBox(
                     "~ MAGIC TYPING RULES ~\n\n" +
                             "1. Type the incantations as they appear\n" +
@@ -115,10 +119,12 @@ public class MainMenuScreen extends FXGLMenu {
         });
 
         Button activityButton = createWizardButton("CREATORS", () -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
             FXGL.getSceneService().pushSubScene(new CreditsScreen(() -> FXGL.getSceneService().popSubScene()));
         });
 
         Button exitButton = createWizardButton("LEAVE TOWER", () -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
             FXGL.getGameController().exit();
         });
 
@@ -205,6 +211,8 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Hover effects (Scale Animation)
         button.setOnMouseEntered(e -> {
+            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
+
             ThreadManager.runAsyncThenUI(
                     () -> {
                         ScaleTransition scaleUp = new ScaleTransition(Duration.seconds(0.2), button);

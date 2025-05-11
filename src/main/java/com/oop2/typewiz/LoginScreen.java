@@ -33,7 +33,7 @@ public class LoginScreen extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings settings) {
-        FXGL.getAssetLoader().loadSound("click.wav");
+        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
         settings.setTitle("TypeWiz Login");
         settings.setWidth(1550);
         settings.setHeight(800);
@@ -45,8 +45,13 @@ public class LoginScreen extends GameApplication {
         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1550, 800);
-        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
-//        root.setStyle("-fx-background-image: url('assets/textures/background-and-platforms/purplebg.png');");
+//        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
+        root.setStyle(
+                "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
+                        "-fx-background-repeat: no-repeat;" +
+                        "-fx-background-size: cover;" +
+                        "-fx-background-position: center center;"
+        );
 
         // Left logo
         VBox leftBox = new VBox();

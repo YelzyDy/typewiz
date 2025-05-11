@@ -35,7 +35,7 @@ public class RegisterScreen extends GameApplication {
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("TypeWiz Register");
-        FXGL.getAssetLoader().loadSound("click.wav");
+        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
         settings.setWidth(1550);
         settings.setHeight(800);
         settings.setMainMenuEnabled(false);
@@ -46,7 +46,12 @@ public class RegisterScreen extends GameApplication {
         root = new HBox(10);
         root.setPrefSize(1550, 800);
         root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
+        root.setStyle(
+                "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
+                        "-fx-background-repeat: no-repeat;" +
+                        "-fx-background-size: cover;" +
+                        "-fx-background-position: center center;"
+        );
 
         // Left VBox with Logo
         VBox leftPane = new VBox();

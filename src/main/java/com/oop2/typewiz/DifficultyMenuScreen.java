@@ -28,6 +28,7 @@ public class DifficultyMenuScreen extends FXGLMenu {
 
     DifficultyMenuScreen(Runnable backAction, Runnable easyAction, Runnable mediumAction, Runnable hardAction) {
         super(MenuType.GAME_MENU);
+        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
 
         // Main container with magical gradient
         StackPane root = new StackPane();
@@ -54,6 +55,20 @@ public class DifficultyMenuScreen extends FXGLMenu {
         Button mediumButton = createDifficultyButton("Wizard", "Standard spells", mediumAction);
         Button hardButton = createDifficultyButton("Archmage", "Lightning-fast charms", hardAction);
 
+        easyButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+        });
+
+        mediumButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+        });
+
+        hardButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+        });
         // Back button
         Button backButton = new Button("Back to Tower");
         backButton.setFont(Font.font("Consolas", 20));
@@ -65,7 +80,10 @@ public class DifficultyMenuScreen extends FXGLMenu {
                 new CornerRadii(5),
                 new BorderWidths(1))
         ));
-        backButton.setOnAction(e -> backAction.run());
+        backButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            backAction.run();
+        });
 
         // Layout
         VBox menuBox = new VBox(20, title, easyButton, mediumButton, hardButton, backButton);
@@ -117,6 +135,8 @@ public class DifficultyMenuScreen extends FXGLMenu {
 
         // Hover effects (Scale Animation)
         button.setOnMouseEntered(e -> {
+            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
+
             ThreadManager.runAsyncThenUI(
                     () -> {
                         ScaleTransition scaleUp = new ScaleTransition(Duration.seconds(0.2), button);
@@ -159,93 +179,3 @@ public class DifficultyMenuScreen extends FXGLMenu {
     }
 }
 
-
-
-//package com.oop2.typewiz;
-//
-//import com.almasb.fxgl.dsl.FXGL;
-//import javafx.geometry.Pos;
-//import javafx.scene.Scene;
-//import javafx.scene.control.Button;
-//import javafx.scene.effect.*;
-//import javafx.scene.layout.*;
-//import javafx.scene.paint.*;
-//import javafx.scene.shape.Rectangle;
-//import javafx.scene.text.Font;
-//import javafx.scene.text.FontWeight;
-//import javafx.scene.text.Text;
-//
-//public class DifficultyMenuScreen {
-//
-//
-//    public static Pane create(Runnable onBack, Runnable onEasy, Runnable onMedium, Runnable onHard) {
-//        StackPane root = new StackPane();
-//        root.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
-//
-//        // Background
-//        Rectangle bg = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
-//        bg.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
-//                new Stop(0, Color.web("#2a0845")),
-//                new Stop(1, Color.web("#1a0638"))));
-//        bg.setEffect(new Bloom(0.1));
-//
-//        // Title
-//        Text title = new Text("Choose Your Path");
-//        title.setFont(Font.font("Papyrus", FontWeight.BOLD, 48));
-//        title.setFill(Color.web("#ffeb3b"));
-//        title.setEffect(new DropShadow(15, Color.web("#ffeb3b", 0.7)));
-//
-//        VBox buttons = new VBox(20,
-//                createButton("Apprentice (Easy)", onEasy),
-//                createButton("Adept (Medium)", onMedium),
-//                createButton("Archmage (Hard)", onHard));
-//        buttons.setAlignment(Pos.CENTER);
-//
-//        Button backBtn = new Button("⬅ BACK");
-//        backBtn.setFont(Font.font("Consolas", 18));
-//        backBtn.setTextFill(Color.web("#e2b0ff"));
-//        backBtn.setBackground(Background.EMPTY);
-//        backBtn.setBorder(new Border(new BorderStroke(Color.web("#e2b0ff"),
-//                BorderStrokeStyle.SOLID, new CornerRadii(5), new BorderWidths(2))));
-//        backBtn.setOnAction(e -> onBack.run());
-//
-//        StackPane.setAlignment(backBtn, Pos.TOP_LEFT);
-//        StackPane.setMargin(backBtn, new javafx.geometry.Insets(20));
-//
-//        VBox vbox = new VBox(40, title, buttons);
-//        vbox.setAlignment(Pos.CENTER);
-//
-//        root.getChildren().addAll(bg, vbox, backBtn);
-//        return root;
-//    }
-//
-//    private static Button createButton(String text, Runnable action) {
-//        Button btn = new Button(text);
-//        btn.setFont(Font.font("Consolas", 24));
-//        btn.setTextFill(Color.web("#e2b0ff"));
-//        btn.setPrefWidth(300);
-//        btn.setPrefHeight(50);
-//        btn.setBackground(new Background(new BackgroundFill(
-//                Color.TRANSPARENT, new CornerRadii(30), javafx.geometry.Insets.EMPTY)));
-//
-//        btn.setBorder(new Border(new BorderStroke(
-//                new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
-//                        new Stop(0, Color.web("#b388ff")),
-//                        new Stop(0.5, Color.web("#ffeb3b")),
-//                        new Stop(1, Color.web("#b388ff"))),
-//                BorderStrokeStyle.SOLID, new CornerRadii(30), new BorderWidths(3))));
-//
-//        btn.setOnMouseEntered(e -> {
-//            btn.setTextFill(Color.web("#2a0845"));
-//            btn.setBackground(new Background(new BackgroundFill(
-//                    Color.web("#ffeb3b"), new CornerRadii(30), javafx.geometry.Insets.EMPTY)));
-//        });
-//        btn.setOnMouseExited(e -> {
-//            btn.setTextFill(Color.web("#e2b0ff"));
-//            btn.setBackground(Background.EMPTY);
-//        });
-//
-//        btn.setOnAction(e -> action.run());
-//        return btn;
-//    }
-//}
