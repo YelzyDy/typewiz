@@ -15,6 +15,8 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.control.Button;
 import javafx.util.Duration;
+import com.almasb.fxgl.audio.Music;
+
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,6 +24,9 @@ import java.util.concurrent.Executors;
 public class MainMenuScreen extends FXGLMenu {
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
+    private Music bgmMusic;
+    private Timeline musicFadeTimeline;
+
 
     public MainMenuScreen() {
         super(MenuType.MAIN_MENU);
@@ -155,14 +160,40 @@ public class MainMenuScreen extends FXGLMenu {
         StackPane glassPane = new StackPane(panel, menuBox);
         root.getChildren().add(glassPane);
         getContentRoot().getChildren().add(root);
+
+        // Load and loop BGM
+        bgmMusic = FXGL.getAssetLoader().loadMusic("bgm.mp3");
+        FXGL.getAudioPlayer().loopMusic(bgmMusic);
+
+// Start volume at 0
+        FXGL.getSettings().setGlobalMusicVolume(0.0);
+
+// Fade in using timeline (manually updating)
+        musicFadeTimeline = new Timeline(
+                new KeyFrame(Duration.ZERO, event -> FXGL.getSettings().setGlobalMusicVolume(0.0)),
+                new KeyFrame(Duration.seconds(3), event -> FXGL.getSettings().setGlobalMusicVolume(0.4)) // Fade to target volume
+        );
+        musicFadeTimeline.setCycleCount(1);
+        musicFadeTimeline.play();
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         executorService.shutdown();
+
+        // Fade out manually
+        Timeline fadeOut = new Timeline(
+                new KeyFrame(Duration.ZERO, event -> FXGL.getSettings().setGlobalMusicVolume(0.4)),
+                new KeyFrame(Duration.seconds(2), event -> FXGL.getSettings().setGlobalMusicVolume(0.0))
+        );
+        fadeOut.setOnFinished(e -> FXGL.getAudioPlayer().stopMusic(bgmMusic));
+        fadeOut.play();
     }
-    
+
+
+
     private void runStartGameThread(Difficulty difficulty) {
         ThreadManager.runAsyncThenUI(
                 () -> {
