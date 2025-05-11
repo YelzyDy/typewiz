@@ -279,7 +279,66 @@ public class UIFactory {
         buttonText.setEffect(textGlow);
 
         // Stack text on background
-        return new StackPane(buttonBg, buttonText);
+        StackPane button = new StackPane(buttonBg, buttonText);
+        
+        // Make button responsive and interactive
+        button.setCursor(javafx.scene.Cursor.HAND); // Change cursor on hover
+        
+        // Store original values for animations
+        Color originalFill = (Color) buttonBg.getFill();
+        Color originalStroke = (Color) buttonBg.getStroke();
+        double originalRadius = buttonGlow.getRadius();
+        double originalSpread = buttonGlow.getSpread();
+        
+        // Add hover effect
+        button.setOnMouseEntered(e -> {
+            // Brighten background
+            buttonBg.setFill(Color.rgb(80, 80, 100, 0.9));
+            // Increase glow
+            buttonGlow.setRadius(25);
+            buttonGlow.setSpread(0.4);
+            // Scale button slightly
+            button.setScaleX(1.05);
+            button.setScaleY(1.05);
+        });
+        
+        // Reset on mouse exit
+        button.setOnMouseExited(e -> {
+            buttonBg.setFill(originalFill);
+            buttonGlow.setRadius(originalRadius);
+            buttonGlow.setSpread(originalSpread);
+            button.setScaleX(1.0);
+            button.setScaleY(1.0);
+        });
+        
+        // Add click effect
+        button.setOnMousePressed(e -> {
+            // Darken background
+            buttonBg.setFill(Color.rgb(40, 40, 60, 0.9));
+            // Change stroke color
+            buttonBg.setStroke(Color.WHITE);
+            // Scale button down
+            button.setScaleX(0.95);
+            button.setScaleY(0.95);
+            // Add vibration effect for feedback
+            javafx.animation.TranslateTransition tt = new javafx.animation.TranslateTransition(
+                javafx.util.Duration.millis(50), button);
+            tt.setByX(3);
+            tt.setByY(0);
+            tt.setCycleCount(2);
+            tt.setAutoReverse(true);
+            tt.play();
+        });
+        
+        // Reset on release
+        button.setOnMouseReleased(e -> {
+            buttonBg.setFill(originalFill);
+            buttonBg.setStroke(originalStroke);
+            button.setScaleX(1.0);
+            button.setScaleY(1.0);
+        });
+
+        return button;
     }
 
     /**

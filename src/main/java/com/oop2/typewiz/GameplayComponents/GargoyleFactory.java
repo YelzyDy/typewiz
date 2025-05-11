@@ -130,6 +130,7 @@ public class GargoyleFactory {
                 .with("movingRight", !fromRight)
                 .buildAndAttach();
 
+        System.out.println("Created gargoyle entity at position: (" + xPos + ", " + yPos + "), active: " + gargoyle.isActive());
         return gargoyle;
     }
 

@@ -230,6 +230,7 @@ public class GamePromptFactory {
         
         // Create restart button using UIFactory
         StackPane restartButton = UIFactory.createStylishButton("Play Again", 200, 60, UI_PRIMARY_COLOR);
+        restartButton.setId("play-again-button"); // Add a unique ID to the button for easy identification
         
         // Create two columns for stats layout
         HBox gameStatsLayout = new HBox(20);

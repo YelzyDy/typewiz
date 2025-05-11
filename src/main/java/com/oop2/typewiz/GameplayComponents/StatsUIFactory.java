@@ -56,12 +56,14 @@ public class StatsUIFactory {
     // Add methods to update factory data from Game
     public static void setTotalCharactersTyped(int count) {
         totalCharactersTyped = count;
+        System.out.println("StatsUIFactory: Set total characters typed to " + count);
     }
     
     public static void setWpmData(List<Double> data) {
         wpmOverTime.clear();
         if (data != null) {
             wpmOverTime.addAll(data);
+            System.out.println("StatsUIFactory: Set WPM data with " + data.size() + " entries");
         }
     }
     
@@ -69,6 +71,7 @@ public class StatsUIFactory {
         accuracyOverTime.clear();
         if (data != null) {
             accuracyOverTime.addAll(data);
+            System.out.println("StatsUIFactory: Set accuracy data with " + data.size() + " entries");
         }
     }
 
@@ -124,6 +127,11 @@ public class StatsUIFactory {
         Text consistencyValue = new Text(String.format("%.1f%%", consistency));
         consistencyValue.setFont(Font.font(FONT_FAMILY, 18));
         consistencyValue.setFill(getColorForConsistency(consistency));
+        
+        // Add a small info text below consistency to explain
+        Text consistencyInfo = new Text("(Develops over multiple games)");
+        consistencyInfo.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.NORMAL, 12));
+        consistencyInfo.setFill(Color.LIGHTGRAY);
 
         // Character count
         Text charCountLabel = new Text("Characters Typed:");
@@ -143,8 +151,9 @@ public class StatsUIFactory {
         statsGrid.add(accuracyValue, 1, 2);
         statsGrid.add(consistencyLabel, 0, 3);
         statsGrid.add(consistencyValue, 1, 3);
-        statsGrid.add(charCountLabel, 0, 4);
-        statsGrid.add(charCountValue, 1, 4);
+        statsGrid.add(consistencyInfo, 1, 4);
+        statsGrid.add(charCountLabel, 0, 5);
+        statsGrid.add(charCountValue, 1, 5);
 
         // Add all elements to panel
         statsPanel.getChildren().addAll(statsTitle, statsGrid);
