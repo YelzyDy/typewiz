@@ -39,6 +39,7 @@ public class LoginScreen extends GameApplication {
         settings.setHeight(800);
         settings.setMainMenuEnabled(false);
         settings.setGameMenuEnabled(false);
+
     }
 
     public void addLoginUI() {
@@ -157,10 +158,12 @@ public class LoginScreen extends GameApplication {
         button.setStyle(baseStyle);
         button.setOnMouseEntered(e -> {
             FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
+            button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
             button.setStyle(hoverStyle);
         });
 
         button.setOnMouseExited(e ->{
+            button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
             button.setStyle(baseStyle);
         });
     }

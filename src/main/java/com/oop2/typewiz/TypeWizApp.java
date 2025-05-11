@@ -17,6 +17,8 @@ public class TypeWizApp extends GameApplication {
         MAIN_MENU,
         DIFFICULTY_SELECTION
     }
+    public static ImageCursor CLOSED_BOOK_CURSOR;
+    public static ImageCursor OPEN_BOOK_CURSOR;
 
     @Override
     protected void initSettings(GameSettings settings) {
@@ -25,13 +27,11 @@ public class TypeWizApp extends GameApplication {
         settings.setTitle("TypeWiz");
     }
 
-    static void setupCustomCursor() {
-        Image cursorImg = new Image(TypeWizApp.class.getResource("assets/magicbook.png").toExternalForm());
+    public static void setupCustomCursor() {
+        CLOSED_BOOK_CURSOR = new ImageCursor(FXGL.image("magicbook.png"), 0, 0);
+        OPEN_BOOK_CURSOR = new ImageCursor(FXGL.image("magicbook_hover.png"), 0, 0);
 
-        Image scaledImg = new Image(cursorImg.getUrl(), 32, 32, true, true);
-
-        // Use the scaled image for the custom cursor
-        FXGL.getGameScene().setCursor(new ImageCursor(scaledImg, 16, 16)); // Hotspot at top-left
+        FXGL.getGameScene().getRoot().setCursor(CLOSED_BOOK_CURSOR);
     }
 
     @Override

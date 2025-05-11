@@ -85,6 +85,7 @@ public class CreditsScreen extends FXGLMenu {
 
         // On-click event for the Back button
         backButton.setOnMouseClicked(event -> {
+            FXGL.play("sound-library/click.wav");
             // Transition back to the main menu
             FXGL.getGameScene().removeUINode(getContentRoot());
             FXGL.getGameScene().getContentRoot().getChildren().add(new MainMenuScreen().getContentRoot());
