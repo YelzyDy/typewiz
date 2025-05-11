@@ -344,14 +344,31 @@ public class Game extends GameApplication {
      * Sets up global key event handling for special keys
      */
     private void setupGlobalKeyHandling() {
+        // Track the last time the shift key was processed to prevent rapid repeats
+        final long[] lastShiftKeyTime = {0};
+        final long SHIFT_DEBOUNCE_MS = 200; // Debounce time in milliseconds
+        
         // Add a global filter to intercept shift key events before they're processed by other handlers
         FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
                 // If in playing state, cycle through targets
                 if (stateManager.isInState(GameStateManager.GameState.PLAYING)) {
-                    inputManager.cycleToNextWordBlock();
+                    // Debounce logic to prevent too rapid cycling
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastShiftKeyTime[0] > SHIFT_DEBOUNCE_MS) {
+                        inputManager.cycleToNextWordBlock();
+                        lastShiftKeyTime[0] = currentTime;
+                    }
                     event.consume(); // Prevent event from being processed further
                 }
+            }
+        });
+        
+        // Also handle KEY_RELEASED to ensure consistent behavior
+        FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_RELEASED, event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
+                // Consume the event to prevent it from being processed further
+                event.consume();
             }
         });
     }
