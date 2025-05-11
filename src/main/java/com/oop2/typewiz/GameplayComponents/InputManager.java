@@ -220,6 +220,8 @@ public class InputManager {
                     GargoyleFactory.resetBlockToDefaultColor(selectedWordBlock);
                 } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
                     GrimougeFactory.resetBlockToDefaultColor(selectedWordBlock);
+                } else if (selectedWordBlock.isType(Game.EntityType.VYLEYE)) {
+                    VyleyeFactory.resetBlockToDefaultColor(selectedWordBlock);
                 }
             } catch (Exception e) {
                 // Ignore errors when resetting colors
@@ -238,6 +240,8 @@ public class InputManager {
                 GargoyleFactory.selectWordBlock(selectedWordBlock);
             } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
                 GrimougeFactory.selectWordBlock(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.VYLEYE)) {
+                VyleyeFactory.selectWordBlock(selectedWordBlock);
             }
             
             // Immediately show that the block is selected and ready for input
@@ -264,6 +268,8 @@ public class InputManager {
                 GargoyleFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
             } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
                 GrimougeFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
+            } else if (selectedWordBlock.isType(Game.EntityType.VYLEYE)) {
+                VyleyeFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
             }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
@@ -281,6 +287,8 @@ public class InputManager {
                 GargoyleFactory.markWordAsComplete(selectedWordBlock);
             } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
                 GrimougeFactory.markWordAsComplete(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.VYLEYE)) {
+                VyleyeFactory.markWordAsComplete(selectedWordBlock);
             }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
@@ -300,6 +308,8 @@ public class InputManager {
                 GargoyleFactory.selectWordBlock(selectedWordBlock);
             } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
                 GrimougeFactory.selectWordBlock(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.VYLEYE)) {
+                VyleyeFactory.selectWordBlock(selectedWordBlock);
             }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
@@ -385,6 +395,7 @@ public class InputManager {
                 Entity completedBlock = selectedWordBlock;
                 boolean wasGargoyle = completedBlock.isType(Game.EntityType.GARGOYLE);
                 boolean wasGrimouge = completedBlock.isType(Game.EntityType.GRIMOUGE);
+                boolean wasVyleye = completedBlock.isType(Game.EntityType.VYLEYE);
                 
                 // Record the completed word
                 int waveNumber = stateManager.isInState(GameStateManager.GameState.PLAYING) ? 1 : 0;

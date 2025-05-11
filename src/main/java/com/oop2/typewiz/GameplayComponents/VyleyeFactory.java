@@ -24,24 +24,24 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Factory class for creating and configuring grimouge entities.
- * This class follows the Factory pattern to centralize grimouge creation.
+ * Factory class for creating and configuring vyleye entities.
+ * This class follows the Factory pattern to centralize vyleye creation.
  */
-public class GrimougeFactory {
-    // Constants for grimouge configuration
-    private static final int GRIMOUGE_SPRITE_SHEET_WIDTH = 7200;
-    private static final int GRIMOUGE_FRAME_COUNT = 9;
-    private static final int GRIMOUGE_FRAME_WIDTH = GRIMOUGE_SPRITE_SHEET_WIDTH / GRIMOUGE_FRAME_COUNT; // 800px per frame
-    private static final int GRIMOUGE_FRAME_HEIGHT = 400;
-    private static final double GRIMOUGE_SCALE = 0.6;
+public class VyleyeFactory {
+    // Constants for vyleye configuration
+    private static final int VYLEYE_SPRITE_SHEET_WIDTH = 5600;
+    private static final int VYLEYE_FRAME_COUNT = 7;
+    private static final int VYLEYE_FRAME_WIDTH = VYLEYE_SPRITE_SHEET_WIDTH / VYLEYE_FRAME_COUNT; // 800px per frame
+    private static final int VYLEYE_FRAME_HEIGHT = 400;
+    private static final double VYLEYE_SCALE = 0.6;
     private static final double WORD_FONT_SIZE = 40;
     private static final double WORD_VERTICAL_OFFSET = 160;
     private static final double SCREEN_MARGIN = 150;
     private static final String FONT_FAMILY = "Arial";
 
     // Animation channels
-    private static AnimationChannel grimougeIdleAnimation;
-    static AnimationChannel grimoungeFlyAnimation;
+    private static AnimationChannel vyleyeIdleAnimation;
+    static AnimationChannel vyleyeFlyAnimation;
     private static final double WING_FLAP_SPEED = 0.2;
 
     // Color constants for word highlighting
@@ -53,45 +53,45 @@ public class GrimougeFactory {
     private static final Random random = new Random();
 
     /**
-     * Initializes the grimouge animations.
-     * Must be called before using the factory to create grimouges.
+     * Initializes the vyleye animations.
+     * Must be called before using the factory to create vyleyes.
      */
     public static void initializeAnimations() {
-        // Create animation channels for grimouges
+        // Create animation channels for vyleyes
         try {
             // Create animation channel for idle animation (first row)
-            grimougeIdleAnimation = new AnimationChannel(
-                    FXGL.image("mobs/grimouge/grimouge.png"),
-                    GRIMOUGE_FRAME_COUNT, // 9 frames per row
-                    GRIMOUGE_FRAME_WIDTH, GRIMOUGE_FRAME_HEIGHT,
+            vyleyeIdleAnimation = new AnimationChannel(
+                    FXGL.image("mobs/vyleye/vyleye.png"),
+                    VYLEYE_FRAME_COUNT, // 7 frames per row
+                    VYLEYE_FRAME_WIDTH, VYLEYE_FRAME_HEIGHT,
                     Duration.seconds(WING_FLAP_SPEED * 1.5), // Even slower for idle
-                    0, GRIMOUGE_FRAME_COUNT - 1); // First row, frames 0-8
+                    0, VYLEYE_FRAME_COUNT - 1); // First row, frames 0-6
 
             // Create animation channel for flying animation (same row)
-            grimoungeFlyAnimation = new AnimationChannel(
-                    FXGL.image("mobs/grimouge/grimouge.png"),
-                    GRIMOUGE_FRAME_COUNT, // 9 frames per row
-                    GRIMOUGE_FRAME_WIDTH, GRIMOUGE_FRAME_HEIGHT,
+            vyleyeFlyAnimation = new AnimationChannel(
+                    FXGL.image("mobs/vyleye/vyleye.png"),
+                    VYLEYE_FRAME_COUNT, // 7 frames per row
+                    VYLEYE_FRAME_WIDTH, VYLEYE_FRAME_HEIGHT,
                     Duration.seconds(WING_FLAP_SPEED), // Slower for flying
-                    0, GRIMOUGE_FRAME_COUNT - 1); // Same row, frames 0-8
+                    0, VYLEYE_FRAME_COUNT - 1); // Same row, frames 0-6
         } catch (Exception e) {
-            System.err.println("Error initializing grimouge animations: " + e.getMessage());
+            System.err.println("Error initializing vyleye animations: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     /**
-     * Creates a grimouge entity at the specified position.
+     * Creates a vyleye entity at the specified position.
      *
-     * @param index      Index of the grimouge for positioning
-     * @param yPos       Y-position of the grimouge
-     * @param fromRight  Whether the grimouge should spawn from the right side
-     * @param spawnPerimeterRight Distance from right edge where grimouges spawn
-     * @param entityType Entity type enum value for the grimouge
-     * @return The created grimouge entity
+     * @param index      Index of the vyleye for positioning
+     * @param yPos       Y-position of the vyleye
+     * @param fromRight  Whether the vyleye should spawn from the right side
+     * @param spawnPerimeterRight Distance from right edge where vyleyes spawn
+     * @param entityType Entity type enum value for the vyleye
+     * @return The created vyleye entity
      */
-    public static Entity spawnGrimouge(int index, double yPos, boolean fromRight, double spawnPerimeterRight, Enum<?> entityType) {
-        if (grimoungeFlyAnimation == null || grimougeIdleAnimation == null) {
+    public static Entity spawnVyleye(int index, double yPos, boolean fromRight, double spawnPerimeterRight, Enum<?> entityType) {
+        if (vyleyeFlyAnimation == null || vyleyeIdleAnimation == null) {
             // Initialize animations if they haven't been yet
             initializeAnimations();
         }
@@ -105,22 +105,22 @@ public class GrimougeFactory {
         }
 
         StackPane wordBlockView = new StackPane();
-        AnimatedTexture texture = new AnimatedTexture(grimoungeFlyAnimation);
+        AnimatedTexture texture = new AnimatedTexture(vyleyeFlyAnimation);
         texture.loop();
-        texture.setScaleX(fromRight ? GRIMOUGE_SCALE : -GRIMOUGE_SCALE); // Flip sprite if spawning from left
-        texture.setScaleY(GRIMOUGE_SCALE);
+        texture.setScaleX(fromRight ? VYLEYE_SCALE : -VYLEYE_SCALE); // Flip sprite if spawning from left
+        texture.setScaleY(VYLEYE_SCALE);
         TextFlow textFlow = new TextFlow();
-        textFlow.setMaxWidth(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE);
-        textFlow.setMaxHeight(GRIMOUGE_FRAME_HEIGHT * GRIMOUGE_SCALE);
+        textFlow.setMaxWidth(VYLEYE_FRAME_WIDTH * VYLEYE_SCALE);
+        textFlow.setMaxHeight(VYLEYE_FRAME_HEIGHT * VYLEYE_SCALE);
         wordBlockView.getChildren().addAll(texture, textFlow);
 
         // Create new entity with all required properties
-        Entity grimouge = FXGL.entityBuilder()
+        Entity vyleye = FXGL.entityBuilder()
                 .type(entityType)
                 .at(xPos, yPos)
                 .view(wordBlockView)
-                .scale(GRIMOUGE_SCALE, GRIMOUGE_SCALE)
-                .bbox(new HitBox(BoundingShape.box(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE, GRIMOUGE_FRAME_HEIGHT * GRIMOUGE_SCALE)))
+                .scale(VYLEYE_SCALE, VYLEYE_SCALE)
+                .bbox(new HitBox(BoundingShape.box(VYLEYE_FRAME_WIDTH * VYLEYE_SCALE, VYLEYE_FRAME_HEIGHT * VYLEYE_SCALE)))
                 .zIndex(25)
                 .with("word", "") // Initialize with empty string
                 .with("letterNodes", new ArrayList<Text>())
@@ -132,43 +132,43 @@ public class GrimougeFactory {
                 .with("movingRight", !fromRight)
                 .buildAndAttach();
 
-        System.out.println("Created grimouge entity at position: (" + xPos + ", " + yPos + "), active: " + grimouge.isActive());
-        return grimouge;
+        System.out.println("Created vyleye entity at position: (" + xPos + ", " + yPos + "), active: " + vyleye.isActive());
+        return vyleye;
     }
 
     /**
-     * Configures a word for a grimouge entity.
+     * Configures a word for a vyleye entity.
      *
-     * @param grimouge The grimouge entity
-     * @param word     The word to assign to the grimouge
+     * @param vyleye The vyleye entity
+     * @param word     The word to assign to the vyleye
      * @param yPos     Y-position for calculation purposes
      */
-    public static void configureGrimougeWord(Entity grimouge, String word, double yPos) {
-        if (grimouge == null || word == null || word.isEmpty()) {
+    public static void configureVyleyeWord(Entity vyleye, String word, double yPos) {
+        if (vyleye == null || word == null || word.isEmpty()) {
             return;
         }
 
         // Set word property
-        grimouge.setProperty("word", word);
+        vyleye.setProperty("word", word);
 
         // Get view component and validate
-        if (grimouge.getViewComponent() == null || grimouge.getViewComponent().getChildren().isEmpty()) {
+        if (vyleye.getViewComponent() == null || vyleye.getViewComponent().getChildren().isEmpty()) {
             return;
         }
 
-        StackPane view = (StackPane) grimouge.getViewComponent().getChildren().get(0);
+        StackPane view = (StackPane) vyleye.getViewComponent().getChildren().get(0);
         if (view == null || view.getChildren().isEmpty()) {
             return;
         }
 
         // Get or create TextFlow
-        TextFlow textFlow = grimouge.getObject("textFlow");
+        TextFlow textFlow = vyleye.getObject("textFlow");
         if (textFlow == null) {
             textFlow = new TextFlow();
             textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
             // Position the text flow at the top center of the entity
             textFlow.setTranslateY(WORD_VERTICAL_OFFSET * 0.8); // Reduced vertical offset to move word higher
-            grimouge.setProperty("textFlow", textFlow);
+            vyleye.setProperty("textFlow", textFlow);
             view.getChildren().add(textFlow);
         }
 
@@ -177,7 +177,6 @@ public class GrimougeFactory {
         
         // Create container for word with background
         StackPane wordContainer = new StackPane();
-        wordContainer.setAlignment(Pos.CENTER); // Ensure container is centered
         
         // Determine font size based on word length - longer words get smaller font
         double fontSize = WORD_FONT_SIZE;
@@ -191,7 +190,7 @@ public class GrimougeFactory {
         Rectangle wordBackground = new Rectangle();
         double padding = 10;
         double wordLength = word.length() * fontSize * 0.55 + padding * 2;  // Even more compact width
-        wordBackground.setWidth(Math.max(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE * 0.6, wordLength));
+        wordBackground.setWidth(Math.max(VYLEYE_FRAME_WIDTH * VYLEYE_SCALE * 0.6, wordLength));
         wordBackground.setHeight(fontSize + padding);  // Compact height
         wordBackground.setArcWidth(10);  // Smaller corners
         wordBackground.setArcHeight(10);
@@ -231,19 +230,20 @@ public class GrimougeFactory {
         
         // Add word background and text to the container
         wordContainer.getChildren().addAll(wordBackground, wordBox);
+        wordContainer.setAlignment(Pos.CENTER); // Ensure everything is centered
         
         // Add the container to the text flow
         textFlow.getChildren().add(wordContainer);
-        textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER); // Make sure text flow is centered
+        textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER); // Ensure text flow is also centered
 
         // Store letter nodes for later use
-        grimouge.setProperty("letterNodes", letterNodes);
+        vyleye.setProperty("letterNodes", letterNodes);
         
-        // Add connecting line from grimouge to word
+        // Add simpler connecting line 
         Line connectionLine = new Line();
-        connectionLine.setStartX(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE / 2);
-        connectionLine.setStartY(GRIMOUGE_FRAME_HEIGHT * GRIMOUGE_SCALE / 2);
-        connectionLine.setEndX(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE / 2);
+        connectionLine.setStartX(VYLEYE_FRAME_WIDTH * VYLEYE_SCALE / 2);
+        connectionLine.setStartY(VYLEYE_FRAME_HEIGHT * VYLEYE_SCALE / 2);
+        connectionLine.setEndX(VYLEYE_FRAME_WIDTH * VYLEYE_SCALE / 2);
         connectionLine.setEndY(WORD_VERTICAL_OFFSET * 0.8);  // Match the reduced vertical offset
         connectionLine.setStroke(Color.rgb(200, 200, 200, 0.3));
         connectionLine.setStrokeWidth(0.75);
@@ -254,22 +254,22 @@ public class GrimougeFactory {
     }
 
     /**
-     * Spawns a group of grimouges with random positions and words.
+     * Spawns a group of vyleyes with random positions and words.
      *
-     * @param currentGroupSize Number of grimouges to spawn in this group
+     * @param currentGroupSize Number of vyleyes to spawn in this group
      * @param minY Minimum Y position for spawning
      * @param maxY Maximum Y position for spawning
      * @param fromRight Whether to spawn from right side
-     * @param spawnPerimeterRight Distance from right edge where grimouges spawn
+     * @param spawnPerimeterRight Distance from right edge where vyleyes spawn
      * @param wordSupplier Function to get a random word
-     * @param entityType Entity type enum value for the grimouges
-     * @return List of spawned grimouge entities
+     * @param entityType Entity type enum value for the vyleyes
+     * @return List of spawned vyleye entities
      */
-    public static List<Entity> spawnGrimougeGroup(int currentGroupSize, double minY, double maxY, 
+    public static List<Entity> spawnVyleyeGroup(int currentGroupSize, double minY, double maxY, 
                                               boolean fromRight, double spawnPerimeterRight,
                                               java.util.function.Supplier<String> wordSupplier,
                                               Enum<?> entityType) {
-        List<Entity> newGrimouges = new ArrayList<>();
+        List<Entity> newVyleyes = new ArrayList<>();
         
         // Calculate spawn area
         double availableHeight = maxY - minY;
@@ -286,29 +286,29 @@ public class GrimougeFactory {
         // Sort positions to keep some visual order
         Collections.sort(spawnPositions);
         
-        // Spawn grimouges at positions
+        // Spawn vyleyes at positions
         int spawned = 0;
         for (double yPos : spawnPositions) {
             String word = wordSupplier.get();
-            Entity grimouge = spawnGrimouge(spawned, yPos, fromRight, spawnPerimeterRight, entityType);
-            configureGrimougeWord(grimouge, word, yPos);
-            newGrimouges.add(grimouge);
+            Entity vyleye = spawnVyleye(spawned, yPos, fromRight, spawnPerimeterRight, entityType);
+            configureVyleyeWord(vyleye, word, yPos);
+            newVyleyes.add(vyleye);
             spawned++;
         }
         
-        return newGrimouges;
+        return newVyleyes;
     }
 
     /**
-     * Highlights the selected grimouge's word.
+     * Highlights the selected vyleye's word.
      *
-     * @param grimouge The grimouge entity to select
+     * @param vyleye The vyleye entity to select
      */
-    public static void selectWordBlock(Entity grimouge) {
-        if (grimouge == null) return;
+    public static void selectWordBlock(Entity vyleye) {
+        if (vyleye == null) return;
         
         try {
-            List<Text> letterNodes = grimouge.getObject("letterNodes");
+            List<Text> letterNodes = vyleye.getObject("letterNodes");
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(SELECTED_COLOR);
@@ -325,15 +325,15 @@ public class GrimougeFactory {
     }
     
     /**
-     * Resets the grimouge's word to default white color.
+     * Resets the vyleye's word to default white color.
      *
-     * @param grimouge The grimouge entity to reset
+     * @param vyleye The vyleye entity to reset
      */
-    public static void resetBlockToDefaultColor(Entity grimouge) {
-        if (grimouge == null) return;
+    public static void resetBlockToDefaultColor(Entity vyleye) {
+        if (vyleye == null) return;
         
         try {
-            List<Text> letterNodes = grimouge.getObject("letterNodes");
+            List<Text> letterNodes = vyleye.getObject("letterNodes");
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(DEFAULT_COLOR);
@@ -349,14 +349,14 @@ public class GrimougeFactory {
     /**
      * Updates letter colors based on typing progress.
      *
-     * @param grimouge The grimouge entity
+     * @param vyleye The vyleye entity
      * @param currentInput Current typed input
      */
-    public static void updateLetterColors(Entity grimouge, String currentInput) {
-        if (grimouge == null) return;
+    public static void updateLetterColors(Entity vyleye, String currentInput) {
+        if (vyleye == null) return;
         
         try {
-            List<Text> letterNodes = grimouge.getObject("letterNodes");
+            List<Text> letterNodes = vyleye.getObject("letterNodes");
             if (letterNodes == null) return;
             
             // Update colors - typed letters blue, remaining letters yellow
@@ -382,15 +382,15 @@ public class GrimougeFactory {
     }
     
     /**
-     * Marks all letters in the grimouge's word as complete (all blue).
+     * Marks all letters in the vyleye's word as complete (all blue).
      *
-     * @param grimouge The grimouge entity
+     * @param vyleye The vyleye entity
      */
-    public static void markWordAsComplete(Entity grimouge) {
-        if (grimouge == null) return;
+    public static void markWordAsComplete(Entity vyleye) {
+        if (vyleye == null) return;
         
         try {
-            List<Text> letterNodes = grimouge.getObject("letterNodes");
+            List<Text> letterNodes = vyleye.getObject("letterNodes");
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(TYPED_COLOR);
@@ -407,13 +407,13 @@ public class GrimougeFactory {
     }
     
     /**
-     * Finds the closest grimouge to the center of the screen.
+     * Finds the closest vyleye to the center of the screen.
      *
-     * @param activeGrimouges List of active grimouge entities
-     * @return The closest grimouge, or null if none available
+     * @param activeVyleyes List of active vyleye entities
+     * @return The closest vyleye, or null if none available
      */
-    public static Entity findClosestGrimougeToCenter(List<Entity> activeGrimouges) {
-        if (activeGrimouges.isEmpty()) return null;
+    public static Entity findClosestVyleyeToCenter(List<Entity> activeVyleyes) {
+        if (activeVyleyes.isEmpty()) return null;
         
         double centerX = FXGL.getAppWidth() / 2.0;
         double centerY = FXGL.getAppHeight() / 2.0;
@@ -421,18 +421,18 @@ public class GrimougeFactory {
         Entity closest = null;
         double minDistance = Double.MAX_VALUE;
         
-        for (Entity grimouge : activeGrimouges) {
+        for (Entity vyleye : activeVyleyes) {
             try {
                 // Make sure it has the required property
-                grimouge.getString("word");
+                vyleye.getString("word");
                 
-                double dx = grimouge.getX() - centerX;
-                double dy = grimouge.getY() - centerY;
+                double dx = vyleye.getX() - centerX;
+                double dy = vyleye.getY() - centerY;
                 double distance = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distance < minDistance) {
                     minDistance = distance;
-                    closest = grimouge;
+                    closest = vyleye;
                 }
             } catch (Exception e) {
                 // Skip entities with issues

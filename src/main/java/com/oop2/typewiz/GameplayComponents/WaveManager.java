@@ -5,6 +5,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.time.LocalTimer;
 import javafx.util.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -45,7 +46,7 @@ public class WaveManager {
     private int currentGroupSize;
     private double currentSpawnDelay;
     private boolean spawnFromRight;
-    private boolean spawnGrimougeNext;  // Flag to alternate between Gargoyles and Grimouges
+    private int nextEnemyType; // 0 = Gargoyle, 1 = Grimouge, 2 = Vyleye
     
     private LocalTimer waveSpawnTimer;
     private final Random random;
@@ -78,12 +79,12 @@ public class WaveManager {
         this.currentWave = 1;
         this.waveInProgress = false;
         this.isSpawningWave = false;
-        this.spawnGrimougeNext = false;  // Start with Gargoyles
+        this.nextEnemyType = 0; // Start with Gargoyles
         
-        // Initialize spawn area
+        // Initialize spawn area with reduced top margin to allow spawning higher
         this.spawnPerimeterRight = 100; // Distance from right edge where entities spawn
-        this.minY = SCREEN_MARGIN;
-        this.maxY = screenHeight - SCREEN_MARGIN;
+        this.minY = SCREEN_MARGIN * 0.6; // Reduced top margin to allow more top spawning
+        this.maxY = screenHeight - (SCREEN_MARGIN * 1.5); // Increased bottom margin
         
         // Initialize timers
         this.waveSpawnTimer = FXGL.newLocalTimer();
@@ -130,6 +131,7 @@ public class WaveManager {
         // Remove all existing enemies before starting a new wave
         entityManager.removeAllEntitiesOfType(Game.EntityType.GARGOYLE);
         entityManager.removeAllEntitiesOfType(Game.EntityType.GRIMOUGE);
+        entityManager.removeAllEntitiesOfType(Game.EntityType.VYLEYE);
         
         // Get wave index (0-based)
         int waveIndex = currentWave - 1;
@@ -137,7 +139,7 @@ public class WaveManager {
         // Reset wave spawning state with wave-specific parameters
         isSpawningWave = false; // Start as false, set to true after announcement
         spawnFromRight = true; // Always spawn from right side
-        spawnGrimougeNext = false; // Start with Gargoyles for each wave
+        nextEnemyType = 0; // Start with Gargoyles for each wave
         
         // Apply wave-specific difficulty settings
         int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
@@ -212,6 +214,21 @@ public class WaveManager {
         // Get wave index (0-based)
         int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
         
+        // Check how many more entities we can spawn based on the active entity limit
+        int availableSlots = entityManager.getAvailableEntitySlots();
+        if (availableSlots <= 0) {
+            System.out.println("Cannot spawn more entities - at maximum capacity");
+            return new ArrayList<>(); // Return empty list
+        }
+        
+        // Adjust group size to respect available slots
+        int adjustedGroupSize = Math.min(currentGroupSize, availableSlots);
+        if (adjustedGroupSize != currentGroupSize) {
+            System.out.println("Adjusted spawn group size from " + currentGroupSize + 
+                               " to " + adjustedGroupSize + " due to entity limit");
+            currentGroupSize = adjustedGroupSize;
+        }
+        
         // Ensure we don't try to spawn 0 entities
         if (currentGroupSize <= 0) {
             int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
@@ -221,13 +238,179 @@ public class WaveManager {
             } else {
                 currentGroupSize = Math.max(1, random.nextInt(maxSpawns - minSpawns + 1) + minSpawns);
             }
+            // Adjust again based on available slots
+            currentGroupSize = Math.min(currentGroupSize, availableSlots);
             System.out.println("Fixed zero group size to: " + currentGroupSize);
         }
         
         List<Entity> spawnedEntities;
         
-        // Decide whether to spawn Gargoyles or Grimouges
-        if (spawnGrimougeNext) {
+        // Calculate spawn heights for better distribution
+        double availableHeight = maxY - minY;
+        
+        // Create position segments that ensure coverage of the entire screen height
+        List<Double> yPositions = new ArrayList<>();
+        
+        // Define height segments to ensure good distribution
+        final int NUM_SEGMENTS = 5; // More segments for better distribution
+        
+        // Option 1: Ensure we have entities at various screen heights with bias toward top
+        if (currentGroupSize <= NUM_SEGMENTS) {
+            // For small groups, distribute evenly with emphasis on top section
+            for (int i = 0; i < currentGroupSize; i++) {
+                // Bias toward top of screen (weighted distribution)
+                double segmentHeight = availableHeight / NUM_SEGMENTS;
+                
+                // Select segment with bias toward top segments
+                int segmentIndex;
+                if (random.nextDouble() < 0.6) { // 60% chance to pick from top half
+                    segmentIndex = random.nextInt(NUM_SEGMENTS / 2);
+                } else {
+                    segmentIndex = random.nextInt(NUM_SEGMENTS);
+                }
+                
+                // Position within segment with random offset
+                double basePos = minY + segmentIndex * segmentHeight;
+                double randomOffset = random.nextDouble() * segmentHeight;
+                double finalPos = Math.max(minY, Math.min(maxY, basePos + randomOffset));
+                
+                yPositions.add(finalPos);
+            }
+        } else {
+            // For larger groups, ensure coverage across all segments
+            
+            // First, place at least one entity in each segment to ensure full coverage
+            for (int segment = 0; segment < NUM_SEGMENTS && segment < currentGroupSize; segment++) {
+                double segmentHeight = availableHeight / NUM_SEGMENTS;
+                double basePos = minY + segment * segmentHeight;
+                double randomOffset = random.nextDouble() * segmentHeight;
+                yPositions.add(basePos + randomOffset);
+            }
+            
+            // For remaining entities, distribute randomly but with top bias
+            for (int i = NUM_SEGMENTS; i < currentGroupSize; i++) {
+                double yPos;
+                if (random.nextDouble() < 0.5) { // 50% chance to spawn in top half
+                    yPos = minY + random.nextDouble() * (availableHeight / 2);
+                } else {
+                    yPos = minY + random.nextDouble() * availableHeight;
+                }
+                yPositions.add(yPos);
+            }
+        }
+        
+        // Apply minimum spacing between entities to prevent overlap
+        Collections.sort(yPositions);
+        List<Double> spacedPositions = new ArrayList<>();
+        double minSpacing = 60; // Minimum pixels between entities
+        
+        for (double pos : yPositions) {
+            // Check if this position would be too close to any existing position
+            boolean tooClose = false;
+            for (double existingPos : spacedPositions) {
+                if (Math.abs(existingPos - pos) < minSpacing) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            
+            if (!tooClose) {
+                spacedPositions.add(pos);
+            } else {
+                // Find an alternative position
+                double altPos = pos;
+                boolean foundPosition = false;
+                
+                // Try positions above and below with increasing distance
+                for (int offset = 1; offset < 10 && !foundPosition; offset++) {
+                    // Try above
+                    altPos = pos - (offset * minSpacing / 2);
+                    if (altPos >= minY) {
+                        boolean positionValid = true;
+                        for (double existingPos : spacedPositions) {
+                            if (Math.abs(existingPos - altPos) < minSpacing) {
+                                positionValid = false;
+                                break;
+                            }
+                        }
+                        if (positionValid) {
+                            spacedPositions.add(altPos);
+                            foundPosition = true;
+                            break;
+                        }
+                    }
+                    
+                    // Try below
+                    altPos = pos + (offset * minSpacing / 2);
+                    if (altPos <= maxY) {
+                        boolean positionValid = true;
+                        for (double existingPos : spacedPositions) {
+                            if (Math.abs(existingPos - altPos) < minSpacing) {
+                                positionValid = false;
+                                break;
+                            }
+                        }
+                        if (positionValid) {
+                            spacedPositions.add(altPos);
+                            foundPosition = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // If we couldn't find a good position, just use original if we have space
+                if (!foundPosition && spacedPositions.size() < currentGroupSize) {
+                    spacedPositions.add(pos);
+                }
+            }
+        }
+        
+        // If we don't have enough positions, add some more
+        while (spacedPositions.size() < currentGroupSize && spacedPositions.size() < 12) {
+            double randomY = minY + random.nextDouble() * availableHeight;
+            boolean tooClose = false;
+            for (double existingPos : spacedPositions) {
+                if (Math.abs(existingPos - randomY) < minSpacing) {
+                    tooClose = true;
+                    break;
+                }
+            }
+            
+            if (!tooClose) {
+                spacedPositions.add(randomY);
+            }
+        }
+        
+        // Use these spaced positions instead of the original ones
+        yPositions = spacedPositions;
+        
+        // Spawn different enemy types in sequence
+        if (nextEnemyType == 0) {
+            // Spawn Gargoyles
+            System.out.println("Spawning group of " + currentGroupSize + " gargoyles from right side");
+            
+            // Use GargoyleFactory to spawn a group of gargoyles with improved positioning
+            spawnedEntities = GargoyleFactory.spawnGargoyleGroup(
+                currentGroupSize,
+                minY,
+                maxY,
+                spawnFromRight, // Always spawn from right
+                spawnPerimeterRight,
+                wordSupplier, // Method reference to get random words
+                Game.EntityType.GARGOYLE
+            );
+            
+            System.out.println("GargoyleFactory returned " + spawnedEntities.size() + " entities");
+            
+            // Adjust Y positions for better distribution
+            for (int i = 0; i < spawnedEntities.size(); i++) {
+                if (i < yPositions.size()) {
+                    spawnedEntities.get(i).setY(yPositions.get(i));
+                }
+            }
+        } 
+        else if (nextEnemyType == 1) {
+            // Spawn Grimouges
             System.out.println("Spawning group of " + currentGroupSize + " grimouges from right side");
             
             // Use GrimougeFactory to spawn a group of grimouges
@@ -242,51 +425,89 @@ public class WaveManager {
             );
             
             System.out.println("GrimougeFactory returned " + spawnedEntities.size() + " entities");
-        } else {
-            System.out.println("Spawning group of " + currentGroupSize + " gargoyles from right side");
             
-            // Use GargoyleFactory to spawn a group of gargoyles
-            spawnedEntities = GargoyleFactory.spawnGargoyleGroup(
+            // Adjust Y positions for better distribution
+            for (int i = 0; i < spawnedEntities.size(); i++) {
+                if (i < yPositions.size()) {
+                    spawnedEntities.get(i).setY(yPositions.get(i));
+                }
+            }
+        }
+        else {
+            // Spawn Vyleyes
+            System.out.println("Spawning group of " + currentGroupSize + " vyleyes from right side");
+            
+            // Use VyleyeFactory to spawn a group of vyleyes
+            spawnedEntities = VyleyeFactory.spawnVyleyeGroup(
                 currentGroupSize,
                 minY,
                 maxY,
                 spawnFromRight, // Always spawn from right
                 spawnPerimeterRight,
                 wordSupplier, // Method reference to get random words
-                Game.EntityType.GARGOYLE
+                Game.EntityType.VYLEYE
             );
             
-            System.out.println("GargoyleFactory returned " + spawnedEntities.size() + " entities");
+            System.out.println("VyleyeFactory returned " + spawnedEntities.size() + " entities");
+            
+            // Adjust Y positions for better distribution
+            for (int i = 0; i < spawnedEntities.size(); i++) {
+                if (i < yPositions.size()) {
+                    spawnedEntities.get(i).setY(yPositions.get(i));
+                }
+            }
         }
         
-        // Toggle flag for next spawn
-        spawnGrimougeNext = !spawnGrimougeNext;
+        // Update nextEnemyType for the next spawn (cycle through 0, 1, 2)
+        nextEnemyType = (nextEnemyType + 1) % 3;
         
         // Add spawned entities to entity manager and ensure they're attached to the world
+        List<Entity> successfullyAddedEntities = new ArrayList<>();
         for (Entity entity : spawnedEntities) {
-            String entityType = entity.isType(Game.EntityType.GRIMOUGE) ? "grimouge" : "gargoyle";
+            String entityType = "unknown";
+            if (entity.isType(Game.EntityType.GARGOYLE)) {
+                entityType = "gargoyle";
+            } else if (entity.isType(Game.EntityType.GRIMOUGE)) {
+                entityType = "grimouge";
+            } else if (entity.isType(Game.EntityType.VYLEYE)) {
+                entityType = "vyleye";
+            }
+            
             System.out.println("Adding " + entityType + " to entity manager with word: " + 
                 (entity.getProperties().exists("word") ? entity.getString("word") : "unknown"));
                 
-            entityManager.addActiveEntity(entity);
-            
-            // Ensure the entity is attached to the world
-            if (!entity.isActive()) {
-                System.out.println("Attaching " + entityType + " to world");
-                FXGL.getGameWorld().addEntity(entity);
+            boolean added = entityManager.addActiveEntity(entity);
+            if (added) {
+                successfullyAddedEntities.add(entity);
+                
+                // Ensure the entity is attached to the world
+                if (!entity.isActive()) {
+                    System.out.println("Attaching " + entityType + " to world");
+                    FXGL.getGameWorld().addEntity(entity);
+                }
+            } else {
+                // Entity wasn't added due to limit, so we can remove it
+                if (entity.isActive()) {
+                    entity.removeFromWorld();
+                }
             }
         }
+        
+        // Update our reference to only the entities that were actually added
+        spawnedEntities = successfullyAddedEntities;
         
         // Check if we need to select a new entity automatically
         InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
         if (inputManager != null && inputManager.getSelectedWordBlock() == null && !spawnedEntities.isEmpty()) {
             // We only want to select one if there are no other active selections
-            Entity closestEntity;
+            Entity closestEntity = null;
             
-            if (spawnGrimougeNext) { // We just spawned gargoyles
+            if (spawnedEntities.get(0).isType(Game.EntityType.GARGOYLE)) {
                 closestEntity = GargoyleFactory.findClosestGargoyleToCenter(spawnedEntities);
-            } else { // We just spawned grimouges
+            } else if (spawnedEntities.get(0).isType(Game.EntityType.GRIMOUGE)) {
                 closestEntity = GrimougeFactory.findClosestGrimougeToCenter(spawnedEntities);
+            } else if (spawnedEntities.get(0).isType(Game.EntityType.VYLEYE)) {
+                closestEntity = VyleyeFactory.findClosestVyleyeToCenter(spawnedEntities);
             }
             
             if (closestEntity != null) {
@@ -297,9 +518,18 @@ public class WaveManager {
         
         totalWaveSpawns -= spawnedEntities.size();
         
-        String entityType = spawnGrimougeNext ? "gargoyles" : "grimouges"; // Because we toggled the flag
+        // Get name of next entity type to spawn
+        String nextEntityType = "unknown";
+        if (nextEnemyType == 0) {
+            nextEntityType = "gargoyles";
+        } else if (nextEnemyType == 1) {
+            nextEntityType = "grimouges";
+        } else {
+            nextEntityType = "vyleyes";
+        }
+        
         System.out.println("Successfully spawned " + spawnedEntities.size() + 
-                " " + entityType + ", " + totalWaveSpawns + " remaining in wave");
+                " entities, next spawn: " + nextEntityType + ", " + totalWaveSpawns + " remaining in wave");
         
         // Prepare for next group with wave-specific parameters
         int waveMinSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
@@ -358,8 +588,8 @@ public class WaveManager {
         isSpawningWave = true;
         waveSpawnTimer.capture();
         
-        // Reset spawn flag to start with Gargoyles
-        spawnGrimougeNext = false;
+        // Reset next enemy type to start with Gargoyles
+        nextEnemyType = 0;
         
         System.out.println("WaveManager: Spawning first group of enemies, size=" + currentGroupSize);
         
@@ -372,11 +602,14 @@ public class WaveManager {
         // Automatically select the first entity (closest to center) for targeting
         if (!spawned.isEmpty()) {
             // Find the closest entity to the center of the screen
-            Entity closestEntity;
+            Entity closestEntity = null;
+            
             if (spawned.get(0).isType(Game.EntityType.GARGOYLE)) {
                 closestEntity = GargoyleFactory.findClosestGargoyleToCenter(spawned);
-            } else {
+            } else if (spawned.get(0).isType(Game.EntityType.GRIMOUGE)) {
                 closestEntity = GrimougeFactory.findClosestGrimougeToCenter(spawned);
+            } else if (spawned.get(0).isType(Game.EntityType.VYLEYE)) {
+                closestEntity = VyleyeFactory.findClosestVyleyeToCenter(spawned);
             }
             
             // Get input manager from world properties and select the entity
@@ -405,6 +638,6 @@ public class WaveManager {
         currentWave = 1;
         waveInProgress = false;
         isSpawningWave = false;
-        spawnGrimougeNext = false;
+        nextEnemyType = 0;
     }
 } 

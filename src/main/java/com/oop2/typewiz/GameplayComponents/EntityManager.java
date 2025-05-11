@@ -19,6 +19,7 @@ public class EntityManager {
     private List<Entity> activeEntities;
     private List<Entity> gargoylePool;
     private List<Entity> grimougePool;
+    private List<Entity> vyleyePool;
     private List<Entity> entitiesToRemove;
     private SpatialPartitioning spatialPartitioning;
     private double width;
@@ -27,6 +28,8 @@ public class EntityManager {
     private static final int BATCH_SIZE = 50;
     private static final int MAX_GARGOYLES = 10;
     private static final int MAX_GRIMOUGES = 10;
+    private static final int MAX_VYLEYES = 10;
+    private static final int MAX_ACTIVE_ENTITIES = 12; // Maximum entities on screen at once
     
     // Constants for entity movement
     private static final double GARGOYLE_SPEED = 50.0;
@@ -41,6 +44,13 @@ public class EntityManager {
     private static final double GRIMOUGE_FRAME_HEIGHT = 400;
     private static final double GRIMOUGE_SCALE = 0.6;
     
+    private static final double VYLEYE_SPEED = 50.0;
+    private static final int VYLEYE_SPRITE_SHEET_WIDTH = 5600;
+    private static final int VYLEYE_FRAME_COUNT = 7;
+    private static final double VYLEYE_FRAME_WIDTH = VYLEYE_SPRITE_SHEET_WIDTH / VYLEYE_FRAME_COUNT; // 800px per frame
+    private static final double VYLEYE_FRAME_HEIGHT = 400;
+    private static final double VYLEYE_SCALE = 0.6;
+    
     /**
      * Creates a new EntityManager with initialized pools and spatial partitioning
      * 
@@ -53,12 +63,14 @@ public class EntityManager {
         activeEntities = new ArrayList<>();
         gargoylePool = new ArrayList<>(MAX_GARGOYLES);
         grimougePool = new ArrayList<>(MAX_GRIMOUGES);
+        vyleyePool = new ArrayList<>(MAX_VYLEYES);
         entitiesToRemove = new ArrayList<>(BATCH_SIZE);
         spatialPartitioning = new SpatialPartitioning(100, width, height);
         
         // Pre-initialize the entity pools
         initializeGargoylePool();
         initializeGrimougePool();
+        initializeVyleyePool();
     }
     
     /**
@@ -88,6 +100,21 @@ public class EntityManager {
             
             // Add to pool
             grimougePool.add(grimougeEntity);
+        }
+    }
+    
+    /**
+     * Initializes the vyleye entity pool
+     */
+    private void initializeVyleyePool() {
+        for (int i = 0; i < MAX_VYLEYES; i++) {
+            Entity vyleyeEntity = FXGL.entityBuilder()
+                    .type(Game.EntityType.VYLEYE)
+                    .zIndex(25)
+                    .build();
+            
+            // Add to pool
+            vyleyePool.add(vyleyeEntity);
         }
     }
     
@@ -130,6 +157,25 @@ public class EntityManager {
     }
     
     /**
+     * Gets a vyleye entity from the pool or creates a new one if needed
+     * 
+     * @return An available vyleye entity
+     */
+    public Entity getVyleyeFromPool() {
+        if (vyleyePool.isEmpty()) {
+            // If pool is empty, create a new entity
+            Entity vyleyeEntity = FXGL.entityBuilder()
+                    .type(Game.EntityType.VYLEYE)
+                    .zIndex(25)
+                    .build();
+            return vyleyeEntity;
+        }
+        
+        // Get and remove the last entity from the pool
+        return vyleyePool.remove(vyleyePool.size() - 1);
+    }
+    
+    /**
      * Returns an entity to the gargoyle pool for reuse
      * 
      * @param entity The entity to return to the pool
@@ -160,12 +206,34 @@ public class EntityManager {
     }
     
     /**
+     * Returns an entity to the vyleye pool for reuse
+     * 
+     * @param entity The entity to return to the pool
+     */
+    public void returnVyleyeToPool(Entity entity) {
+        if (entity != null) {
+            if (entity.isActive()) {
+                entity.removeFromWorld();
+            }
+            spatialPartitioning.removeEntity(entity);
+            vyleyePool.add(entity);
+        }
+    }
+    
+    /**
      * Adds an entity to the active entities list and updates spatial partitioning
      * 
      * @param entity The entity to add
+     * @return true if entity was added, false if limit reached
      */
-    public void addActiveEntity(Entity entity) {
+    public boolean addActiveEntity(Entity entity) {
         if (entity != null) {
+            // Check if we've reached the maximum number of active entities
+            if (getActiveEnemies().size() >= MAX_ACTIVE_ENTITIES) {
+                System.out.println("Maximum active entities limit reached, not adding new entity");
+                return false;
+            }
+            
             activeEntities.add(entity);
             spatialPartitioning.updateEntity(entity);
             
@@ -176,7 +244,36 @@ public class EntityManager {
             } else {
                 System.out.println("Entity is already active in the world: " + entity);
             }
+            return true;
         }
+        return false;
+    }
+    
+    /**
+     * Checks if adding more entities is possible
+     * 
+     * @return true if more entities can be added, false if at max capacity
+     */
+    public boolean canAddMoreEntities() {
+        return getActiveEnemies().size() < MAX_ACTIVE_ENTITIES;
+    }
+    
+    /**
+     * Gets the maximum number of active entities allowed
+     * 
+     * @return The maximum number of active entities
+     */
+    public int getMaxActiveEntities() {
+        return MAX_ACTIVE_ENTITIES;
+    }
+    
+    /**
+     * Gets the number of slots available for new entities
+     * 
+     * @return Number of available entity slots
+     */
+    public int getAvailableEntitySlots() {
+        return Math.max(0, MAX_ACTIVE_ENTITIES - getActiveEnemies().size());
     }
     
     /**
@@ -199,6 +296,8 @@ public class EntityManager {
                 gargoylePool.add(entity);
             } else if (entity.isType(Game.EntityType.GRIMOUGE)) {
                 grimougePool.add(entity);
+            } else if (entity.isType(Game.EntityType.VYLEYE)) {
+                vyleyePool.add(entity);
             }
         }
     }
@@ -268,7 +367,16 @@ public class EntityManager {
     }
     
     /**
-     * Gets all active enemy entities (gargoyles and grimouges)
+     * Gets the active vyleye entities
+     * 
+     * @return List of active vyleye entities
+     */
+    public List<Entity> getActiveVyleyes() {
+        return getActiveEntitiesByType(Game.EntityType.VYLEYE);
+    }
+    
+    /**
+     * Gets all active enemy entities (gargoyles, grimouges, and vyleyes)
      * 
      * @return List of all active enemy entities
      */
@@ -276,6 +384,7 @@ public class EntityManager {
         List<Entity> enemies = new ArrayList<>();
         enemies.addAll(getActiveGargoyles());
         enemies.addAll(getActiveGrimouges());
+        enemies.addAll(getActiveVyleyes());
         return enemies;
     }
     
@@ -341,8 +450,10 @@ public class EntityManager {
         // Reinitialize the pools
         gargoylePool.clear();
         grimougePool.clear();
+        vyleyePool.clear();
         initializeGargoylePool();
         initializeGrimougePool();
+        initializeVyleyePool();
         
         // Reset spatial partitioning
         spatialPartitioning.clear();
@@ -359,6 +470,9 @@ public class EntityManager {
         
         // Process all active grimouges
         updateGrimouges(tpf, speedMultiplier);
+        
+        // Process all active vyleyes
+        updateVyleyes(tpf, speedMultiplier);
     }
     
     /**
@@ -494,6 +608,74 @@ public class EntityManager {
 
             // Update spatial partitioning
             spatialPartitioning.updateEntity(grimouge);
+        }
+    }
+    
+    /**
+     * Updates all active vyleye entities
+     * @param tpf Time per frame
+     * @param speedMultiplier Speed multiplier for the current wave
+     */
+    private void updateVyleyes(double tpf, double speedMultiplier) {
+        List<Entity> vyleyes = getActiveVyleyes();
+        for (Entity vyleye : vyleyes) {
+            if (vyleye == null) continue;
+
+            // Check visibility and activity state
+            boolean isVisible = isEntityVisible(vyleye);
+            boolean hasBeenVisible = vyleye.getBoolean("hasBeenVisible");
+            boolean isActive = vyleye.getBoolean("isActive");
+            boolean movingRight = vyleye.getBoolean("movingRight");
+
+            // Mark as visible once it enters the screen
+            if (isVisible && !hasBeenVisible) {
+                vyleye.setProperty("hasBeenVisible", true);
+                hasBeenVisible = true;
+            }
+
+            // Activate when fully visible
+            if (isVisible && !isActive) {
+                vyleye.setProperty("isActive", true);
+                isActive = true;
+            }
+
+            // Only move and check for removal if the vyleye is active
+            if (isActive) {
+                // Update position
+                double movement = VYLEYE_SPEED * speedMultiplier * tpf;
+                movement = Math.max(movement, 1.0); // Prevent micro-stuttering
+                vyleye.translateX(movingRight ? movement : -movement);
+
+                // Check if vyleye has left the screen
+                if ((movingRight && vyleye.getX() > this.width) ||
+                        (!movingRight && vyleye.getX() < -VYLEYE_FRAME_WIDTH * VYLEYE_SCALE)) {
+                    if (hasBeenVisible) {
+                        // Decrease player health when vyleye leaves screen
+                        PlayerManager playerManager = FXGL.getWorldProperties().getObject("playerManager");
+                        if (playerManager != null) {
+                            playerManager.decreaseHealth();
+                        }
+                    }
+                    // Mark for removal in the next cycle
+                    markForRemoval(vyleye);
+
+                    // Update selection if needed
+                    InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
+                    if (inputManager != null && vyleye == inputManager.getSelectedWordBlock()) {
+                        Entity closest = VyleyeFactory.findClosestVyleyeToCenter(getActiveVyleyes());
+                        if (closest != null) {
+                            inputManager.selectWordBlock(closest);
+                        }
+                    }
+                    continue;
+                }
+            }
+
+            // Update animation
+            updateEntityAnimation(vyleye, tpf);
+
+            // Update spatial partitioning
+            spatialPartitioning.updateEntity(vyleye);
         }
     }
     

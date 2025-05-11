@@ -164,7 +164,8 @@ public class GargoyleFactory {
         if (textFlow == null) {
             textFlow = new TextFlow();
             textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-            textFlow.setTranslateY(WORD_VERTICAL_OFFSET);
+            // Position the text flow at the top center of the entity
+            textFlow.setTranslateY(WORD_VERTICAL_OFFSET * 0.8); // Reduced vertical offset to move word higher
             gargoyle.setProperty("textFlow", textFlow);
             view.getChildren().add(textFlow);
         }
@@ -174,6 +175,7 @@ public class GargoyleFactory {
         
         // Create container for word with background
         StackPane wordContainer = new StackPane();
+        wordContainer.setAlignment(Pos.CENTER); // Ensure container is centered
         
         // Determine font size based on word length - longer words get smaller font
         double fontSize = WORD_FONT_SIZE;
@@ -202,7 +204,7 @@ public class GargoyleFactory {
         dropShadow.setSpread(0.2);
         wordBackground.setEffect(dropShadow);
         
-        // Create compact HBox for text
+        // Create compact HBox for text with center alignment
         HBox wordBox = new HBox(1); // Minimal spacing between letters
         wordBox.setAlignment(Pos.CENTER);
         
@@ -230,16 +232,17 @@ public class GargoyleFactory {
         
         // Add the container to the text flow
         textFlow.getChildren().add(wordContainer);
+        textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER); // Make sure text flow is centered
 
         // Store letter nodes for later use
         gargoyle.setProperty("letterNodes", letterNodes);
         
-        // Add simpler connecting line 
+        // Add connecting line from gargoyle to word
         Line connectionLine = new Line();
         connectionLine.setStartX(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE / 2);
         connectionLine.setStartY(GARGOYLE_FRAME_HEIGHT * GARGOYLE_SCALE / 2);
         connectionLine.setEndX(GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE / 2);
-        connectionLine.setEndY(WORD_VERTICAL_OFFSET);
+        connectionLine.setEndY(WORD_VERTICAL_OFFSET * 0.8);  // Match the reduced vertical offset
         connectionLine.setStroke(Color.rgb(200, 200, 200, 0.3));
         connectionLine.setStrokeWidth(0.75);
         connectionLine.getStrokeDashArray().addAll(2.0, 2.0);  // Smaller dashes

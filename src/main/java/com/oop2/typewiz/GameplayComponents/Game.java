@@ -41,7 +41,8 @@ public class Game extends GameApplication {
         PLAYER,
         MOVING_BLOCK,
         GARGOYLE,
-        GRIMOUGE
+        GRIMOUGE,
+        VYLEYE
     }
 
     // Core game constants
@@ -105,6 +106,7 @@ public class Game extends GameApplication {
         // Initialize animations for entities
         GargoyleFactory.initializeAnimations();
         GrimougeFactory.initializeAnimations();
+        VyleyeFactory.initializeAnimations();
         
         // Set up UI elements
         UIFactory.createUI(this);
