@@ -117,14 +117,7 @@ public class MainMenuScreen extends FXGLMenu {
 
         Button helpButton = createWizardButton("SPELLBOOK", () -> {
             FXGL.play("sound-library/click.wav"); // plays the sound
-            FXGL.getDialogService().showMessageBox(
-                    "~ MAGIC TYPING RULES ~\n\n" +
-                            "1. Type the incantations as they appear\n" +
-                            "2. Complete them before time runs out\n" +
-                            "3. Accuracy increases your mana\n\n" +
-                            "Press any key to begin your training!",
-                    () -> {}
-            );
+            FXGL.getSceneService().pushSubScene(new HowToPlayScreen(() -> FXGL.getSceneService().popSubScene()));
         });
 
         Button activityButton = createWizardButton("CREATORS", () -> {
