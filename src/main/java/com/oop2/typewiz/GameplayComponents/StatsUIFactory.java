@@ -313,52 +313,6 @@ public class StatsUIFactory {
         return canvas;
     }
 
-//    static double calculateWPM() {
-//        // If no time has elapsed, return 0
-//        if (totalTypingTime <= 0) return 0;
-//
-//        // WPM = (characters typed / 5) / (time in minutes)
-//        // 5 characters is the standard word length
-//        double minutes = totalTypingTime / 60000.0;
-//        return (totalCharactersTyped / 5.0) / minutes;
-//    }
-//
-//    static double calculateRawWPM() {
-//        // If no time has elapsed, return 0
-//        if (totalTypingTime <= 0) return 0;
-//
-//        // Raw WPM = (total keystrokes / 5) / (time in minutes)
-//        double minutes = totalTypingTime / 60000.0;
-//        return (totalKeystrokes / 5.0) / minutes;
-//    }
-//
-//    static double calculateAccuracy() {
-//        // If no keystrokes, return 0
-//        if (totalKeystrokes <= 0) return 0;
-//
-//        return (double) correctKeystrokes / totalKeystrokes * 100.0;
-//    }
-//
-//    static double calculateConsistency() {
-//        // If less than 2 keystroke timings, return 0
-//        if (keystrokeTimings.size() < 2) return 0;
-//
-//        // Calculate standard deviation of keystroke timings
-//        double mean = keystrokeTimings.stream().mapToLong(Long::valueOf).average().getAsDouble();
-//        double variance = keystrokeTimings.stream()
-//                .mapToDouble(timing -> Math.pow(timing - mean, 2))
-//                .average()
-//                .getAsDouble();
-//        double stdDev = Math.sqrt(variance);
-//
-//        // Calculate coefficient of variation (lower is more consistent)
-//        double cv = stdDev / mean;
-//
-//        // Convert to a percentage (100% = perfect consistency, 0% = terrible)
-//        // Cap at 100% for very consistent typing
-//        return Math.max(0, Math.min(100, (1 - cv) * 100));
-//    }
-
     private static Color getColorForWPM(double wpm) {
         if (wpm >= 60) return STAT_GOOD_COLOR;
         if (wpm >= 40) return STAT_MEDIUM_COLOR;
