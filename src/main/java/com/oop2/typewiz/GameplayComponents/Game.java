@@ -59,9 +59,10 @@ public class Game extends GameApplication {
         settings.setWidth(1280);
         settings.setHeight(720);
         settings.setTitle("TypeWiz - Winter Theme");
-        settings.setManualResizeEnabled(false);
+        settings.setManualResizeEnabled(true);
         settings.setPreserveResizeRatio(true);
-        settings.setFullScreenAllowed(false);
+        settings.setFullScreenAllowed(true);
+        settings.setFullScreenFromStart(true);
         settings.setGameMenuEnabled(false);
         settings.setIntroEnabled(false);
         settings.setProfilingEnabled(false);
