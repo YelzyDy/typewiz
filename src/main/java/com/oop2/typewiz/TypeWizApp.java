@@ -26,15 +26,14 @@ public class TypeWizApp extends GameApplication {
     }
 
     static void setupCustomCursor() {
+        Image cursorImg = new Image(TypeWizApp.class.getResource("assets/magicbook.png").toExternalForm());
 
-            Image cursorImg = new Image(TypeWizApp.class.getResource("assets/hat.png").toExternalForm());
+        Image scaledImg = new Image(cursorImg.getUrl(), 32, 32, true, true);
 
-            // Create an ImageView to scale the image
-            ImageView imageView = new ImageView(cursorImg);
-            // Use the scaled image for the custom cursor
-            FXGL.getGameScene().setCursor(new ImageCursor(imageView.getImage(), 1280, 1280)); // Hotspot set to the center of the large image
-
+        // Use the scaled image for the custom cursor
+        FXGL.getGameScene().setCursor(new ImageCursor(scaledImg, 16, 16)); // Hotspot at top-left
     }
+
     @Override
     protected void initUI() {
         // Initialize custom cursor for the first screen

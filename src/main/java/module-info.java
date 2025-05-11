@@ -10,7 +10,7 @@ open module TypeWiz {
     // Ensure explicit visibility for FXGL entity classes
     requires com.almasb.fxgl.core;
     requires com.almasb.fxgl.entity;
-    
+
     // Export game packages explicitly to FXGL
     exports com.oop2.typewiz;
     exports com.oop2.typewiz.GameplayComponents;
