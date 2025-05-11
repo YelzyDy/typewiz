@@ -19,15 +19,14 @@ import javafx.scene.control.Button;
 import javafx.util.Duration;
 
 public class DifficultyMenuScreen extends FXGLMenu {
-    public Pane getAsPane() {
-        return (Pane) getContentRoot();
-    }
+
     public static Node create(Runnable backAction, Runnable easyAction, Runnable mediumAction, Runnable hardAction) {
         return new DifficultyMenuScreen(backAction, easyAction, mediumAction, hardAction).getContentRoot();
     }
 
     DifficultyMenuScreen(Runnable backAction, Runnable easyAction, Runnable mediumAction, Runnable hardAction) {
         super(MenuType.GAME_MENU);
+
         FXGL.getAssetLoader().loadSound("sound-library/click.wav");
 
         // Main container with magical gradient
@@ -60,20 +59,20 @@ public class DifficultyMenuScreen extends FXGLMenu {
         Button mediumButton = createDifficultyButton("Wizard", "Standard spells", mediumAction);
         Button hardButton = createDifficultyButton("Archmage", "Lightning-fast charms", hardAction);
 
-        easyButton.setOnAction(e -> {
-            FXGL.play("sound-library/click.wav"); // plays the sound
-//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
-        });
-
-        mediumButton.setOnAction(e -> {
-            FXGL.play("sound-library/click.wav"); // plays the sound
-//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
-        });
-
-        hardButton.setOnAction(e -> {
-            FXGL.play("sound-library/click.wav"); // plays the sound
-//            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
-        });
+//        easyButton.setOnAction(e -> {
+//            FXGL.play("sound-library/click.wav"); // plays the sound
+//           SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+//        });
+//
+//        mediumButton.setOnAction(e -> {
+//            FXGL.play("sound-library/click.wav"); // plays the sound
+////            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+//        });
+//
+//        hardButton.setOnAction(e -> {
+//            FXGL.play("sound-library/click.wav"); // plays the sound
+//           SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+//        });
 
 
         // Back button
@@ -87,8 +86,9 @@ public class DifficultyMenuScreen extends FXGLMenu {
                 new CornerRadii(5),
                 new BorderWidths(1))
         ));
+
+        addMagicHover(backButton);
         backButton.setOnAction(e -> {
-            addMagicHover(backButton);
             FXGL.play("sound-library/click.wav"); // plays the sound
             backAction.run();
         });

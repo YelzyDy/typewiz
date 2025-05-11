@@ -3,6 +3,10 @@ package com.oop2.typewiz;
 import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.geometry.Pos;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.ImageView;
@@ -89,13 +93,52 @@ public class HowToPlayScreen extends FXGLMenu {
             FXGL.getGameScene().getContentRoot().getChildren().add(new MainMenuScreen().getContentRoot());
         });
 
-        // Arrange the UI components in a VBox for vertical alignment
-        VBox centerBox = new VBox(30, title, instructionsContainer, backButton);
+        // Wrapper to center the instructionsContainer while keeping text left-aligned
+        VBox instructionsWrapper = new VBox(instructionsContainer);
+        instructionsWrapper.setAlignment(Pos.CENTER); // Center the VBox itself
+        instructionsContainer.setMaxWidth(600);
+        instructionsWrapper.setMaxWidth(600);
+
+        instructionsContainer.setStyle(
+                "-fx-background-color: rgba(0, 0, 0, 0.5); " +
+                        "-fx-padding: 20; " +
+                        "-fx-background-radius: 20;"
+        );
+
+// Arrange the title, instructionsWrapper, and backButton in a VBox
+        VBox centerBox = new VBox(30, title, instructionsWrapper, backButton);
         centerBox.setAlignment(Pos.CENTER);
+        centerBox.setMaxWidth(700); // <— Set max width to prevent stretching
+
+
 
         // Set up the root StackPane
         StackPane root = new StackPane(background, centerBox);
         getContentRoot().getChildren().setAll(root);
+
+        // Fade in the whole centerBox
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(1.2), centerBox);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+// Floating animation for the instructionsContainer
+        TranslateTransition floatEffect = new TranslateTransition(Duration.seconds(2.5), instructionsWrapper);
+        floatEffect.setByY(15);
+        floatEffect.setAutoReverse(true);
+        floatEffect.setCycleCount(Animation.INDEFINITE);
+        floatEffect.play();
+
+// Slight scale animation for the backButton to give it a magical pulse
+        ScaleTransition pulse = new ScaleTransition(Duration.seconds(1.5), backButton);
+        pulse.setFromX(1.0);
+        pulse.setFromY(1.0);
+        pulse.setToX(1.05);
+        pulse.setToY(1.05);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(Animation.INDEFINITE);
+        pulse.play();
+
 
         // Play magical music or sound effect (optional)
 //        FXGL.getGameTimer().runOnceAfter(() -> {
