@@ -119,7 +119,7 @@ public class MainMenuScreen extends FXGLMenu {
             });
         });
 
-        Button helpButton = createWizardButton("SPELLBOOK", () -> {
+        Button helpButton = createWizardButton("WIZARD’S GUIDE", () -> {
             FXGL.play("sound-library/click.wav"); // plays the sound
             FXGL.getSceneService().pushSubScene(new HowToPlayScreen(() -> FXGL.getSceneService().popSubScene()));
         });

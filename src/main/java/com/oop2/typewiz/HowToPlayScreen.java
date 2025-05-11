@@ -24,7 +24,7 @@ public class HowToPlayScreen extends FXGLMenu {
         Pane background = new Pane();
         background.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
         background.setStyle(
-                "-fx-background-image: url('/assets/textures/background-and-platforms/purplebg.png');" +
+                "-fx-background-image: url('/assets/textures/background-and-platforms/spellbookbg.png');" +
                         "-fx-background-repeat: no-repeat;" +
                         "-fx-background-size: cover;" +
                         "-fx-background-position: center center;"
@@ -72,7 +72,7 @@ public class HowToPlayScreen extends FXGLMenu {
         }
 
         // Create a magical "Back" button
-        Text backButton = new Text("Back to Main Menu");
+        Text backButton = new Text("Back to the Tower");
         backButton.setFont(javafx.scene.text.Font.font("Papyrus", 28));
         backButton.setFill(Color.web("#ffeb3b"));
         backButton.setEffect(new Glow(0.8));

@@ -49,14 +49,15 @@ public class LoadingScreen extends LoadingScene {
         logo.setFitHeight(469);
         logo.setFitWidth(669);
         logo.setPreserveRatio(true);
-        logo.setEffect(new Glow(0.7));
+        logo.setEffect(new DropShadow(30, Color.web("#c85bff")));
 
-        FadeTransition logoPulse = new FadeTransition(Duration.seconds(1.5), logo);
-        logoPulse.setFromValue(0.8);
-        logoPulse.setToValue(1.0);
-        logoPulse.setCycleCount(Animation.INDEFINITE);
-        logoPulse.setAutoReverse(true);
-        logoPulse.play();
+
+//        FadeTransition logoPulse = new FadeTransition(Duration.seconds(1.5), logo);
+//        logoPulse.setFromValue(0.8);
+//        logoPulse.setToValue(1.0);
+//        logoPulse.setCycleCount(Animation.INDEFINITE);
+//        logoPulse.setAutoReverse(true);
+//        logoPulse.play();
 
         // Progress bar
         Rectangle progressBarBg = new Rectangle(568, 39);

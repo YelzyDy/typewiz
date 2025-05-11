@@ -57,22 +57,38 @@ public class CreditsScreen extends FXGLMenu {
         );
         namesSection.setAlignment(Pos.CENTER);
 
-        Button backButton = new Button("Return to the Tower");
-        backButton.setFont(Font.font("Consolas", 20));
-        backButton.setTextFill(Color.web("#ce93d8"));
-        backButton.setBackground(Background.EMPTY);
-        backButton.setBorder(new Border(new BorderStroke(
-                Color.web("#ba68c8"),
-                BorderStrokeStyle.SOLID,
-                new CornerRadii(8),
-                new BorderWidths(2)
-        )));
+//        Button backButton = new Button("Return to the Tower");
+//        backButton.setFont(Font.font("Consolas", 20));
+//        backButton.setTextFill(Color.web("#ce93d8"));
+//        backButton.setBackground(Background.EMPTY);
+//        backButton.setBorder(new Border(new BorderStroke(
+//                Color.web("#ba68c8"),
+//                BorderStrokeStyle.SOLID,
+//                new CornerRadii(8),
+//                new BorderWidths(2)
+//        )));
 
-        addMagicHover(backButton);
-        backButton.setOnAction(e -> {
-            backAction.run();
+        // Create a magical "Back" button
+        Text backButton = new Text("Back to the Tower");
+        backButton.setFont(javafx.scene.text.Font.font("Papyrus", 28));
+        backButton.setFill(Color.web("#ffeb3b"));
+        backButton.setEffect(new Glow(0.8));
+
+        // Add hover effect to back button
+        backButton.setOnMouseEntered(event -> {
+            backButton.setFill(Color.web("#b388ff")); // Change color on hover
         });
 
+        backButton.setOnMouseExited(event -> {
+            backButton.setFill(Color.web("#ffeb3b")); // Reset color when hover ends
+        });
+
+        // On-click event for the Back button
+        backButton.setOnMouseClicked(event -> {
+            // Transition back to the main menu
+            FXGL.getGameScene().removeUINode(getContentRoot());
+            FXGL.getGameScene().getContentRoot().getChildren().add(new MainMenuScreen().getContentRoot());
+        });
 
         VBox layout = new VBox(50, title, namesSection, backButton);
         layout.setAlignment(Pos.CENTER);
