@@ -30,6 +30,9 @@ import java.util.ArrayList;
  * - Model: GameStateManager, EntityManager, PlayerManager, WaveManager
  * - View: UIFactory, GamePromptFactory, GargoyleFactory
  * - Controller: InputManager, Game (as coordinator)
+ * 
+ * @implNote This class should not be launched directly.
+ *           Use {@link com.oop2.typewiz.GameLauncher} instead.
  */
 public class Game extends GameApplication {
     // Define EntityType enum inside the Game class
@@ -353,7 +356,13 @@ public class Game extends GameApplication {
         });
     }
 
-    public static void main(String[] args) {
-        launch(args);
+    /**
+     * Internal method to launch the game
+     * @deprecated Use GameLauncher instead for launching the game
+     * @param args Command line arguments
+     */
+    @Deprecated
+    public static void launch(String[] args) {
+        com.almasb.fxgl.app.GameApplication.launch(Game.class, args);
     }
 }

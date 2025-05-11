@@ -4,11 +4,14 @@ open module TypeWiz {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;
+    requires javafx.base;
+    requires javafx.media;
     
-    // Add explicit requires for entity module
-    requires transitive javafx.base;
-    requires transitive javafx.media;
+    // Ensure explicit visibility for FXGL entity classes
+    requires com.almasb.fxgl.core;
+    requires com.almasb.fxgl.entity;
     
     // Export game packages explicitly to FXGL
-    exports com.oop2.typewiz.GameplayComponents to com.almasb.fxgl.all;
+    exports com.oop2.typewiz;
+    exports com.oop2.typewiz.GameplayComponents;
 }
