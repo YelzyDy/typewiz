@@ -1405,6 +1405,11 @@ public class Game extends GameApplication {
         double finalAccuracy = StatsUIFactory.calculateAccuracy();
         double finalConsistency = StatsUIFactory.calculateConsistency();
 
+        // Transfer data to StatsUIFactory before creating UI components
+        StatsUIFactory.setTotalCharactersTyped(totalCharactersTyped);
+        StatsUIFactory.setWpmData(wpmOverTime);
+        StatsUIFactory.setAccuracyData(accuracyOverTime);
+
         VBox statsPanel = StatsUIFactory.createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
         addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light golden border
 
@@ -1519,6 +1524,11 @@ public class Game extends GameApplication {
         double finalRawWPM = StatsUIFactory.calculateRawWPM();
         double finalAccuracy = StatsUIFactory.calculateAccuracy();
         double finalConsistency = StatsUIFactory.calculateConsistency();
+
+        // Transfer data to StatsUIFactory before creating UI components
+        StatsUIFactory.setTotalCharactersTyped(totalCharactersTyped);
+        StatsUIFactory.setWpmData(wpmOverTime);
+        StatsUIFactory.setAccuracyData(accuracyOverTime);
 
         VBox statsPanel = StatsUIFactory.createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
         addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light gold border
