@@ -34,12 +34,15 @@ public class LoadingScreen extends LoadingScene {
             FXGL.getAudioPlayer().playMusic(FXGL.getAssetLoader().loadMusic("magic.wav"));
         }, Duration.seconds(1)); // Delay of 1 second
 
-        Rectangle background = new Rectangle(getAppWidth(), getAppHeight());
-        background.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#2a0845")),
-                new Stop(0.5, Color.web("#521166")),
-                new Stop(1, Color.web("#1a0638"))));
-        background.setEffect(new Bloom(0.1));
+        Pane background = new Pane();
+        background.setPrefSize(getAppWidth(), getAppHeight());
+        background.setStyle(
+                "-fx-background-image: url('/assets/textures/background-and-platforms/loadingscreenbg.png');" +
+                        "-fx-background-repeat: no-repeat;" +
+                        "-fx-background-size: cover;" +
+                        "-fx-background-position: center center;"
+        );
+
 
         // Logo
         ImageView logo = new ImageView(new Image(getClass().getResource("assets/typewiz_logo.png").toExternalForm()));
