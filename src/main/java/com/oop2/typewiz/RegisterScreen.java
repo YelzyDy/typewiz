@@ -35,6 +35,7 @@ public class RegisterScreen extends GameApplication {
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setTitle("TypeWiz Register");
+        FXGL.getAssetLoader().loadSound("click.wav");
         settings.setWidth(1550);
         settings.setHeight(800);
         settings.setMainMenuEnabled(false);
@@ -80,7 +81,11 @@ public class RegisterScreen extends GameApplication {
 
         Button createAccountBtn = new Button("Create Account");
         styleButton(createAccountBtn, "#c85bff", Color.WHITE);
-        createAccountBtn.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOADING));
+        createAccountBtn.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+        });
+
 
         HBox separatorBox = new HBox();
         separatorBox.setAlignment(Pos.CENTER);
@@ -94,7 +99,11 @@ public class RegisterScreen extends GameApplication {
 
         Button loginBtn = new Button("Login");
         styleButton(loginBtn, "#ffffff", Color.BLACK);
-        loginBtn.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOGIN));
+        loginBtn.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            SceneManager.showScreen(TypeWizApp.ScreenType.LOGIN);
+        });
+
 
         formPane.getChildren().addAll(title, emailBox, usernameBox, passwordBox, confirmPasswordBox, createAccountBtn, separatorBox, loginBtn);
 

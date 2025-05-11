@@ -39,7 +39,7 @@ public class GargoyleFactory {
 
     // Animation channels
     private static AnimationChannel gargoyleIdleAnimation;
-    private static AnimationChannel gargoyleFlyAnimation;
+    static AnimationChannel gargoyleFlyAnimation;
     private static final double WING_FLAP_SPEED = 0.2;
 
     // Color constants for word highlighting

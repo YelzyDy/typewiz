@@ -33,6 +33,7 @@ public class LoginScreen extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings settings) {
+        FXGL.getAssetLoader().loadSound("click.wav");
         settings.setTitle("TypeWiz Login");
         settings.setWidth(1550);
         settings.setHeight(800);
@@ -94,11 +95,19 @@ public class LoginScreen extends GameApplication {
         // Buttons
         Button loginButton = FXGL.getUIFactoryService().newButton("Login");
         styleButton(loginButton, "#c85bff", Color.WHITE);
-        loginButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.LOADING));
+        loginButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
+        });
+
 
         Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
         styleButton(signUpButton, "#ffffff", Color.BLACK);
-        signUpButton.setOnAction(e -> SceneManager.showScreen(TypeWizApp.ScreenType.REGISTER));
+        signUpButton.setOnAction(e -> {
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            SceneManager.showScreen(TypeWizApp.ScreenType.REGISTER);
+        });
+
 
         // Separator
         HBox separatorBox = new HBox();
