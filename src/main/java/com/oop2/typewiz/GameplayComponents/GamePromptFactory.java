@@ -18,6 +18,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import javafx.scene.Parent;
 
 import java.util.List;
 
@@ -303,5 +304,64 @@ public class GamePromptFactory {
         
         // Return the full view
         return new StackPane(overlay, textContainer);
+    }
+
+    /**
+     * Finds and sets up the Play Again button in an end game screen
+     * @param endGameScreen The game over or victory screen node
+     * @param restartAction Action to execute when the button is clicked
+     */
+    public static void setupPlayAgainButton(Node endGameScreen, Runnable restartAction) {
+        // Search for the button in the hierarchy
+        if (endGameScreen instanceof StackPane) {
+            findButtonInChildren(endGameScreen, restartAction);
+        }
+    }
+
+    /**
+     * Recursively searches for the Play Again button in the node hierarchy
+     * @param node The current node to search in
+     * @param restartAction Action to execute when the button is clicked
+     * @return true if button was found and configured
+     */
+    private static boolean findButtonInChildren(Node node, Runnable restartAction) {
+        // Base case: found a StackPane that contains "Play Again" text
+        if (node instanceof StackPane) {
+            StackPane stackPane = (StackPane) node;
+            
+            // Search for the text node
+            for (Node child : stackPane.getChildren()) {
+                if (child instanceof Text) {
+                    Text text = (Text) child;
+                    if (text.getText().equals("Play Again")) {
+                        // Assign an ID to the button for easier identification
+                        stackPane.setId("play-again-button");
+                        
+                        // This is the button, add click handler with event consumption
+                        stackPane.setOnMouseClicked(event -> {
+                            event.consume(); // Prevent event bubbling
+                            
+                            // Schedule restart on next frame to avoid concurrent modification
+                            FXGL.getGameTimer().runOnceAfter(() -> {
+                                restartAction.run();
+                            }, javafx.util.Duration.millis(100));
+                        });
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        // Recursively search in children
+        if (node instanceof Parent) {
+            Parent parent = (Parent) node;
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                if (findButtonInChildren(child, restartAction)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 } 

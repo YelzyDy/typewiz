@@ -2,9 +2,13 @@ package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.texture.AnimatedTexture;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
+import javafx.scene.Node;
 
 /**
  * Manages game entities including creation, pooling, tracking, and removal.
@@ -16,9 +20,17 @@ public class EntityManager {
     private List<Entity> gargoylePool;
     private List<Entity> entitiesToRemove;
     private SpatialPartitioning spatialPartitioning;
+    private double width;
+    private double height;
     
     private static final int BATCH_SIZE = 50;
     private static final int MAX_GARGOYLES = 10;
+    
+    // Constants for entity movement
+    private static final double GARGOYLE_SPEED = 50.0;
+    private static final double GARGOYLE_FRAME_WIDTH = 288;
+    private static final double GARGOYLE_FRAME_HEIGHT = 312;
+    private static final double GARGOYLE_SCALE = 0.6;
     
     /**
      * Creates a new EntityManager with initialized pools and spatial partitioning
@@ -27,6 +39,8 @@ public class EntityManager {
      * @param height Height of the game area
      */
     public EntityManager(double width, double height) {
+        this.width = width;
+        this.height = height;
         activeEntities = new ArrayList<>();
         gargoylePool = new ArrayList<>(MAX_GARGOYLES);
         entitiesToRemove = new ArrayList<>(BATCH_SIZE);
@@ -247,5 +261,113 @@ public class EntityManager {
         
         // Reset spatial partitioning
         spatialPartitioning.clear();
+    }
+    
+    /**
+     * Updates all active entities
+     * @param tpf Time per frame
+     * @param speedMultiplier Speed multiplier for the current wave
+     */
+    public void updateEntities(double tpf, double speedMultiplier) {
+        // Process all active gargoyles
+        List<Entity> gargoyles = getActiveGargoyles();
+        for (Entity gargoyle : gargoyles) {
+            if (gargoyle == null) continue;
+
+            // Check visibility and activity state
+            boolean isVisible = isEntityVisible(gargoyle);
+            boolean hasBeenVisible = gargoyle.getBoolean("hasBeenVisible");
+            boolean isActive = gargoyle.getBoolean("isActive");
+            boolean movingRight = gargoyle.getBoolean("movingRight");
+
+            // Mark as visible once it enters the screen
+            if (isVisible && !hasBeenVisible) {
+                gargoyle.setProperty("hasBeenVisible", true);
+                hasBeenVisible = true;
+            }
+
+            // Activate when fully visible
+            if (isVisible && !isActive) {
+                gargoyle.setProperty("isActive", true);
+                isActive = true;
+            }
+
+            // Only move and check for removal if the gargoyle is active
+            if (isActive) {
+                // Update position
+                double movement = GARGOYLE_SPEED * speedMultiplier * tpf;
+                movement = Math.max(movement, 1.0); // Prevent micro-stuttering
+                gargoyle.translateX(movingRight ? movement : -movement);
+
+                // Check if gargoyle has left the screen
+                if ((movingRight && gargoyle.getX() > this.width) ||
+                        (!movingRight && gargoyle.getX() < -GARGOYLE_FRAME_WIDTH * GARGOYLE_SCALE)) {
+                    if (hasBeenVisible) {
+                        // Decrease player health when gargoyle leaves screen
+                        PlayerManager playerManager = FXGL.getWorldProperties().getObject("playerManager");
+                        if (playerManager != null) {
+                            playerManager.decreaseHealth();
+                        }
+                    }
+                    // Mark for removal in the next cycle
+                    markForRemoval(gargoyle);
+
+                    // Update selection if needed
+                    InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
+                    if (inputManager != null && gargoyle == inputManager.getSelectedWordBlock()) {
+                        Entity closest = GargoyleFactory.findClosestGargoyleToCenter(getActiveGargoyles());
+                        if (closest != null) {
+                            inputManager.selectWordBlock(closest);
+                        }
+                    }
+                    continue;
+                }
+            }
+
+            // Update animation
+            updateEntityAnimation(gargoyle, tpf);
+
+            // Update spatial partitioning
+            spatialPartitioning.updateEntity(gargoyle);
+        }
+    }
+    
+    /**
+     * Updates animation for an entity
+     * @param entity The entity to update
+     * @param tpf Time per frame
+     */
+    private void updateEntityAnimation(Entity entity, double tpf) {
+        if (entity.getViewComponent() != null && !entity.getViewComponent().getChildren().isEmpty()) {
+            Node view = entity.getViewComponent().getChildren().get(0);
+            if (view != null) {
+                Node viewNode = view instanceof javafx.scene.layout.StackPane ? 
+                    ((javafx.scene.layout.StackPane) view).getChildren().get(0) : view;
+                
+                if (viewNode instanceof AnimatedTexture) {
+                    AnimatedTexture texture = (AnimatedTexture) viewNode;
+                    double animationTime = 0.0;
+                    if (entity.getProperties().exists("animationTime")) {
+                        animationTime = entity.getDouble("animationTime");
+                    }
+                    animationTime += tpf;
+                    entity.setProperty("animationTime", animationTime);
+
+                    // Update the animation frame
+                    texture.onUpdate(tpf);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Checks if an entity is visible on screen
+     * @param entity The entity to check
+     * @return True if the entity is within screen bounds
+     */
+    private boolean isEntityVisible(Entity entity) {
+        double x = entity.getX();
+        // Consider entity visible only when it's within the actual screen bounds
+        return x >= 0 && x <= this.width;
     }
 } 

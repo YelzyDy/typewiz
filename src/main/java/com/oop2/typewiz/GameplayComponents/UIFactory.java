@@ -1,10 +1,19 @@
 package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.dsl.FXGL;
+import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.physics.BoundingShape;
+import com.almasb.fxgl.physics.HitBox;
+import com.almasb.fxgl.physics.PhysicsComponent;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.AnimationChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -18,10 +27,13 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
+import javafx.scene.Node;
 
 /**
  * Factory class for creating UI components.
@@ -466,6 +478,155 @@ public class UIFactory {
         PerformanceData(Rectangle performanceBar, Text performanceText) {
             this.performanceBar = performanceBar;
             this.performanceText = performanceText;
+        }
+    }
+
+    /**
+     * Creates the background for the game
+     * @param width Screen width
+     * @param height Screen height
+     */
+    public static void createBackground(int width, int height) {
+        Image backgroundImage = FXGL.image("background-and-platforms/bg-winter_1280_720.png");
+        Rectangle background = new Rectangle(width, height);
+        background.setFill(new ImagePattern(backgroundImage));
+
+        FXGL.entityBuilder()
+            .at(0, 0)
+            .view(background)
+            .zIndex(-100)
+            .buildAndAttach();
+    }
+
+    /**
+     * Creates the platform for the game
+     */
+    public static void createPlatform() {
+        Image platformImage = FXGL.image("background-and-platforms/hdlargerplatform-winter.png");
+        ImageView platformView = new ImageView(platformImage);
+
+        double platformWidth = 1450;
+        double platformHeight = 820;
+        platformView.setFitWidth(platformWidth);
+        platformView.setFitHeight(platformHeight);
+        platformView.setPreserveRatio(false);
+
+        double platformOffsetY = 100;
+        double platformOffsetX = (platformWidth - FXGL.getAppWidth()) / -2;
+
+        FXGL.entityBuilder()
+            .type(Game.EntityType.PLATFORM)
+            .at(platformOffsetX, platformOffsetY)
+            .view(platformView)
+            .bbox(new HitBox(BoundingShape.box(platformWidth, platformHeight)))
+            .with(new PhysicsComponent())
+            .zIndex(10)
+            .buildAndAttach();
+    }
+
+    /**
+     * Creates the wizard character
+     */
+    public static void createWizard() {
+        Image wizardImage = FXGL.image("wizard/wizard.png");
+
+        int frameWidth = 500;
+        int frameHeight = 500;
+
+        AnimationChannel idleAnimation = new AnimationChannel(wizardImage,
+                4,
+                frameWidth, frameHeight,
+                Duration.seconds(0.25),
+                0, 3);
+
+        AnimatedTexture wizardTexture = new AnimatedTexture(idleAnimation);
+        wizardTexture.loop();
+
+        double wizardScale = 0.30;
+
+        FXGL.entityBuilder()
+            .type(Game.EntityType.PLAYER)
+            .at(-5, 50)
+            .view(wizardTexture)
+            .scale(wizardScale, wizardScale)
+            .bbox(new HitBox(BoundingShape.box(frameWidth * wizardScale, frameHeight * wizardScale)))
+            .zIndex(25)
+            .buildAndAttach();
+    }
+
+    /**
+     * Creates and sets up all UI elements
+     * @param game Reference to the main Game class
+     */
+    public static void createUI(Game game) {
+        // Get the player manager directly from the game
+        PlayerManager playerManager = game.getPlayerManager();
+        
+        // Create health display with player's current health
+        VBox healthDisplay = createHealthDisplay(
+            playerManager.getHealth(),
+            playerManager.getMaxHealth()
+        );
+        
+        // Set health display reference directly
+        playerManager.setHealthDisplay(healthDisplay);
+        
+        // Find and set the health text reference
+        for (Node child : healthDisplay.getChildren()) {
+            if (child instanceof Text) {
+                Text text = (Text) child;
+                if (text.getText().contains("/")) {
+                    playerManager.setHealthText(text);
+                    break;
+                }
+            }
+        }
+        
+        // Create top bar with initial score and wave
+        HBox topBar = createTopBar(playerManager.getScore(), 1, 10);
+        
+        // Find and set score text reference
+        for (Node child : topBar.getChildren()) {
+            if (child instanceof VBox) {
+                VBox box = (VBox) child;
+                if (!box.getChildren().isEmpty() && box.getChildren().get(0) instanceof Text) {
+                    Text label = (Text) box.getChildren().get(0);
+                    if (label.getText().equals("SCORE") && box.getChildren().size() > 1) {
+                        playerManager.setScoreText((Text) box.getChildren().get(1));
+                    }
+                }
+            }
+        }
+        
+        // Create performance display
+        VBox performanceDisplay = createPerformanceDisplay();
+        
+        // Add UI elements to the scene
+        FXGL.addUINode(healthDisplay);
+        FXGL.addUINode(topBar);
+        FXGL.addUINode(performanceDisplay);
+    }
+
+    /**
+     * Updates the performance display with the current FPS
+     * @param tpf Time per frame
+     */
+    public static void updatePerformanceDisplay(double tpf) {
+        // Calculate FPS
+        double fps = 1.0 / Math.max(tpf, 0.0001);
+        
+        // Find and update the performance display
+        for (Node node : FXGL.getGameScene().getUINodes()) {
+            if (node instanceof VBox) {
+                VBox vbox = (VBox) node;
+                if (!vbox.getChildren().isEmpty() && vbox.getChildren().get(0) instanceof Text) {
+                    Text titleText = (Text) vbox.getChildren().get(0);
+                    if ("Performance:".equals(titleText.getText())) {
+                        updatePerformanceDisplay(vbox, fps);
+                        break;
+                    }
+                }
+            }
         }
     }
 } 
