@@ -22,6 +22,7 @@ public class SceneManager {
         };
 
         FXGL.getGameScene().addUINode(screen);
+        TypeWizApp.setupCustomCursor();
     }
 
     private static void startGame(Difficulty difficulty) {
