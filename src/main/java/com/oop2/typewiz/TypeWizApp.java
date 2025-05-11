@@ -5,7 +5,7 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.scene.ImageCursor;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+//import javafx.scene.image.ImageView;
 
 
 public class TypeWizApp extends GameApplication {
@@ -28,9 +28,16 @@ public class TypeWizApp extends GameApplication {
     }
 
     public static void setupCustomCursor() {
-        CLOSED_BOOK_CURSOR = new ImageCursor(FXGL.image("magicbook.png"), 0, 0);
-        OPEN_BOOK_CURSOR = new ImageCursor(FXGL.image("magicbook_hover.png"), 0, 0);
+        Image closedBookImg = FXGL.image("magicbook.png");
+        Image openBookImg = FXGL.image("magicbook_hover.png");
 
+        Image scaledClosedBookImg = new Image(closedBookImg.getUrl(), 32, 32, true, true);
+        Image scaledOpenBookImg = new Image(openBookImg.getUrl(), 32, 32, true, true);
+
+        CLOSED_BOOK_CURSOR = new ImageCursor(scaledClosedBookImg, 16, 16); // Centered hotspot
+        OPEN_BOOK_CURSOR = new ImageCursor(scaledOpenBookImg, 16, 16); // Centered hotspot
+
+        // default cursor
         FXGL.getGameScene().getRoot().setCursor(CLOSED_BOOK_CURSOR);
     }
 

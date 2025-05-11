@@ -87,8 +87,7 @@ public class CreditsScreen extends FXGLMenu {
         backButton.setOnMouseClicked(event -> {
             FXGL.play("sound-library/click.wav");
             // Transition back to the main menu
-            FXGL.getGameScene().removeUINode(getContentRoot());
-            FXGL.getGameScene().getContentRoot().getChildren().add(new MainMenuScreen().getContentRoot());
+            backAction.run();
         });
 
         VBox layout = new VBox(50, title, namesSection, backButton);
