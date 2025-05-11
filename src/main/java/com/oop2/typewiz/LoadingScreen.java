@@ -1,6 +1,7 @@
 package com.oop2.typewiz;
 
 import com.almasb.fxgl.app.scene.LoadingScene;
+import com.almasb.fxgl.audio.Music;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
 import javafx.geometry.Insets;
@@ -26,6 +27,13 @@ public class LoadingScreen extends LoadingScene {
 
     public LoadingScreen() {
         // Gradient background
+
+// Play the sound after the delay
+        FXGL.getGameTimer().runOnceAfter(() -> {
+            // Load and play your music file with a delay
+            FXGL.getAudioPlayer().playMusic(FXGL.getAssetLoader().loadMusic("magic.wav"));
+        }, Duration.seconds(1)); // Delay of 1 second
+
         Rectangle background = new Rectangle(getAppWidth(), getAppHeight());
         background.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#2a0845")),
