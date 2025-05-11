@@ -46,6 +46,7 @@ public class LoginScreen extends GameApplication {
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1550, 800);
         root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
+//        root.setStyle("-fx-background-image: url('assets/textures/background-and-platforms/purplebg.png');");
 
         // Left logo
         VBox leftBox = new VBox();
@@ -267,8 +268,8 @@ public class LoginScreen extends GameApplication {
 
         return box;
     }
-
-    public static void main(String[] args) {
-        launch(args);
-    }
+//
+//    public static void main(String[] args) {
+//        launch(args);
+//    }
 }
