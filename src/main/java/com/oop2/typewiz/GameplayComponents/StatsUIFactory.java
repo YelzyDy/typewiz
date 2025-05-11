@@ -34,6 +34,24 @@ public class StatsUIFactory {
     private static final Color GRAPH_LINE_COLOR = Color.DEEPSKYBLUE;
     private static final Color GRAPH_BACKGROUND_COLOR = Color.rgb(20, 20, 50, 0.7);
 
+    // Add methods to update factory data from Game
+    public static void setTotalCharactersTyped(int count) {
+        totalCharactersTyped = count;
+    }
+    
+    public static void setWpmData(List<Double> data) {
+        wpmOverTime.clear();
+        if (data != null) {
+            wpmOverTime.addAll(data);
+        }
+    }
+    
+    public static void setAccuracyData(List<Double> data) {
+        accuracyOverTime.clear();
+        if (data != null) {
+            accuracyOverTime.addAll(data);
+        }
+    }
 
     public static VBox createStatsPanel(double wpm, double rawWpm, double accuracy, double consistency) {
         // Create stylish stats panel
