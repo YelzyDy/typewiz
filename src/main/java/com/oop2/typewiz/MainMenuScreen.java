@@ -95,29 +95,23 @@ public class MainMenuScreen extends FXGLMenu {
         );
 
 
-        // Buttons with wizard theme
         Button startButton = createWizardButton("START QUEST", () -> {
-            FXGL.play("sound-library/click.wav"); // plays the sound
-            executorService.submit(() -> {
+            FXGL.play("sound-library/click.wav");
 
-                preloadAssetsInBackground();
-                // Simulate asset loading
-                try {
-                    Thread.sleep(300);  // Simulate background loading
-                } catch (InterruptedException ignored) {}
+            preloadAssetsInBackground(); // Do any prep here
 
-                // Once the assets are loaded, update the UI
-                FXGL.runOnce(() -> {
-                    DifficultyMenuScreen screen = new DifficultyMenuScreen(
-                            () -> FXGL.getSceneService().popSubScene(),
-                            () -> runStartGameThread(Difficulty.APPRENTICE),
-                            () -> runStartGameThread(Difficulty.WIZARD),
-                            () -> runStartGameThread(Difficulty.ARCHMAGE)
-                    );
-                    FXGL.getSceneService().pushSubScene(screen);
-                }, Duration.seconds(0));
-            });
+            // Run after a short pause (simulate loading)
+            FXGL.getGameTimer().runOnceAfter(() -> {
+                DifficultyMenuScreen screen = new DifficultyMenuScreen(
+                        () -> FXGL.getSceneService().popSubScene(),
+                        () -> runStartGameThread(Difficulty.APPRENTICE),
+                        () -> runStartGameThread(Difficulty.WIZARD),
+                        () -> runStartGameThread(Difficulty.ARCHMAGE)
+                );
+                FXGL.getSceneService().pushSubScene(screen);
+            }, Duration.seconds(0.3)); // same delay as Thread.sleep(300)
         });
+
 
         Button helpButton = createWizardButton("WIZARD’S GUIDE", () -> {
             FXGL.play("sound-library/click.wav"); // plays the sound
