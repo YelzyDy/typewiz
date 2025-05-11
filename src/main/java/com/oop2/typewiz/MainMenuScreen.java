@@ -30,6 +30,7 @@ public class MainMenuScreen extends FXGLMenu {
         StackPane root = new StackPane();
         root.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #2a0845, #4a148c);");
+        root.setStyle("-fx-background-image: url('assets/textures/background-and-platforms/purplebg.png');");
 
         // Glass panel effect (matches difficulty screen)
         Rectangle panel = new Rectangle(600, 700); // was 500 x 550
@@ -49,18 +50,18 @@ public class MainMenuScreen extends FXGLMenu {
                 new Stop(1, Color.web("#b388ff"))));
         title.setEffect(new Glow(0.8));
 
-//        // Bouncing animation for title
-//        ThreadManager.runAsyncThenUI(
-//                () -> {
-//                    TranslateTransition bounce = new TranslateTransition(Duration.seconds(1), title);
-//                    bounce.setByY(-20); // Move up
-//                    bounce.setCycleCount(Animation.INDEFINITE);
-//                    bounce.setAutoReverse(true);
-//                    bounce.setInterpolator(Interpolator.EASE_BOTH);
-//                    bounce.play();
-//                },
-//                () -> {} // UI thread callback (empty since animation starts asynchronously)
-//        );
+        // Bouncing animation for title
+        ThreadManager.runAsyncThenUI(
+                () -> {
+                    TranslateTransition bounce = new TranslateTransition(Duration.seconds(1), title);
+                    bounce.setByY(-20); // Move up
+                    bounce.setCycleCount(Animation.INDEFINITE);
+                    bounce.setAutoReverse(true);
+                    bounce.setInterpolator(Interpolator.EASE_BOTH);
+                    bounce.play();
+                },
+                () -> {} // UI thread callback (empty since animation starts asynchronously)
+        );
 
         // Subtitle with typewriter effect (Fade-In Animation)
         Text subtitle = new Text("Master the Magic of Typing");
@@ -82,6 +83,8 @@ public class MainMenuScreen extends FXGLMenu {
         // Buttons with wizard theme
         Button startButton = createWizardButton("START QUEST", () -> {
             executorService.submit(() -> {
+
+                preloadAssetsInBackground();
                 // Simulate asset loading
                 try {
                     Thread.sleep(300);  // Simulate background loading

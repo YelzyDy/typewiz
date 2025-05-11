@@ -215,7 +215,7 @@ public class RegisterScreen extends GameApplication {
         fade.play();
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+//    public static void main(String[] args) {
+//        launch(args);
+//    }
 }
