@@ -71,6 +71,20 @@ public class InputManager {
         // Only process letter, digit, hyphen, or apostrophe
         if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
             System.out.println("Processing typed character: " + typedChar);
+            
+            // If no word is selected, try to select one first
+            if (selectedWordBlock == null) {
+                List<Entity> gargoyles = entityManager.getActiveGargoyles();
+                if (!gargoyles.isEmpty()) {
+                    Entity target = findMostUrgentGargoyle(gargoyles);
+                    if (target != null) {
+                        selectWordBlock(target);
+                        System.out.println("Auto-selected target for typing: " + target.getString("word"));
+                    }
+                }
+            }
+            
+            // Now process the character
             processTypedCharacter(typedChar);
             
             // Consume the event to prevent it from bubbling up
@@ -217,8 +231,17 @@ public class InputManager {
         // Set initial yellow highlight for the selected block
         try {
             GargoyleFactory.selectWordBlock(selectedWordBlock);
+            
+            // Immediately show that the block is selected and ready for input
+            System.out.println("Word block selected and ready for input: " + selectedWordBlock.getString("word"));
+            
+            // Ensure the word is properly initialized and has the required properties
+            if (!selectedWordBlock.getProperties().exists("processed")) {
+                selectedWordBlock.setProperty("processed", true);
+            }
         } catch (Exception e) {
             // If we can't highlight, just continue
+            System.out.println("Error highlighting word block: " + e.getMessage());
         }
     }
     
@@ -264,7 +287,7 @@ public class InputManager {
     }
     
     /**
-     * Selects the next word block in sequence
+     * Cycles to the next word block in the game
      */
     private void selectNextWordBlock() {
         List<Entity> gargoyles = entityManager.getActiveGargoyles();
@@ -275,12 +298,20 @@ public class InputManager {
         
         System.out.println("Cycling through " + gargoyles.size() + " available gargoyles");
         
-        // If no block is currently selected, just pick the most urgent one
+        // First, sort gargoyles by proximity to the center of the screen (left to right)
+        double centerX = FXGL.getAppWidth() / 2.0;
+        gargoyles.sort((g1, g2) -> {
+            double dist1 = Math.abs(g1.getX() - centerX);
+            double dist2 = Math.abs(g2.getX() - centerX);
+            return Double.compare(dist1, dist2);
+        });
+        
+        // If no block is currently selected, select the closest one to the center
         if (selectedWordBlock == null) {
-            Entity mostUrgent = findMostUrgentGargoyle(gargoyles);
-            if (mostUrgent != null) {
-                selectWordBlock(mostUrgent);
-                System.out.println("Selected most urgent gargoyle: " + mostUrgent.getString("word"));
+            if (!gargoyles.isEmpty()) {
+                Entity closestToCenter = gargoyles.get(0);
+                selectWordBlock(closestToCenter);
+                System.out.println("Selected gargoyle closest to center: " + closestToCenter.getString("word"));
             }
             return;
         }
@@ -471,6 +502,32 @@ public class InputManager {
      * Public method to cycle to the next word block (for use by other components)
      */
     public void cycleToNextWordBlock() {
+        // Only select next word if we're in playing state
+        if (!stateManager.isInState(GameStateManager.GameState.PLAYING)) {
+            System.out.println("Not cycling - game is not in PLAYING state");
+            return;
+        }
+        
+        // Get active gargoyles and check if there are any to cycle through
+        List<Entity> gargoyles = entityManager.getActiveGargoyles();
+        if (gargoyles.isEmpty()) {
+            System.out.println("No gargoyles available to cycle through");
+            return;
+        }
+        
+        // Log the attempt to cycle
+        System.out.println("Shift key pressed - cycling to next word block, " + gargoyles.size() + " gargoyles available");
+        
+        // Perform the cycling action
         selectNextWordBlock();
+        
+        // Immediately after cycling, ensure the word is ready for typing
+        if (selectedWordBlock != null) {
+            try {
+                System.out.println("Ready to type word: " + selectedWordBlock.getString("word"));
+            } catch (Exception e) {
+                System.out.println("Selected word block has issues: " + e.getMessage());
+            }
+        }
     }
 } 
