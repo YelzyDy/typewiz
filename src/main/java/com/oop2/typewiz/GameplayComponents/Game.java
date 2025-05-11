@@ -1,6 +1,5 @@
 package com.oop2.typewiz.GameplayComponents;
 
-import com.oop2.typewiz.GameplayComponents.StatsUIFactory;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
@@ -33,19 +32,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Line;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.Collections;
 
-import static com.oop2.typewiz.GameplayComponents.StatsUIFactory.createStatsPanel;
-
 public class Game extends GameApplication {
-    // Define EntityType enum inside the Game class
     public enum EntityType {
         PLATFORM,
         PLAYER,
@@ -381,7 +375,7 @@ public class Game extends GameApplication {
         batchRenderer = new BatchRenderer(spatialPartitioning);
         
         // Add performance monitoring UI
-        setupPerformanceUI();
+        StatsUIFactory.setupPerformanceUI();
         
         // Create animation channels for gargoyles
         Image gargoyleImage = FXGL.image("mobs/gargoyle/gargoyle.png");
@@ -616,7 +610,7 @@ public class Game extends GameApplication {
         // Update performance display using FXGL's timing
         if (frameCount++ % 30 == 0) {
             fps = 1.0 / frameTime;
-            updatePerformanceDisplay();
+            StatsUIFactory.updatePerformanceDisplay();
             
             if (fps < TARGET_FPS * 0.9) {
                 System.out.println("Performance Warning: FPS dropped to " + String.format("%.1f", fps));
@@ -1081,7 +1075,7 @@ public class Game extends GameApplication {
                 }
                 
                 // Update typing statistics periodically
-                updateTypingStats();
+                StatsUIFactory.updateTypingStats();
             }
         });
         
@@ -1406,10 +1400,10 @@ public class Game extends GameApplication {
         pulse.play();
 
         // Calculate stats
-        double finalWPM = calculateWPM();
-        double finalRawWPM = calculateRawWPM();
-        double finalAccuracy = calculateAccuracy();
-        double finalConsistency = calculateConsistency();
+        double finalWPM = StatsUIFactory.calculateWPM();
+        double finalRawWPM = StatsUIFactory.calculateRawWPM();
+        double finalAccuracy = StatsUIFactory.calculateAccuracy();
+        double finalConsistency = StatsUIFactory.calculateConsistency();
 
         VBox statsPanel = StatsUIFactory.createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
         addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light golden border
@@ -1521,10 +1515,10 @@ public class Game extends GameApplication {
         addTextGlow(subtitleText, Color.web("#B388EB"), 0.4);
 
         // Stats
-        double finalWPM = calculateWPM();
-        double finalRawWPM = calculateRawWPM();
-        double finalAccuracy = calculateAccuracy();
-        double finalConsistency = calculateConsistency();
+        double finalWPM = StatsUIFactory.calculateWPM();
+        double finalRawWPM = StatsUIFactory.calculateRawWPM();
+        double finalAccuracy = StatsUIFactory.calculateAccuracy();
+        double finalConsistency = StatsUIFactory.calculateConsistency();
 
         VBox statsPanel = StatsUIFactory.createStatsPanel(finalWPM, finalRawWPM, finalAccuracy, finalConsistency);
         addPanelBorder(statsPanel, Color.web("#E1C16E"), UI_CORNER_RADIUS); // Light gold border
@@ -1637,46 +1631,6 @@ public class Game extends GameApplication {
         StackPane button = new StackPane(buttonBg, buttonText);
         
         return button;
-    }
-    
-    private void setupPerformanceUI() {
-        // Create performance display
-        VBox performanceDisplay = new VBox(5);
-        performanceDisplay.setTranslateX(FXGL.getAppWidth() - 200);
-        performanceDisplay.setTranslateY(20);
-        
-        Text performanceLabel = new Text("Performance:");
-        performanceLabel.setFill(Color.WHITE);
-        performanceLabel.setFont(Font.font(16));
-        
-        performanceBar = new Rectangle(150, 10, GOOD_PERFORMANCE);
-        
-        performanceText = new Text("FPS: 144");
-        performanceText.setFill(Color.WHITE);
-        performanceText.setFont(Font.font(14));
-        
-        performanceDisplay.getChildren().addAll(performanceLabel, performanceBar, performanceText);
-        FXGL.addUINode(performanceDisplay);
-    }
-    
-    private void updatePerformanceDisplay() {
-        // Update FPS text
-        performanceText.setText(String.format("FPS: %.1f", fps));
-        
-        // Calculate performance percentage
-        double performancePercentage = Math.min(fps / TARGET_FPS, 1.0);
-        
-        // Update performance bar
-        performanceBar.setWidth(150 * performancePercentage);
-        
-        // Update performance bar color
-        if (performancePercentage >= 0.9) {
-            performanceBar.setFill(GOOD_PERFORMANCE);
-        } else if (performancePercentage >= 0.7) {
-            performanceBar.setFill(MEDIUM_PERFORMANCE);
-        } else {
-            performanceBar.setFill(POOR_PERFORMANCE);
-        }
     }
     
     private double getAverageFrameTime() {
@@ -1840,76 +1794,6 @@ public class Game extends GameApplication {
         view.getChildren().add(1, connectionLine);
     }
 
-    // Add methods to calculate and update typing statistics
-    private void updateTypingStats() {
-        long currentTime = System.currentTimeMillis();
-        
-        // Only update stats periodically to avoid overhead
-        if (currentTime - lastStatsUpdate < STATS_UPDATE_INTERVAL) {
-            return;
-        }
-        
-        // Update total typing time
-        totalTypingTime = currentTime - typingStartTime;
-        
-        // Calculate current WPM and accuracy
-        double currentWPM = calculateWPM();
-        double currentAccuracy = calculateAccuracy();
-        
-        // Store in history for graph
-        wpmOverTime.add(currentWPM);
-        accuracyOverTime.add(currentAccuracy);
-        
-        // Update last stats update time
-        lastStatsUpdate = currentTime;
-    }
-    
-    private double calculateWPM() {
-        // If no time has elapsed, return 0
-        if (totalTypingTime <= 0) return 0;
-        
-        // WPM = (characters typed / 5) / (time in minutes)
-        // 5 characters is the standard word length
-        double minutes = totalTypingTime / 60000.0;
-        return (totalCharactersTyped / 5.0) / minutes;
-    }
-    
-    private double calculateRawWPM() {
-        // If no time has elapsed, return 0
-        if (totalTypingTime <= 0) return 0;
-        
-        // Raw WPM = (total keystrokes / 5) / (time in minutes)
-        double minutes = totalTypingTime / 60000.0;
-        return (totalKeystrokes / 5.0) / minutes;
-    }
-    
-    private double calculateAccuracy() {
-        // If no keystrokes, return 0
-        if (totalKeystrokes <= 0) return 0;
-        
-        return (double) correctKeystrokes / totalKeystrokes * 100.0;
-    }
-    
-    private double calculateConsistency() {
-        // If less than 2 keystroke timings, return 0
-        if (keystrokeTimings.size() < 2) return 0;
-        
-        // Calculate standard deviation of keystroke timings
-        double mean = keystrokeTimings.stream().mapToLong(Long::valueOf).average().getAsDouble();
-        double variance = keystrokeTimings.stream()
-                .mapToDouble(timing -> Math.pow(timing - mean, 2))
-                .average()
-                .getAsDouble();
-        double stdDev = Math.sqrt(variance);
-        
-        // Calculate coefficient of variation (lower is more consistent)
-        double cv = stdDev / mean;
-        
-        // Convert to a percentage (100% = perfect consistency, 0% = terrible)
-        // Cap at 100% for very consistent typing
-        return Math.max(0, Math.min(100, (1 - cv) * 100));
-    }
-
     private void showWaveAnnouncement() {
         // Create semi-transparent overlay with a gradient effect
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
@@ -2029,7 +1913,7 @@ public class Game extends GameApplication {
             gameOverScreen.removeFromWorld();
             gameOverScreen = null;
         }
-        
+
         // Remove all existing gargoyles
         for (Entity g : new ArrayList<>(activeGargoyles)) {
             g.removeFromWorld();
@@ -2037,22 +1921,22 @@ public class Game extends GameApplication {
             gargoylePool.add(g);
         }
         activeGargoyles.clear();
-        
+
         // Reset game state
         gameOver = false;
         gameCompleted = false;
         waveCompleted = false;
         currentWave = 1;
         waveText.setText("1/" + MAX_WAVES);
-        
+
         // Reset health
         playerHealth = MAX_HEALTH;
         updateHealthBar();
-        
+
         // Reset score
         score = 0;
         scoreText.setText("0");
-        
+
         // Reset typing stats
         totalKeystrokes = 0;
         correctKeystrokes = 0;
@@ -2065,16 +1949,14 @@ public class Game extends GameApplication {
         accuracyOverTime.clear();
         keystrokeTimings.clear();
         lastKeystrokeTime = 0;
-        
+
         // Reset input
         currentInput.setLength(0);
         selectedWordBlock = null;
-        
+
         // Start first wave
         showWaveStartMessage();
     }
-    
-
 
     public static void main(String[] args) {
         launch(args);
