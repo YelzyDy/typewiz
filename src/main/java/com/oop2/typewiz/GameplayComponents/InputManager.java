@@ -60,12 +60,21 @@ public class InputManager {
             return;
         }
         
+        // Skip empty characters or control characters (including Shift)
+        if (event.getCharacter().isEmpty() || event.getCharacter().length() == 0 || 
+            event.getCharacter().charAt(0) < 32) {
+            return;
+        }
+        
         char typedChar = event.getCharacter().charAt(0);
         
         // Only process letter, digit, hyphen, or apostrophe
         if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
             System.out.println("Processing typed character: " + typedChar);
             processTypedCharacter(typedChar);
+            
+            // Consume the event to prevent it from bubbling up
+            event.consume();
         }
     }
     
@@ -97,14 +106,13 @@ public class InputManager {
             // Delete last character
             currentInput.deleteCharAt(currentInput.length() - 1);
             updateLetterColors();
-        } else if (event.getCode() == KeyCode.SHIFT) {
-            // Switch between blocks with Shift
-            selectNextWordBlock();
-            event.consume();
-        } else if (event.getCode() == KeyCode.SPACE) {
+            event.consume(); // Consume backspace to prevent it from triggering browser back navigation
+        } 
+        // Shift key is now handled by the global event filter in Game.java
+        else if (event.getCode() == KeyCode.SPACE) {
             // Complete word with Space
             checkWordCompletion();
-            event.consume();
+            event.consume(); // Consume space to prevent default scrolling behavior
         }
     }
     
@@ -238,6 +246,8 @@ public class InputManager {
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
         }
+        
+        // The actual removal and selection of a new entity will happen in checkWordCompletion()
     }
     
     /**
@@ -455,5 +465,12 @@ public class InputManager {
     public void reset() {
         currentInput.setLength(0);
         selectedWordBlock = null;
+    }
+    
+    /**
+     * Public method to cycle to the next word block (for use by other components)
+     */
+    public void cycleToNextWordBlock() {
+        selectNextWordBlock();
     }
 } 

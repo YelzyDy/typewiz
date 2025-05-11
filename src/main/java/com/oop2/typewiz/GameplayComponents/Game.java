@@ -73,6 +73,9 @@ public class Game extends GameApplication {
         // Initialize managers first (Model and Controller components)
         initializeManagers();
         
+        // Add global event filter to properly handle shift key
+        setupGlobalKeyHandling();
+        
         // Initialize the game environment (View setup)
         setupGameEnvironment();
         
@@ -164,6 +167,12 @@ public class Game extends GameApplication {
         stateManager.setStateEntryAction(GameStateManager.GameState.WAVE_ANNOUNCEMENT, wave -> {
             // Start the wave to initialize parameters
             waveManager.startWave();
+            
+            // Reset any current input state to prepare for the new wave
+            inputManager.reset();
+            
+            // Update the wave counter in the UI
+            updateWaveUI(waveManager.getCurrentWave());
             
             // Show wave announcement and start wave
             Node announcementNode = GamePromptFactory.createWaveAnnouncement(
@@ -293,6 +302,9 @@ public class Game extends GameApplication {
         inputManager.reset();
         waveManager.reset();
         
+        // Reset UI to wave 1
+        updateWaveUI(1);
+        
         // Force game state to PLAYING before starting the wave
         stateManager.startPlaying(null);
         
@@ -317,6 +329,50 @@ public class Game extends GameApplication {
      */
     public InputManager getInputManager() {
         return inputManager;
+    }
+
+    /**
+     * Updates the wave counter in the UI
+     * @param wave Current wave number
+     */
+    private void updateWaveUI(int wave) {
+        // Find the top bar HBox in the UI
+        for (Node node : FXGL.getGameScene().getUINodes()) {
+            if (node instanceof HBox) {
+                HBox topBar = (HBox) node;
+                
+                // Check if this is the top bar by looking for wave display
+                for (Node child : topBar.getChildren()) {
+                    if (child instanceof VBox) {
+                        VBox box = (VBox) child;
+                        if (!box.getChildren().isEmpty() && box.getChildren().get(0) instanceof Text) {
+                            Text label = (Text) box.getChildren().get(0);
+                            if (label.getText().equals("WAVE")) {
+                                // Found the wave display, update it
+                                UIFactory.updateWave(topBar, wave);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets up global key event handling for special keys
+     */
+    private void setupGlobalKeyHandling() {
+        // Add a global filter to intercept shift key events before they're processed by other handlers
+        FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
+                // If in playing state, cycle through targets
+                if (stateManager.isInState(GameStateManager.GameState.PLAYING)) {
+                    inputManager.cycleToNextWordBlock();
+                    event.consume(); // Prevent event from being processed further
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {

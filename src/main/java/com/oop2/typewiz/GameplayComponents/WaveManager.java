@@ -249,6 +249,20 @@ public class WaveManager {
             }
         }
         
+        // Check if we need to select a new gargoyle automatically
+        // This happens in two cases:
+        // 1. This is the first group of a wave (already handled in startSpawning)
+        // 2. The player has defeated all previous gargoyles and this is a new group
+        InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
+        if (inputManager != null && inputManager.getSelectedWordBlock() == null && !spawnedGargoyles.isEmpty()) {
+            // We only want to select one if there are no other active selections
+            Entity closestGargoyle = GargoyleFactory.findClosestGargoyleToCenter(spawnedGargoyles);
+            if (closestGargoyle != null) {
+                System.out.println("WaveManager: Automatically selecting new gargoyle after spawn");
+                inputManager.selectWordBlock(closestGargoyle);
+            }
+        }
+        
         totalWaveSpawns -= spawnedGargoyles.size();
         
         System.out.println("Successfully spawned " + spawnedGargoyles.size() + 
@@ -318,6 +332,19 @@ public class WaveManager {
         
         System.out.println("WaveManager: Spawned first group with " + spawned.size() + 
                 " gargoyles, total remaining: " + totalWaveSpawns);
+        
+        // Automatically select the first gargoyle (closest to center) for targeting
+        if (!spawned.isEmpty()) {
+            // Find the closest gargoyle to the center of the screen
+            Entity closestGargoyle = GargoyleFactory.findClosestGargoyleToCenter(spawned);
+            
+            // Get input manager from world properties and select the gargoyle
+            InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
+            if (inputManager != null && closestGargoyle != null) {
+                System.out.println("WaveManager: Automatically selecting first gargoyle");
+                inputManager.selectWordBlock(closestGargoyle);
+            }
+        }
     }
     
     /**
