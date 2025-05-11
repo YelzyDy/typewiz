@@ -36,8 +36,12 @@ public class MainMenuScreen extends FXGLMenu {
         FXGL.getAssetLoader().loadSound("sound-library/click.wav");
         root.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #2a0845, #4a148c);");
-        root.setStyle("-fx-background-image: url('assets/textures/background-and-platforms/purplebg.png');");
-
+        root.setStyle(
+                "-fx-background-image: url('assets/textures/background-and-platforms/mainmenubg.png');" +
+                        "-fx-background-repeat: no-repeat;" +
+                        "-fx-background-size: cover;" +
+                        "-fx-background-position: center center;"
+        );
         // Glass panel effect (matches difficulty screen)
         Rectangle panel = new Rectangle(600, 700); // was 500 x 550
         panel.setArcHeight(30);
@@ -164,17 +168,17 @@ public class MainMenuScreen extends FXGLMenu {
         // Load and loop BGM
         bgmMusic = FXGL.getAssetLoader().loadMusic("bgm.mp3");
         FXGL.getAudioPlayer().loopMusic(bgmMusic);
-
-// Start volume at 0
-        FXGL.getSettings().setGlobalMusicVolume(0.0);
-
-// Fade in using timeline (manually updating)
-        musicFadeTimeline = new Timeline(
-                new KeyFrame(Duration.ZERO, event -> FXGL.getSettings().setGlobalMusicVolume(0.0)),
-                new KeyFrame(Duration.seconds(3), event -> FXGL.getSettings().setGlobalMusicVolume(0.4)) // Fade to target volume
-        );
-        musicFadeTimeline.setCycleCount(1);
-        musicFadeTimeline.play();
+//
+//// Start volume at 0
+//        FXGL.getSettings().setGlobalMusicVolume(0.0);
+//
+//// Fade in using timeline (manually updating)
+//        musicFadeTimeline = new Timeline(
+//                new KeyFrame(Duration.ZERO, event -> FXGL.getSettings().setGlobalMusicVolume(0.0)),
+//                new KeyFrame(Duration.seconds(3), event -> FXGL.getSettings().setGlobalMusicVolume(0.4)) // Fade to target volume
+//        );
+//        musicFadeTimeline.setCycleCount(1);
+//        musicFadeTimeline.play();
 
     }
 
