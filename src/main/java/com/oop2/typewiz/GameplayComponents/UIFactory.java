@@ -121,11 +121,11 @@ public class UIFactory {
         
         HealthDisplayData data = (HealthDisplayData) healthDisplay.getUserData();
         double healthPercentage = (double) currentHealth / data.maxHealth;
-        data.healthBar.setWidth(200 * healthPercentage);
+        ((Rectangle)data.getComponent()).setWidth(200 * healthPercentage);
         data.healthText.setText(currentHealth + "/" + data.maxHealth);
 
         // Update color based on health with smoother gradient
-        data.healthBar.setFill(getHealthColor(currentHealth, data.maxHealth));
+        ((Rectangle)data.getComponent()).setFill(getHealthColor(currentHealth, data.maxHealth));
     }
     
     private static Color getHealthColor(int health, int maxHealth) {
@@ -396,15 +396,15 @@ public class UIFactory {
         double performancePercentage = Math.min(fps / TARGET_FPS, 1.0);
 
         // Update performance bar
-        data.performanceBar.setWidth(150 * performancePercentage);
+        ((Rectangle)data.getComponent()).setWidth(150 * performancePercentage);
 
         // Update performance bar color
         if (performancePercentage >= 0.9) {
-            data.performanceBar.setFill(GOOD_PERFORMANCE);
+            ((Rectangle)data.getComponent()).setFill(GOOD_PERFORMANCE);
         } else if (performancePercentage >= 0.7) {
-            data.performanceBar.setFill(MEDIUM_PERFORMANCE);
+            ((Rectangle)data.getComponent()).setFill(MEDIUM_PERFORMANCE);
         } else {
-            data.performanceBar.setFill(POOR_PERFORMANCE);
+            ((Rectangle)data.getComponent()).setFill(POOR_PERFORMANCE);
         }
     }
     
@@ -447,38 +447,111 @@ public class UIFactory {
     }
     
     // Inner classes to store UI component references
-    private static class HealthDisplayData {
-        final Rectangle healthBar;
+    /**
+     * Generic base class for UI component data
+     * @param <T> The type of UI component
+     */
+    private static class DisplayData<T> {
+        protected final T component;
+        
+        DisplayData(T component) {
+            this.component = component;
+        }
+        
+        public T getComponent() {
+            return component;
+        }
+    }
+    
+    private static class HealthDisplayData extends DisplayData<Rectangle> {
         final Text healthText;
         final int maxHealth;
         
         HealthDisplayData(Rectangle healthBar, Text healthText, int maxHealth) {
-            this.healthBar = healthBar;
+            super(healthBar);
             this.healthText = healthText;
             this.maxHealth = maxHealth;
         }
     }
     
-    private static class TopBarData {
+    private static class TopBarData extends DisplayData<HBox> {
         final Text scoreText;
         final Text waveText;
         final int maxWaves;
         
         TopBarData(Text scoreText, Text waveText, int maxWaves) {
+            super(null);
             this.scoreText = scoreText;
             this.waveText = waveText;
             this.maxWaves = maxWaves;
         }
     }
     
-    private static class PerformanceData {
-        final Rectangle performanceBar;
+    private static class PerformanceData extends DisplayData<Rectangle> {
         final Text performanceText;
         
         PerformanceData(Rectangle performanceBar, Text performanceText) {
-            this.performanceBar = performanceBar;
+            super(performanceBar);
             this.performanceText = performanceText;
         }
+    }
+
+    /**
+     * Generic Theme class for managing game assets by theme
+     * @param <T> The type of asset paths the theme manages
+     */
+    public static class Theme<T> {
+        private final String name;
+        private final T backgroundPath;
+        private final T platformPath;
+        
+        public Theme(String name, T backgroundPath, T platformPath) {
+            this.name = name;
+            this.backgroundPath = backgroundPath;
+            this.platformPath = platformPath;
+        }
+        
+        public String getName() {
+            return name;
+        }
+        
+        public T getBackgroundPath() {
+            return backgroundPath;
+        }
+        
+        public T getPlatformPath() {
+            return platformPath;
+        }
+    }
+    
+    /**
+     * Randomly selects a theme for the game (background and platform)
+     * @return The selected theme name ("winter", "purple", or "fall")
+     */
+    private static boolean isFirstRun = true;
+    
+    private static Theme<String> selectRandomTheme() {
+        Theme<String>[] themes = new Theme[] {
+            new Theme<>("winter", 
+                "background-and-platforms/bg-winter_1280_720.png", 
+                "background-and-platforms/hdlargerplatform-winter.png"),
+            new Theme<>("purple", 
+                "background-and-platforms/bg-midnightpurple_1280_720.png", 
+                "background-and-platforms/hdlargerplatform-purple.png"),
+            new Theme<>("fall", 
+                "background-and-platforms/bg-fall_1280_720.png", 
+                "background-and-platforms/hdlargerplatform-fall.png")
+        };
+        
+        // Always select the purple theme on first run
+        if (isFirstRun) {
+            isFirstRun = false;
+            // Return the purple theme (index 1)
+            return themes[1];
+        }
+        
+        int randomIndex = (int)(Math.random() * themes.length);
+        return themes[randomIndex];
     }
 
     /**
@@ -487,7 +560,13 @@ public class UIFactory {
      * @param height Screen height
      */
     public static void createBackground(int width, int height) {
-        Image backgroundImage = FXGL.image("background-and-platforms/bg-winter_1280_720.png");
+        Theme<String> theme = selectRandomTheme();
+        
+        // Store the selected theme for platform creation
+        FXGL.getWorldProperties().setValue("currentTheme", theme.getName());
+        FXGL.getWorldProperties().setValue("currentThemeObj", theme);
+        
+        Image backgroundImage = FXGL.image(theme.getBackgroundPath());
         Rectangle background = new Rectangle(width, height);
         background.setFill(new ImagePattern(backgroundImage));
 
@@ -502,7 +581,40 @@ public class UIFactory {
      * Creates the platform for the game
      */
     public static void createPlatform() {
-        Image platformImage = FXGL.image("background-and-platforms/hdlargerplatform-winter.png");
+        // Try to get the theme object first for direct access
+        if (FXGL.getWorldProperties().exists("currentThemeObj")) {
+            @SuppressWarnings("unchecked")
+            Theme<String> theme = (Theme<String>) FXGL.getWorldProperties().getObject("currentThemeObj");
+            Image platformImage = FXGL.image(theme.getPlatformPath());
+            createPlatformEntity(platformImage);
+        } else {
+            // Fallback to the old method if the theme object isn't available
+            String themeName = FXGL.getWorldProperties().getString("currentTheme");
+            
+            String platformFile;
+            switch(themeName) {
+                case "purple":
+                    platformFile = "background-and-platforms/hdlargerplatform-purple.png";
+                    break;
+                case "fall":
+                    platformFile = "background-and-platforms/hdlargerplatform-fall.png";
+                    break;
+                case "winter":
+                default:
+                    platformFile = "background-and-platforms/hdlargerplatform-winter.png";
+                    break;
+            }
+            
+            Image platformImage = FXGL.image(platformFile);
+            createPlatformEntity(platformImage);
+        }
+    }
+    
+    /**
+     * Creates the platform entity with the given image
+     * @param platformImage The platform image to use
+     */
+    private static void createPlatformEntity(Image platformImage) {
         ImageView platformView = new ImageView(platformImage);
 
         double platformWidth = 1450;
@@ -628,5 +740,161 @@ public class UIFactory {
                 }
             }
         }
+    }
+
+    /**
+     * Creates a styled game label using the generic component factory
+     * @param text Label text
+     * @param style Label style (e.g., "title", "score", "health", "info")
+     * @return The styled Text node
+     */
+    public static Text createGameLabel(String text, String style) {
+        return createComponent(new ComponentCreator<Text, LabelConfig>() {
+            @Override
+            public Text create(LabelConfig config) {
+                Text label = new Text(config.text);
+                
+                // Apply styling based on style type
+                switch(config.style) {
+                    case "title":
+                        label.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 32));
+                        label.setFill(UI_ACCENT_COLOR);
+                        addTextGlow(label, UI_ACCENT_COLOR, 0.6);
+                        break;
+                    case "score":
+                        label.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
+                        label.setFill(UI_SECONDARY_COLOR);
+                        addTextGlow(label, UI_SECONDARY_COLOR, 0.4);
+                        break;
+                    case "health":
+                        label.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));
+                        label.setFill(UI_PRIMARY_COLOR);
+                        addTextGlow(label, UI_PRIMARY_COLOR, 0.4);
+                        break;
+                    case "info":
+                    default:
+                        label.setFont(Font.font(FONT_FAMILY, 16));
+                        label.setFill(UI_TEXT_PRIMARY);
+                        break;
+                }
+                
+                return label;
+            }
+        }, new LabelConfig(text, style));
+    }
+    
+    /**
+     * Configuration class for label creation
+     */
+    private static class LabelConfig {
+        final String text;
+        final String style;
+        
+        LabelConfig(String text, String style) {
+            this.text = text;
+            this.style = style;
+        }
+    }
+    
+    /**
+     * Generic component factory method for creating UI components
+     * @param <T> Type of component to create
+     * @param <P> Type of parameter used for configuration
+     * @param creator Function to create the component
+     * @param config Configuration parameter
+     * @return The created component
+     */
+    public static <T extends Node, P> T createComponent(ComponentCreator<T, P> creator, P config) {
+        T component = creator.create(config);
+        
+        // Add default styling if component is a Region
+        if (component instanceof Region) {
+            Region region = (Region) component;
+            region.setPadding(new Insets(5));
+        }
+        
+        return component;
+    }
+    
+    /**
+     * Functional interface for component creation
+     * @param <T> Type of component to create
+     * @param <P> Type of parameter used for configuration
+     */
+    @FunctionalInterface
+    public interface ComponentCreator<T extends Node, P> {
+        T create(P config);
+    }
+
+    /**
+     * Creates a styled game container using the generic component factory
+     * @param <T> Type of container to create (must extend Region)
+     * @param containerType Class object for the container type
+     * @param style Container style (e.g., "panel", "header", "footer")
+     * @return The styled container
+     */
+    public static <T extends Region> T createGameContainer(Class<T> containerType, String style) {
+        return createComponent(new ComponentCreator<T, String>() {
+            @Override
+            public T create(String styleType) {
+                T container;
+                try {
+                    // Create new instance of the specified container type
+                    container = containerType.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    // Fall back to VBox if instantiation fails
+                    System.err.println("Failed to create container: " + e.getMessage());
+                    return (T) new VBox();
+                }
+                
+                // Apply basic styling
+                container.setPadding(new Insets(10));
+                
+                // Apply style-specific styling
+                switch(styleType) {
+                    case "panel":
+                        container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
+                        addPanelBorder(container, UI_PRIMARY_COLOR, UI_CORNER_RADIUS);
+                        break;
+                    case "header":
+                        container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
+                        addPanelBorder(container, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
+                        break;
+                    case "footer":
+                        container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
+                        addPanelBorder(container, UI_SECONDARY_COLOR, UI_CORNER_RADIUS);
+                        break;
+                    default:
+                        // Default transparent style
+                        container.setBackground(null);
+                        break;
+                }
+                
+                return container;
+            }
+        }, style);
+    }
+
+    /**
+     * Creates a game interface panel using the generic component factories
+     * @param title Panel title
+     * @param content Panel content description
+     * @return A VBox containing the styled panel
+     */
+    public static VBox createGamePanel(String title, String content) {
+        // Create main container using the generic container factory
+        VBox panel = createGameContainer(VBox.class, "panel");
+        panel.setSpacing(10);
+        
+        // Create title using the generic label factory
+        Text titleLabel = createGameLabel(title, "title");
+        
+        // Create content using the generic label factory
+        Text contentLabel = createGameLabel(content, "info");
+        
+        // Add title and content to panel
+        panel.getChildren().addAll(titleLabel, contentLabel);
+        
+        return panel;
     }
 } 

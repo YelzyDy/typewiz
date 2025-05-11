@@ -8,7 +8,7 @@ import com.oop2.typewiz.GameplayComponents.Game;
  */
 public class GameLauncher {
     /**
-     * Application entry point
+     * Application entry point  
      * @param args Command line arguments
      */
     public static void main(String[] args) {
