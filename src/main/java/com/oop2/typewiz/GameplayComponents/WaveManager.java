@@ -45,6 +45,7 @@ public class WaveManager {
     private int currentGroupSize;
     private double currentSpawnDelay;
     private boolean spawnFromRight;
+    private boolean spawnGrimougeNext;  // Flag to alternate between Gargoyles and Grimouges
     
     private LocalTimer waveSpawnTimer;
     private final Random random;
@@ -77,6 +78,7 @@ public class WaveManager {
         this.currentWave = 1;
         this.waveInProgress = false;
         this.isSpawningWave = false;
+        this.spawnGrimougeNext = false;  // Start with Gargoyles
         
         // Initialize spawn area
         this.spawnPerimeterRight = 100; // Distance from right edge where entities spawn
@@ -125,8 +127,9 @@ public class WaveManager {
             return;
         }
         
-        // Remove all existing gargoyles before starting a new wave
+        // Remove all existing enemies before starting a new wave
         entityManager.removeAllEntitiesOfType(Game.EntityType.GARGOYLE);
+        entityManager.removeAllEntitiesOfType(Game.EntityType.GRIMOUGE);
         
         // Get wave index (0-based)
         int waveIndex = currentWave - 1;
@@ -134,6 +137,7 @@ public class WaveManager {
         // Reset wave spawning state with wave-specific parameters
         isSpawningWave = false; // Start as false, set to true after announcement
         spawnFromRight = true; // Always spawn from right side
+        spawnGrimougeNext = false; // Start with Gargoyles for each wave
         
         // Apply wave-specific difficulty settings
         int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
@@ -187,11 +191,11 @@ public class WaveManager {
         }
         
         // Check if we need to spawn a new group
-        List<Entity> activeGargoyles = entityManager.getActiveGargoyles();
-        if (activeGargoyles.isEmpty() || waveSpawnTimer.elapsed(Duration.seconds(currentSpawnDelay))) {
+        List<Entity> activeEnemies = entityManager.getActiveEnemies();
+        if (activeEnemies.isEmpty() || waveSpawnTimer.elapsed(Duration.seconds(currentSpawnDelay))) {
             if (totalWaveSpawns > 0) {
                 spawnGroup();
-            } else if (activeGargoyles.isEmpty()) {
+            } else if (activeEnemies.isEmpty()) {
                 // Wave completed
                 waveCompleted();
                 return true;
@@ -220,53 +224,82 @@ public class WaveManager {
             System.out.println("Fixed zero group size to: " + currentGroupSize);
         }
         
-        System.out.println("Spawning group of " + currentGroupSize + " gargoyles from right side");
+        List<Entity> spawnedEntities;
         
-        // Use GargoyleFactory to spawn a group of gargoyles
-        List<Entity> spawnedGargoyles = GargoyleFactory.spawnGargoyleGroup(
-            currentGroupSize,
-            minY,
-            maxY,
-            spawnFromRight, // Always spawn from right
-            spawnPerimeterRight,
-            wordSupplier, // Method reference to get random words
-            Game.EntityType.GARGOYLE
-        );
+        // Decide whether to spawn Gargoyles or Grimouges
+        if (spawnGrimougeNext) {
+            System.out.println("Spawning group of " + currentGroupSize + " grimouges from right side");
+            
+            // Use GrimougeFactory to spawn a group of grimouges
+            spawnedEntities = GrimougeFactory.spawnGrimougeGroup(
+                currentGroupSize,
+                minY,
+                maxY,
+                spawnFromRight, // Always spawn from right
+                spawnPerimeterRight,
+                wordSupplier, // Method reference to get random words
+                Game.EntityType.GRIMOUGE
+            );
+            
+            System.out.println("GrimougeFactory returned " + spawnedEntities.size() + " entities");
+        } else {
+            System.out.println("Spawning group of " + currentGroupSize + " gargoyles from right side");
+            
+            // Use GargoyleFactory to spawn a group of gargoyles
+            spawnedEntities = GargoyleFactory.spawnGargoyleGroup(
+                currentGroupSize,
+                minY,
+                maxY,
+                spawnFromRight, // Always spawn from right
+                spawnPerimeterRight,
+                wordSupplier, // Method reference to get random words
+                Game.EntityType.GARGOYLE
+            );
+            
+            System.out.println("GargoyleFactory returned " + spawnedEntities.size() + " entities");
+        }
         
-        System.out.println("GargoyleFactory returned " + spawnedGargoyles.size() + " entities");
+        // Toggle flag for next spawn
+        spawnGrimougeNext = !spawnGrimougeNext;
         
-        // Add spawned gargoyles to entity manager and ensure they're attached to the world
-        for (Entity gargoyle : spawnedGargoyles) {
-            System.out.println("Adding gargoyle to entity manager with word: " + 
-                (gargoyle.getProperties().exists("word") ? gargoyle.getString("word") : "unknown"));
+        // Add spawned entities to entity manager and ensure they're attached to the world
+        for (Entity entity : spawnedEntities) {
+            String entityType = entity.isType(Game.EntityType.GRIMOUGE) ? "grimouge" : "gargoyle";
+            System.out.println("Adding " + entityType + " to entity manager with word: " + 
+                (entity.getProperties().exists("word") ? entity.getString("word") : "unknown"));
                 
-            entityManager.addActiveEntity(gargoyle);
+            entityManager.addActiveEntity(entity);
             
             // Ensure the entity is attached to the world
-            if (!gargoyle.isActive()) {
-                System.out.println("Attaching gargoyle to world");
-                FXGL.getGameWorld().addEntity(gargoyle);
+            if (!entity.isActive()) {
+                System.out.println("Attaching " + entityType + " to world");
+                FXGL.getGameWorld().addEntity(entity);
             }
         }
         
-        // Check if we need to select a new gargoyle automatically
-        // This happens in two cases:
-        // 1. This is the first group of a wave (already handled in startSpawning)
-        // 2. The player has defeated all previous gargoyles and this is a new group
+        // Check if we need to select a new entity automatically
         InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
-        if (inputManager != null && inputManager.getSelectedWordBlock() == null && !spawnedGargoyles.isEmpty()) {
+        if (inputManager != null && inputManager.getSelectedWordBlock() == null && !spawnedEntities.isEmpty()) {
             // We only want to select one if there are no other active selections
-            Entity closestGargoyle = GargoyleFactory.findClosestGargoyleToCenter(spawnedGargoyles);
-            if (closestGargoyle != null) {
-                System.out.println("WaveManager: Automatically selecting new gargoyle after spawn");
-                inputManager.selectWordBlock(closestGargoyle);
+            Entity closestEntity;
+            
+            if (spawnGrimougeNext) { // We just spawned gargoyles
+                closestEntity = GargoyleFactory.findClosestGargoyleToCenter(spawnedEntities);
+            } else { // We just spawned grimouges
+                closestEntity = GrimougeFactory.findClosestGrimougeToCenter(spawnedEntities);
+            }
+            
+            if (closestEntity != null) {
+                System.out.println("WaveManager: Automatically selecting new entity after spawn");
+                inputManager.selectWordBlock(closestEntity);
             }
         }
         
-        totalWaveSpawns -= spawnedGargoyles.size();
+        totalWaveSpawns -= spawnedEntities.size();
         
-        System.out.println("Successfully spawned " + spawnedGargoyles.size() + 
-                " gargoyles, " + totalWaveSpawns + " remaining in wave");
+        String entityType = spawnGrimougeNext ? "gargoyles" : "grimouges"; // Because we toggled the flag
+        System.out.println("Successfully spawned " + spawnedEntities.size() + 
+                " " + entityType + ", " + totalWaveSpawns + " remaining in wave");
         
         // Prepare for next group with wave-specific parameters
         int waveMinSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
@@ -284,7 +317,7 @@ public class WaveManager {
         
         waveSpawnTimer.capture();
         
-        return spawnedGargoyles;
+        return spawnedEntities;
     }
     
     /**
@@ -325,24 +358,32 @@ public class WaveManager {
         isSpawningWave = true;
         waveSpawnTimer.capture();
         
-        System.out.println("WaveManager: Spawning first group of gargoyles, size=" + currentGroupSize);
+        // Reset spawn flag to start with Gargoyles
+        spawnGrimougeNext = false;
+        
+        System.out.println("WaveManager: Spawning first group of enemies, size=" + currentGroupSize);
         
         // Spawn first group right away
         List<Entity> spawned = spawnGroup();
         
         System.out.println("WaveManager: Spawned first group with " + spawned.size() + 
-                " gargoyles, total remaining: " + totalWaveSpawns);
+                " enemies, total remaining: " + totalWaveSpawns);
         
-        // Automatically select the first gargoyle (closest to center) for targeting
+        // Automatically select the first entity (closest to center) for targeting
         if (!spawned.isEmpty()) {
-            // Find the closest gargoyle to the center of the screen
-            Entity closestGargoyle = GargoyleFactory.findClosestGargoyleToCenter(spawned);
+            // Find the closest entity to the center of the screen
+            Entity closestEntity;
+            if (spawned.get(0).isType(Game.EntityType.GARGOYLE)) {
+                closestEntity = GargoyleFactory.findClosestGargoyleToCenter(spawned);
+            } else {
+                closestEntity = GrimougeFactory.findClosestGrimougeToCenter(spawned);
+            }
             
-            // Get input manager from world properties and select the gargoyle
+            // Get input manager from world properties and select the entity
             InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
-            if (inputManager != null && closestGargoyle != null) {
-                System.out.println("WaveManager: Automatically selecting first gargoyle");
-                inputManager.selectWordBlock(closestGargoyle);
+            if (inputManager != null && closestEntity != null) {
+                System.out.println("WaveManager: Automatically selecting first enemy");
+                inputManager.selectWordBlock(closestEntity);
             }
         }
     }
@@ -364,5 +405,6 @@ public class WaveManager {
         currentWave = 1;
         waveInProgress = false;
         isSpawningWave = false;
+        spawnGrimougeNext = false;
     }
 } 

@@ -18,6 +18,7 @@ public class EntityManager {
     
     private List<Entity> activeEntities;
     private List<Entity> gargoylePool;
+    private List<Entity> grimougePool;
     private List<Entity> entitiesToRemove;
     private SpatialPartitioning spatialPartitioning;
     private double width;
@@ -25,12 +26,20 @@ public class EntityManager {
     
     private static final int BATCH_SIZE = 50;
     private static final int MAX_GARGOYLES = 10;
+    private static final int MAX_GRIMOUGES = 10;
     
     // Constants for entity movement
     private static final double GARGOYLE_SPEED = 50.0;
     private static final double GARGOYLE_FRAME_WIDTH = 288;
     private static final double GARGOYLE_FRAME_HEIGHT = 312;
     private static final double GARGOYLE_SCALE = 0.6;
+    
+    private static final double GRIMOUGE_SPEED = 50.0;
+    private static final int GRIMOUGE_SPRITE_SHEET_WIDTH = 7200;
+    private static final int GRIMOUGE_FRAME_COUNT = 9;
+    private static final double GRIMOUGE_FRAME_WIDTH = GRIMOUGE_SPRITE_SHEET_WIDTH / GRIMOUGE_FRAME_COUNT; // 800px per frame
+    private static final double GRIMOUGE_FRAME_HEIGHT = 400;
+    private static final double GRIMOUGE_SCALE = 0.6;
     
     /**
      * Creates a new EntityManager with initialized pools and spatial partitioning
@@ -43,11 +52,13 @@ public class EntityManager {
         this.height = height;
         activeEntities = new ArrayList<>();
         gargoylePool = new ArrayList<>(MAX_GARGOYLES);
+        grimougePool = new ArrayList<>(MAX_GRIMOUGES);
         entitiesToRemove = new ArrayList<>(BATCH_SIZE);
         spatialPartitioning = new SpatialPartitioning(100, width, height);
         
-        // Pre-initialize the gargoyle pool
+        // Pre-initialize the entity pools
         initializeGargoylePool();
+        initializeGrimougePool();
     }
     
     /**
@@ -62,6 +73,21 @@ public class EntityManager {
             
             // Add to pool
             gargoylePool.add(gargoyleEntity);
+        }
+    }
+    
+    /**
+     * Initializes the grimouge entity pool
+     */
+    private void initializeGrimougePool() {
+        for (int i = 0; i < MAX_GRIMOUGES; i++) {
+            Entity grimougeEntity = FXGL.entityBuilder()
+                    .type(Game.EntityType.GRIMOUGE)
+                    .zIndex(25)
+                    .build();
+            
+            // Add to pool
+            grimougePool.add(grimougeEntity);
         }
     }
     
@@ -85,6 +111,25 @@ public class EntityManager {
     }
     
     /**
+     * Gets a grimouge entity from the pool or creates a new one if needed
+     * 
+     * @return An available grimouge entity
+     */
+    public Entity getGrimougeFromPool() {
+        if (grimougePool.isEmpty()) {
+            // If pool is empty, create a new entity
+            Entity grimougeEntity = FXGL.entityBuilder()
+                    .type(Game.EntityType.GRIMOUGE)
+                    .zIndex(25)
+                    .build();
+            return grimougeEntity;
+        }
+        
+        // Get and remove the last entity from the pool
+        return grimougePool.remove(grimougePool.size() - 1);
+    }
+    
+    /**
      * Returns an entity to the gargoyle pool for reuse
      * 
      * @param entity The entity to return to the pool
@@ -96,6 +141,21 @@ public class EntityManager {
             }
             spatialPartitioning.removeEntity(entity);
             gargoylePool.add(entity);
+        }
+    }
+    
+    /**
+     * Returns an entity to the grimouge pool for reuse
+     * 
+     * @param entity The entity to return to the pool
+     */
+    public void returnGrimougeToPool(Entity entity) {
+        if (entity != null) {
+            if (entity.isActive()) {
+                entity.removeFromWorld();
+            }
+            spatialPartitioning.removeEntity(entity);
+            grimougePool.add(entity);
         }
     }
     
@@ -134,9 +194,11 @@ public class EntityManager {
             
             spatialPartitioning.removeEntity(entity);
             
-            // If it's a gargoyle, return it to the pool
+            // Return entity to appropriate pool based on type
             if (entity.isType(Game.EntityType.GARGOYLE)) {
                 gargoylePool.add(entity);
+            } else if (entity.isType(Game.EntityType.GRIMOUGE)) {
+                grimougePool.add(entity);
             }
         }
     }
@@ -194,6 +256,27 @@ public class EntityManager {
      */
     public List<Entity> getActiveGargoyles() {
         return getActiveEntitiesByType(Game.EntityType.GARGOYLE);
+    }
+    
+    /**
+     * Gets the active grimouge entities
+     * 
+     * @return List of active grimouge entities
+     */
+    public List<Entity> getActiveGrimouges() {
+        return getActiveEntitiesByType(Game.EntityType.GRIMOUGE);
+    }
+    
+    /**
+     * Gets all active enemy entities (gargoyles and grimouges)
+     * 
+     * @return List of all active enemy entities
+     */
+    public List<Entity> getActiveEnemies() {
+        List<Entity> enemies = new ArrayList<>();
+        enemies.addAll(getActiveGargoyles());
+        enemies.addAll(getActiveGrimouges());
+        return enemies;
     }
     
     /**
@@ -255,9 +338,11 @@ public class EntityManager {
         activeEntities.clear();
         entitiesToRemove.clear();
         
-        // Reinitialize the gargoyle pool
+        // Reinitialize the pools
         gargoylePool.clear();
+        grimougePool.clear();
         initializeGargoylePool();
+        initializeGrimougePool();
         
         // Reset spatial partitioning
         spatialPartitioning.clear();
@@ -270,6 +355,18 @@ public class EntityManager {
      */
     public void updateEntities(double tpf, double speedMultiplier) {
         // Process all active gargoyles
+        updateGargoyles(tpf, speedMultiplier);
+        
+        // Process all active grimouges
+        updateGrimouges(tpf, speedMultiplier);
+    }
+    
+    /**
+     * Updates all active gargoyle entities
+     * @param tpf Time per frame
+     * @param speedMultiplier Speed multiplier for the current wave
+     */
+    private void updateGargoyles(double tpf, double speedMultiplier) {
         List<Entity> gargoyles = getActiveGargoyles();
         for (Entity gargoyle : gargoyles) {
             if (gargoyle == null) continue;
@@ -329,6 +426,74 @@ public class EntityManager {
 
             // Update spatial partitioning
             spatialPartitioning.updateEntity(gargoyle);
+        }
+    }
+    
+    /**
+     * Updates all active grimouge entities
+     * @param tpf Time per frame
+     * @param speedMultiplier Speed multiplier for the current wave
+     */
+    private void updateGrimouges(double tpf, double speedMultiplier) {
+        List<Entity> grimouges = getActiveGrimouges();
+        for (Entity grimouge : grimouges) {
+            if (grimouge == null) continue;
+
+            // Check visibility and activity state
+            boolean isVisible = isEntityVisible(grimouge);
+            boolean hasBeenVisible = grimouge.getBoolean("hasBeenVisible");
+            boolean isActive = grimouge.getBoolean("isActive");
+            boolean movingRight = grimouge.getBoolean("movingRight");
+
+            // Mark as visible once it enters the screen
+            if (isVisible && !hasBeenVisible) {
+                grimouge.setProperty("hasBeenVisible", true);
+                hasBeenVisible = true;
+            }
+
+            // Activate when fully visible
+            if (isVisible && !isActive) {
+                grimouge.setProperty("isActive", true);
+                isActive = true;
+            }
+
+            // Only move and check for removal if the grimouge is active
+            if (isActive) {
+                // Update position
+                double movement = GRIMOUGE_SPEED * speedMultiplier * tpf;
+                movement = Math.max(movement, 1.0); // Prevent micro-stuttering
+                grimouge.translateX(movingRight ? movement : -movement);
+
+                // Check if grimouge has left the screen
+                if ((movingRight && grimouge.getX() > this.width) ||
+                        (!movingRight && grimouge.getX() < -GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE)) {
+                    if (hasBeenVisible) {
+                        // Decrease player health when grimouge leaves screen
+                        PlayerManager playerManager = FXGL.getWorldProperties().getObject("playerManager");
+                        if (playerManager != null) {
+                            playerManager.decreaseHealth();
+                        }
+                    }
+                    // Mark for removal in the next cycle
+                    markForRemoval(grimouge);
+
+                    // Update selection if needed
+                    InputManager inputManager = FXGL.getWorldProperties().getObject("inputManager");
+                    if (inputManager != null && grimouge == inputManager.getSelectedWordBlock()) {
+                        Entity closest = GrimougeFactory.findClosestGrimougeToCenter(getActiveGrimouges());
+                        if (closest != null) {
+                            inputManager.selectWordBlock(closest);
+                        }
+                    }
+                    continue;
+                }
+            }
+
+            // Update animation
+            updateEntityAnimation(grimouge, tpf);
+
+            // Update spatial partitioning
+            spatialPartitioning.updateEntity(grimouge);
         }
     }
     

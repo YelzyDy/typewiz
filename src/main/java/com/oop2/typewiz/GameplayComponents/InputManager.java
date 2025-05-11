@@ -60,9 +60,9 @@ public class InputManager {
             return;
         }
         
-        // Skip empty characters or control characters (including Shift)
+        // Skip empty characters or non-printable control characters
         if (event.getCharacter().isEmpty() || event.getCharacter().length() == 0 || 
-            event.getCharacter().charAt(0) < 32) {
+            event.getCharacter().charAt(0) < ' ') { // ASCII 32 is space, the first printable character
             return;
         }
         
@@ -74,9 +74,9 @@ public class InputManager {
             
             // If no word is selected, try to select one first
             if (selectedWordBlock == null) {
-                List<Entity> gargoyles = entityManager.getActiveGargoyles();
-                if (!gargoyles.isEmpty()) {
-                    Entity target = findMostUrgentGargoyle(gargoyles);
+                List<Entity> enemies = entityManager.getActiveEnemies();
+                if (!enemies.isEmpty()) {
+                    Entity target = findMostUrgentEnemy(enemies);
                     if (target != null) {
                         selectWordBlock(target);
                         System.out.println("Auto-selected target for typing: " + target.getString("word"));
@@ -122,7 +122,7 @@ public class InputManager {
             updateLetterColors();
             event.consume(); // Consume backspace to prevent it from triggering browser back navigation
         } 
-        // Shift key is now handled by the global event filter in Game.java
+        // Note: Shift key is handled globally in Game.java for cycling between word blocks
         else if (event.getCode() == KeyCode.SPACE) {
             // Complete word with Space
             checkWordCompletion();
@@ -139,26 +139,26 @@ public class InputManager {
         if (selectedWordBlock == null) {
             System.out.println("No word block selected, attempting to find one...");
             // Select a word block if none is selected
-            List<Entity> gargoyles = entityManager.getActiveGargoyles();
-            System.out.println("Found " + gargoyles.size() + " active gargoyles");
+            List<Entity> enemies = entityManager.getActiveEnemies();
+            System.out.println("Found " + enemies.size() + " active enemies");
             
-            if (!gargoyles.isEmpty()) {
-                // Find the most urgent gargoyle to target
-                Entity mostUrgent = findMostUrgentGargoyle(gargoyles);
+            if (!enemies.isEmpty()) {
+                // Find the most urgent enemy to target
+                Entity mostUrgent = findMostUrgentEnemy(enemies);
                 if (mostUrgent != null) {
-                    System.out.println("Selected most urgent gargoyle with word: " + mostUrgent.getString("word"));
+                    System.out.println("Selected most urgent enemy with word: " + mostUrgent.getString("word"));
                     selectWordBlock(mostUrgent);
-                    // Now that we've selected a gargoyle, continue processing the character
+                    // Now that we've selected an enemy, continue processing the character
                     // instead of returning
                 }
                 else {
-                    System.out.println("No valid gargoyle found after searching");
-                    return; // No valid gargoyles found
+                    System.out.println("No valid enemy found after searching");
+                    return; // No valid enemies found
                 }
             }
             else {
-                System.out.println("No gargoyles available to select");
-                return; // No gargoyles available
+                System.out.println("No enemies available to select");
+                return; // No enemies available
             }
         }
         
@@ -216,7 +216,11 @@ public class InputManager {
         if (selectedWordBlock != null) {
             try {
                 // Reset the previous block's word color to default white
-                GargoyleFactory.resetBlockToDefaultColor(selectedWordBlock);
+                if (selectedWordBlock.isType(Game.EntityType.GARGOYLE)) {
+                    GargoyleFactory.resetBlockToDefaultColor(selectedWordBlock);
+                } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
+                    GrimougeFactory.resetBlockToDefaultColor(selectedWordBlock);
+                }
             } catch (Exception e) {
                 // Ignore errors when resetting colors
             }
@@ -230,7 +234,11 @@ public class InputManager {
         
         // Set initial yellow highlight for the selected block
         try {
-            GargoyleFactory.selectWordBlock(selectedWordBlock);
+            if (selectedWordBlock.isType(Game.EntityType.GARGOYLE)) {
+                GargoyleFactory.selectWordBlock(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
+                GrimougeFactory.selectWordBlock(selectedWordBlock);
+            }
             
             // Immediately show that the block is selected and ready for input
             System.out.println("Word block selected and ready for input: " + selectedWordBlock.getString("word"));
@@ -252,7 +260,11 @@ public class InputManager {
         if (selectedWordBlock == null) return;
         
         try {
-            GargoyleFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
+            if (selectedWordBlock.isType(Game.EntityType.GARGOYLE)) {
+                GargoyleFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
+            } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
+                GrimougeFactory.updateLetterColors(selectedWordBlock, currentInput.toString());
+            }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
         }
@@ -265,7 +277,11 @@ public class InputManager {
         if (selectedWordBlock == null) return;
         
         try {
-            GargoyleFactory.markWordAsComplete(selectedWordBlock);
+            if (selectedWordBlock.isType(Game.EntityType.GARGOYLE)) {
+                GargoyleFactory.markWordAsComplete(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
+                GrimougeFactory.markWordAsComplete(selectedWordBlock);
+            }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
         }
@@ -280,7 +296,11 @@ public class InputManager {
         if (selectedWordBlock == null) return;
         
         try {
-            GargoyleFactory.selectWordBlock(selectedWordBlock);
+            if (selectedWordBlock.isType(Game.EntityType.GARGOYLE)) {
+                GargoyleFactory.selectWordBlock(selectedWordBlock);
+            } else if (selectedWordBlock.isType(Game.EntityType.GRIMOUGE)) {
+                GrimougeFactory.selectWordBlock(selectedWordBlock);
+            }
         } catch (Exception e) {
             // Property may not exist yet, ignore the error
         }
@@ -290,54 +310,54 @@ public class InputManager {
      * Cycles to the next word block in the game
      */
     private void selectNextWordBlock() {
-        List<Entity> gargoyles = entityManager.getActiveGargoyles();
-        if (gargoyles.isEmpty()) {
-            System.out.println("No gargoyles available to cycle through");
+        List<Entity> enemies = entityManager.getActiveEnemies();
+        if (enemies.isEmpty()) {
+            System.out.println("No enemies available to cycle through");
             return;
         }
         
-        System.out.println("Cycling through " + gargoyles.size() + " available gargoyles");
+        System.out.println("Cycling through " + enemies.size() + " available enemies");
         
-        // First, sort gargoyles by proximity to the center of the screen (left to right)
+        // First, sort enemies by proximity to the center of the screen (left to right)
         double centerX = FXGL.getAppWidth() / 2.0;
-        gargoyles.sort((g1, g2) -> {
-            double dist1 = Math.abs(g1.getX() - centerX);
-            double dist2 = Math.abs(g2.getX() - centerX);
+        enemies.sort((e1, e2) -> {
+            double dist1 = Math.abs(e1.getX() - centerX);
+            double dist2 = Math.abs(e2.getX() - centerX);
             return Double.compare(dist1, dist2);
         });
         
         // If no block is currently selected, select the closest one to the center
         if (selectedWordBlock == null) {
-            if (!gargoyles.isEmpty()) {
-                Entity closestToCenter = gargoyles.get(0);
+            if (!enemies.isEmpty()) {
+                Entity closestToCenter = enemies.get(0);
                 selectWordBlock(closestToCenter);
-                System.out.println("Selected gargoyle closest to center: " + closestToCenter.getString("word"));
+                System.out.println("Selected enemy closest to center: " + closestToCenter.getString("word"));
             }
             return;
         }
         
-        // Find the index of the currently selected gargoyle
+        // Find the index of the currently selected enemy
         int currentIndex = -1;
-        for (int i = 0; i < gargoyles.size(); i++) {
-            if (gargoyles.get(i) == selectedWordBlock) {
+        for (int i = 0; i < enemies.size(); i++) {
+            if (enemies.get(i) == selectedWordBlock) {
                 currentIndex = i;
                 break;
             }
         }
         
-        // Move to the next gargoyle in the list
+        // Move to the next enemy in the list
         if (currentIndex != -1) {
-            int nextIndex = (currentIndex + 1) % gargoyles.size();
-            Entity nextGargoyle = gargoyles.get(nextIndex);
-            selectWordBlock(nextGargoyle);
-            System.out.println("Cycled from gargoyle #" + currentIndex + " to #" + nextIndex + 
-                             ": " + nextGargoyle.getString("word"));
+            int nextIndex = (currentIndex + 1) % enemies.size();
+            Entity nextEnemy = enemies.get(nextIndex);
+            selectWordBlock(nextEnemy);
+            System.out.println("Cycled from enemy #" + currentIndex + " to #" + nextIndex + 
+                             ": " + nextEnemy.getString("word"));
         } else {
             // Current selection not found in list, select the first one
-            if (!gargoyles.isEmpty()) {
-                Entity firstGargoyle = gargoyles.get(0);
-                selectWordBlock(firstGargoyle);
-                System.out.println("Selected first gargoyle: " + firstGargoyle.getString("word"));
+            if (!enemies.isEmpty()) {
+                Entity firstEnemy = enemies.get(0);
+                selectWordBlock(firstEnemy);
+                System.out.println("Selected first enemy: " + firstEnemy.getString("word"));
             }
         }
     }
@@ -363,6 +383,8 @@ public class InputManager {
                 
                 // Word completed successfully
                 Entity completedBlock = selectedWordBlock;
+                boolean wasGargoyle = completedBlock.isType(Game.EntityType.GARGOYLE);
+                boolean wasGrimouge = completedBlock.isType(Game.EntityType.GRIMOUGE);
                 
                 // Record the completed word
                 int waveNumber = stateManager.isInState(GameStateManager.GameState.PLAYING) ? 1 : 0;
@@ -371,24 +393,24 @@ public class InputManager {
                 // Clear the selection before we remove the entity
                 selectedWordBlock = null;
                 
-                // Get all active gargoyles BEFORE removing the completed one
-                List<Entity> gargoyles = entityManager.getActiveGargoyles();
-                gargoyles.remove(completedBlock);
+                // Get all active enemies BEFORE removing the completed one
+                List<Entity> enemies = entityManager.getActiveEnemies();
+                enemies.remove(completedBlock);
                 
                 // Remove the completed block
                 entityManager.removeEntity(completedBlock);
-                System.out.println("Removed completed gargoyle, remaining gargoyles: " + gargoyles.size());
+                System.out.println("Removed completed enemy, remaining enemies: " + enemies.size());
                 
-                // Select a new gargoyle if any available
-                if (!gargoyles.isEmpty()) {
+                // Select a new enemy if any available
+                if (!enemies.isEmpty()) {
                     // Find the closest one to the right edge of the screen (most urgent)
-                    Entity mostUrgent = findMostUrgentGargoyle(gargoyles);
+                    Entity mostUrgent = findMostUrgentEnemy(enemies);
                     if (mostUrgent != null) {
-                        System.out.println("Selected new most urgent gargoyle: " + mostUrgent.getString("word"));
+                        System.out.println("Selected new most urgent enemy: " + mostUrgent.getString("word"));
                         selectWordBlock(mostUrgent);
                     }
                 } else {
-                    System.out.println("No more gargoyles to select");
+                    System.out.println("No more enemies to select");
                 }
             } else {
                 // Word not completed - reset input and maintain yellow highlight
@@ -402,16 +424,16 @@ public class InputManager {
             currentInput.setLength(0);
             
             // Try to select another entity if available
-            List<Entity> gargoyles = entityManager.getActiveGargoyles();
-            if (!gargoyles.isEmpty() && selectedWordBlock != null) {
-                System.out.println("Trying to select another valid gargoyle");
-                // Try to find any valid gargoyle to select
-                for (Entity gargoyle : gargoyles) {
+            List<Entity> enemies = entityManager.getActiveEnemies();
+            if (!enemies.isEmpty() && selectedWordBlock != null) {
+                System.out.println("Trying to select another valid enemy");
+                // Try to find any valid enemy to select
+                for (Entity enemy : enemies) {
                     try {
-                        // Verify this gargoyle has the word property
-                        gargoyle.getString("word");
-                        selectWordBlock(gargoyle);
-                        System.out.println("Selected alternative gargoyle: " + gargoyle.getString("word"));
+                        // Verify this enemy has the word property
+                        enemy.getString("word");
+                        selectWordBlock(enemy);
+                        System.out.println("Selected alternative enemy: " + enemy.getString("word"));
                         break;
                     } catch (Exception ex) {
                         // Skip this one if it has errors
@@ -423,36 +445,36 @@ public class InputManager {
     }
     
     /**
-     * Finds the most urgent gargoyle (closest to exiting the screen)
+     * Finds the most urgent enemy (closest to exiting the screen)
      * 
-     * @param gargoyles List of active gargoyles
-     * @return The most urgent gargoyle to target
+     * @param enemies List of active enemies
+     * @return The most urgent enemy to target
      */
-    private Entity findMostUrgentGargoyle(List<Entity> gargoyles) {
-        if (gargoyles.isEmpty()) return null;
+    private Entity findMostUrgentEnemy(List<Entity> enemies) {
+        if (enemies.isEmpty()) return null;
         
         Entity mostUrgent = null;
         double screenWidth = FXGL.getAppWidth();
         double minDistance = Double.MAX_VALUE;
         
-        for (Entity gargoyle : gargoyles) {
+        for (Entity enemy : enemies) {
             try {
                 // Make sure it has required properties
-                gargoyle.getString("word");
-                boolean movingRight = gargoyle.getBoolean("movingRight");
+                enemy.getString("word");
+                boolean movingRight = enemy.getBoolean("movingRight");
                 
                 // Calculate how close it is to the edge it's moving toward
                 double distance;
                 if (movingRight) {
-                    distance = screenWidth - gargoyle.getX();
+                    distance = screenWidth - enemy.getX();
                 } else {
-                    distance = gargoyle.getX();
+                    distance = enemy.getX();
                 }
                 
                 // Keep the one with the smallest distance to edge
                 if (distance < minDistance) {
                     minDistance = distance;
-                    mostUrgent = gargoyle;
+                    mostUrgent = enemy;
                 }
             } catch (Exception e) {
                 // Skip entities with issues
@@ -508,15 +530,15 @@ public class InputManager {
             return;
         }
         
-        // Get active gargoyles and check if there are any to cycle through
-        List<Entity> gargoyles = entityManager.getActiveGargoyles();
-        if (gargoyles.isEmpty()) {
-            System.out.println("No gargoyles available to cycle through");
+        // Get active enemies and check if there are any to cycle through
+        List<Entity> enemies = entityManager.getActiveEnemies();
+        if (enemies.isEmpty()) {
+            System.out.println("No enemies available to cycle through");
             return;
         }
         
         // Log the attempt to cycle
-        System.out.println("Shift key pressed - cycling to next word block, " + gargoyles.size() + " gargoyles available");
+        System.out.println("Shift key pressed - cycling to next word block, " + enemies.size() + " enemies available");
         
         // Perform the cycling action
         selectNextWordBlock();

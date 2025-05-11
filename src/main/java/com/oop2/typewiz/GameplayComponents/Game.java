@@ -40,7 +40,8 @@ public class Game extends GameApplication {
         PLATFORM,
         PLAYER,
         MOVING_BLOCK,
-        GARGOYLE
+        GARGOYLE,
+        GRIMOUGE
     }
 
     // Core game constants
@@ -103,6 +104,7 @@ public class Game extends GameApplication {
         
         // Initialize animations for entities
         GargoyleFactory.initializeAnimations();
+        GrimougeFactory.initializeAnimations();
         
         // Set up UI elements
         UIFactory.createUI(this);
@@ -348,8 +350,8 @@ public class Game extends GameApplication {
         final long[] lastShiftKeyTime = {0};
         final long SHIFT_DEBOUNCE_MS = 200; // Debounce time in milliseconds
         
-        // Add a global filter to intercept shift key events before they're processed by other handlers
-        FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+        // Only handle SHIFT key presses for cycling through targets
+        FXGL.getInput().addEventHandler(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
                 // If in playing state, cycle through targets
                 if (stateManager.isInState(GameStateManager.GameState.PLAYING)) {
@@ -364,13 +366,7 @@ public class Game extends GameApplication {
             }
         });
         
-        // Also handle KEY_RELEASED to ensure consistent behavior
-        FXGL.getInput().addEventFilter(javafx.scene.input.KeyEvent.KEY_RELEASED, event -> {
-            if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
-                // Consume the event to prevent it from being processed further
-                event.consume();
-            }
-        });
+        // No need to handle shift key release events
     }
 
     /**
