@@ -33,7 +33,12 @@ public class DifficultyMenuScreen extends FXGLMenu {
         // Main container with magical gradient
         StackPane root = new StackPane();
         root.setPrefSize(FXGL.getAppWidth(), FXGL.getAppHeight());
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #2a0845, #4a148c);");
+        root.setStyle(
+                "-fx-background-image: url('assets/textures/background-and-platforms/menubg.png');" +
+                        "-fx-background-repeat: no-repeat;" +
+                        "-fx-background-size: cover;" +
+                        "-fx-background-position: center center;"
+        );
 
         // Glass panel effect
         Rectangle panel = new Rectangle(500, 500);
@@ -69,6 +74,8 @@ public class DifficultyMenuScreen extends FXGLMenu {
             FXGL.play("sound-library/click.wav"); // plays the sound
 //            SceneManager.showScreen(TypeWizApp.ScreenType.LOADING);
         });
+
+
         // Back button
         Button backButton = new Button("Back to Tower");
         backButton.setFont(Font.font("Consolas", 20));
@@ -81,6 +88,7 @@ public class DifficultyMenuScreen extends FXGLMenu {
                 new BorderWidths(1))
         ));
         backButton.setOnAction(e -> {
+            addMagicHover(backButton);
             FXGL.play("sound-library/click.wav"); // plays the sound
             backAction.run();
         });
@@ -93,6 +101,24 @@ public class DifficultyMenuScreen extends FXGLMenu {
         StackPane glassPane = new StackPane(panel, menuBox);
         root.getChildren().add(glassPane);
         getContentRoot().getChildren().add(root);
+    }
+
+    private void addMagicHover(Button button) {
+        button.setOnMouseEntered(e -> {
+            button.setTextFill(Color.web("#f8bbd0"));
+            ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
+            st.setToX(1.1);
+            st.setToY(1.1);
+            st.play();
+        });
+
+        button.setOnMouseExited(e -> {
+            button.setTextFill(Color.web("#ce93d8"));
+            ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
+        });
     }
 
     private Button createDifficultyButton(String title, String description, Runnable action) {

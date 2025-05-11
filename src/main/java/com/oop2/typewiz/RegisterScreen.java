@@ -199,7 +199,10 @@ public class RegisterScreen extends GameApplication {
         String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 10%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(200,91,255,0.6), 10, 0.3, 0, 3);";
 
         button.setStyle(baseStyle);
-        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
+        button.setOnMouseEntered(e -> {
+            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
+            button.setStyle(hoverStyle);
+        });
         button.setOnMouseExited(e -> button.setStyle(baseStyle));
     }
 

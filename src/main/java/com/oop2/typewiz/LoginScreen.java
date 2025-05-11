@@ -109,6 +109,7 @@ public class LoginScreen extends GameApplication {
 
         Button signUpButton = FXGL.getUIFactoryService().newButton("Sign up");
         styleButton(signUpButton, "#ffffff", Color.BLACK);
+
         signUpButton.setOnAction(e -> {
             FXGL.play("sound-library/click.wav"); // plays the sound
             SceneManager.showScreen(TypeWizApp.ScreenType.REGISTER);
@@ -154,8 +155,14 @@ public class LoginScreen extends GameApplication {
         String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 10%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(200,91,255,0.6), 10, 0.3, 0, 3);";
 
         button.setStyle(baseStyle);
-        button.setOnMouseEntered(e -> button.setStyle(hoverStyle));
-        button.setOnMouseExited(e -> button.setStyle(baseStyle));
+        button.setOnMouseEntered(e -> {
+            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
+            button.setStyle(hoverStyle);
+        });
+
+        button.setOnMouseExited(e ->{
+            button.setStyle(baseStyle);
+        });
     }
 
     private void applyFadeInAnimation(Pane root) {

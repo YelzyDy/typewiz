@@ -37,7 +37,7 @@ public class LoadingScreen extends LoadingScene {
         Rectangle background = new Rectangle(getAppWidth(), getAppHeight());
         background.setFill(new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#2a0845")),
-                new Stop(0.5, Color.web("#4a157c")),
+                new Stop(0.5, Color.web("#521166")),
                 new Stop(1, Color.web("#1a0638"))));
         background.setEffect(new Bloom(0.1));
 
