@@ -28,8 +28,17 @@ Lovely Shane P. Ong
 
 # About the Project 💜✨
 
-The OOP2 Capstone Project, titled TypeWiz, is a showcase of object-oriented programming principles applied to game development. This project was built using FXGL, a game development library for Java, instead of the traditional FXML framework. The decision to use FXGL allowed us to focus on creating an engaging and interactive experience while leveraging modern game development tools.
+**TypeWiz** is an action-packed typing game where you play as a wizard defending your tower from waves of monsters. Each enemy is tied to a word—type it correctly to cast spells and destroy them before they reach your tower. Use the Spacebar to attack, Shift to switch targets, and stay alert—if monsters breach your defenses, your health will drop. Lose all your health, and it’s game over. Press Enter to try again and sharpen your typing skills.
 
+Choose your challenge:
+
+💫 **APPRENTICE**: Fewer monsters, simpler words
+
+🧙‍♂️ **WIZARD**: Balanced difficulty for seasoned typists
+
+🔮 **ARCHMAGE**: Fast waves and tricky words to truly test your reflexes
+
+Can you survive the onslaught and become the ultimate typing wizard?
 # OOP Principles 🤓✨
 
 Our project highlights several key OOP principles:<br>
