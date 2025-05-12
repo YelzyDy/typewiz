@@ -58,7 +58,7 @@ public class TypeWizApp extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings settings) {
-        settings.setTitle("TypeWiz Login");
+        settings.setTitle("TypeWiz");
         settings.setWidth(1280);
         settings.setHeight(720);
         settings.setMainMenuEnabled(true);
