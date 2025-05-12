@@ -96,20 +96,11 @@ public class MainMenuScreen extends FXGLMenu {
 
 
         Button startButton = createWizardButton("START QUEST", () -> {
-            FXGL.play("sound-library/click.wav");
-
-            preloadAssetsInBackground(); // Do any prep here
-
-            // Run after a short pause (simulate loading)
-            FXGL.getGameTimer().runOnceAfter(() -> {
-                DifficultyMenuScreen screen = new DifficultyMenuScreen(
-                        () -> FXGL.getSceneService().popSubScene(),
-                        () -> runStartGameThread(Difficulty.APPRENTICE),
-                        () -> runStartGameThread(Difficulty.WIZARD),
-                        () -> runStartGameThread(Difficulty.ARCHMAGE)
-                );
-                FXGL.getSceneService().pushSubScene(screen);
-            }, Duration.seconds(0.3)); // same delay as Thread.sleep(300)
+            FXGL.play("sound-library/click.wav"); // plays the sound
+            FXGL.getSceneService().pushSubScene(new DifficultyMenuScreen(() -> FXGL.getSceneService().popSubScene(),
+                    () -> runStartGameThread(Difficulty.APPRENTICE),
+                    () -> runStartGameThread(Difficulty.WIZARD),
+                    () -> runStartGameThread(Difficulty.ARCHMAGE)));
         });
 
 

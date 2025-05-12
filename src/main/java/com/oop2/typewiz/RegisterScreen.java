@@ -2,6 +2,8 @@ package com.oop2.typewiz;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.scene.FXGLMenu;
+import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -22,24 +24,14 @@ import javafx.scene.text.Text;
 import javafx.scene.layout.Region;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
+import org.jetbrains.annotations.NotNull;
 
-public class RegisterScreen extends GameApplication {
+public class RegisterScreen extends FXGLMenu {
 
     private HBox root;
 
-    public Node getRoot() {
-        addRegisterUI(); // ensure the UI is initialized
-        return root;
-    }
-
-    @Override
-    protected void initSettings(GameSettings settings) {
-        settings.setTitle("TypeWiz Register");
-        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
-        settings.setWidth(1550);
-        settings.setHeight(800);
-        settings.setMainMenuEnabled(false);
-        settings.setGameMenuEnabled(false);
+    public RegisterScreen() {
+        super(MenuType.MAIN_MENU);
     }
 
     private void addRegisterUI() {

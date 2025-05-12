@@ -1,5 +1,6 @@
 package com.oop2.typewiz.GameplayComponents;
 
+import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.BoundingShape;
@@ -7,6 +8,7 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import com.oop2.typewiz.TypeWizApp;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -47,13 +49,13 @@ public class UIFactory {
     private static final Color UI_BG_COLOR = Color.rgb(30, 30, 50, 0.8);       // Dark blue/purple background
     private static final Color UI_TEXT_PRIMARY = Color.WHITE;
     private static final Color UI_TEXT_SECONDARY = Color.LIGHTGRAY;
-    
+
     // UI style constants
     private static final String FONT_FAMILY = "Arial";
     private static final double UI_CORNER_RADIUS = 15;
     private static final double UI_PANEL_OPACITY = 0.85;
     private static final double UI_BORDER_WIDTH = 2.0;
-    
+
     // Performance colors
     private static final Color GOOD_PERFORMANCE = Color.GREEN;
     private static final Color MEDIUM_PERFORMANCE = Color.YELLOW;
@@ -107,10 +109,10 @@ public class UIFactory {
 
         healthDisplay.getChildren().addAll(healthLabel, healthBarPane, healthText);
         healthDisplay.setUserData(new HealthDisplayData(healthBar, healthText, maxHealth));
-        
+
         return healthDisplay;
     }
-    
+
     /**
      * Updates the health bar with a new health value
      * @param healthDisplay The health display container
@@ -118,7 +120,7 @@ public class UIFactory {
      */
     public static void updateHealthBar(VBox healthDisplay, int currentHealth) {
         if (healthDisplay == null || healthDisplay.getUserData() == null) return;
-        
+
         HealthDisplayData data = (HealthDisplayData) healthDisplay.getUserData();
         double healthPercentage = (double) currentHealth / data.maxHealth;
         ((Rectangle)data.getComponent()).setWidth(200 * healthPercentage);
@@ -127,7 +129,7 @@ public class UIFactory {
         // Update color based on health with smoother gradient
         ((Rectangle)data.getComponent()).setFill(getHealthColor(currentHealth, data.maxHealth));
     }
-    
+
     private static Color getHealthColor(int health, int maxHealth) {
         double healthPercentage = (double) health / maxHealth;
         if (healthPercentage > 0.6) {
@@ -138,7 +140,7 @@ public class UIFactory {
             return Color.rgb(220, 50, 50); // Red
         }
     }
-    
+
     /**
      * Creates a top bar with score and wave display
      * @param initialScore Initial score value
@@ -195,13 +197,13 @@ public class UIFactory {
 
         // Add score and wave displays to top bar
         topBar.getChildren().addAll(scoreDisplay, waveDisplay);
-        
+
         // Store both texts in the userdata
         topBar.setUserData(new TopBarData(scoreText, waveText, maxWaves));
-        
+
         return topBar;
     }
-    
+
     /**
      * Updates the score display
      * @param topBar The top bar container
@@ -209,11 +211,11 @@ public class UIFactory {
      */
     public static void updateScore(HBox topBar, int score) {
         if (topBar == null || topBar.getUserData() == null) return;
-        
+
         TopBarData data = (TopBarData) topBar.getUserData();
         data.scoreText.setText(Integer.toString(score));
     }
-    
+
     /**
      * Updates the wave display
      * @param topBar The top bar container
@@ -221,11 +223,11 @@ public class UIFactory {
      */
     public static void updateWave(HBox topBar, int wave) {
         if (topBar == null || topBar.getUserData() == null) return;
-        
+
         TopBarData data = (TopBarData) topBar.getUserData();
         data.waveText.setText(wave + "/" + data.maxWaves);
     }
-    
+
     /**
      * Creates an instruction text display
      * @return A Text node for instructions
@@ -238,10 +240,10 @@ public class UIFactory {
         instructionText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 28));
         instructionText.setVisible(false);
         addTextGlow(instructionText, Color.ORANGE, 0.6);
-        
+
         return instructionText;
     }
-    
+
     /**
      * Creates a controls help text display
      * @return A Text node for controls help
@@ -253,10 +255,10 @@ public class UIFactory {
         controlsText.setFill(UI_TEXT_SECONDARY);
         controlsText.setFont(Font.font(FONT_FAMILY, 16));
         addTextGlow(controlsText, Color.WHITE, 0.2);
-        
+
         return controlsText;
     }
-    
+
     /**
      * Creates a stylish button
      * @param text Button text
@@ -292,16 +294,16 @@ public class UIFactory {
 
         // Stack text on background
         StackPane button = new StackPane(buttonBg, buttonText);
-        
+
         // Make button responsive and interactive
         button.setCursor(javafx.scene.Cursor.HAND); // Change cursor on hover
-        
+
         // Store original values for animations
         Color originalFill = (Color) buttonBg.getFill();
         Color originalStroke = (Color) buttonBg.getStroke();
         double originalRadius = buttonGlow.getRadius();
         double originalSpread = buttonGlow.getSpread();
-        
+
         // Add hover effect
         button.setOnMouseEntered(e -> {
             // Brighten background
@@ -313,7 +315,7 @@ public class UIFactory {
             button.setScaleX(1.05);
             button.setScaleY(1.05);
         });
-        
+
         // Reset on mouse exit
         button.setOnMouseExited(e -> {
             buttonBg.setFill(originalFill);
@@ -322,7 +324,7 @@ public class UIFactory {
             button.setScaleX(1.0);
             button.setScaleY(1.0);
         });
-        
+
         // Add click effect
         button.setOnMousePressed(e -> {
             // Darken background
@@ -334,14 +336,14 @@ public class UIFactory {
             button.setScaleY(0.95);
             // Add vibration effect for feedback
             javafx.animation.TranslateTransition tt = new javafx.animation.TranslateTransition(
-                javafx.util.Duration.millis(50), button);
+                    javafx.util.Duration.millis(50), button);
             tt.setByX(3);
             tt.setByY(0);
             tt.setCycleCount(2);
             tt.setAutoReverse(true);
             tt.play();
         });
-        
+
         // Reset on release
         button.setOnMouseReleased(e -> {
             buttonBg.setFill(originalFill);
@@ -374,10 +376,10 @@ public class UIFactory {
 
         performanceDisplay.getChildren().addAll(performanceLabel, performanceBar, performanceText);
         performanceDisplay.setUserData(new PerformanceData(performanceBar, performanceText));
-        
+
         return performanceDisplay;
     }
-    
+
     /**
      * Updates the performance display
      * @param performanceDisplay The performance display container
@@ -385,10 +387,10 @@ public class UIFactory {
      */
     public static void updatePerformanceDisplay(VBox performanceDisplay, double fps) {
         if (performanceDisplay == null || performanceDisplay.getUserData() == null) return;
-        
+
         PerformanceData data = (PerformanceData) performanceDisplay.getUserData();
         final double TARGET_FPS = 60.0;
-        
+
         // Update FPS text
         data.performanceText.setText(String.format("FPS: %.1f", fps));
 
@@ -407,7 +409,7 @@ public class UIFactory {
             ((Rectangle)data.getComponent()).setFill(POOR_PERFORMANCE);
         }
     }
-    
+
     // Helper methods for UI styling
     public static Background createPanelBackground(Color color, double cornerRadius) {
         return new Background(
@@ -445,7 +447,7 @@ public class UIFactory {
         shadow.setInput(glow);
         text.setEffect(shadow);
     }
-    
+
     // Inner classes to store UI component references
     /**
      * Generic base class for UI component data
@@ -453,32 +455,32 @@ public class UIFactory {
      */
     private static class DisplayData<T> {
         protected final T component;
-        
+
         DisplayData(T component) {
             this.component = component;
         }
-        
+
         public T getComponent() {
             return component;
         }
     }
-    
+
     private static class HealthDisplayData extends DisplayData<Rectangle> {
         final Text healthText;
         final int maxHealth;
-        
+
         HealthDisplayData(Rectangle healthBar, Text healthText, int maxHealth) {
             super(healthBar);
             this.healthText = healthText;
             this.maxHealth = maxHealth;
         }
     }
-    
+
     private static class TopBarData extends DisplayData<HBox> {
         final Text scoreText;
         final Text waveText;
         final int maxWaves;
-        
+
         TopBarData(Text scoreText, Text waveText, int maxWaves) {
             super(null);
             this.scoreText = scoreText;
@@ -486,10 +488,10 @@ public class UIFactory {
             this.maxWaves = maxWaves;
         }
     }
-    
+
     private static class PerformanceData extends DisplayData<Rectangle> {
         final Text performanceText;
-        
+
         PerformanceData(Rectangle performanceBar, Text performanceText) {
             super(performanceBar);
             this.performanceText = performanceText;
@@ -504,52 +506,52 @@ public class UIFactory {
         private final String name;
         private final T backgroundPath;
         private final T platformPath;
-        
+
         public Theme(String name, T backgroundPath, T platformPath) {
             this.name = name;
             this.backgroundPath = backgroundPath;
             this.platformPath = platformPath;
         }
-        
+
         public String getName() {
             return name;
         }
-        
+
         public T getBackgroundPath() {
             return backgroundPath;
         }
-        
+
         public T getPlatformPath() {
             return platformPath;
         }
     }
-    
+
     /**
      * Randomly selects a theme for the game (background and platform)
      * @return The selected theme name ("winter", "purple", or "fall")
      */
     private static boolean isFirstRun = true;
-    
+
     private static Theme<String> selectRandomTheme() {
         Theme<String>[] themes = new Theme[] {
-            new Theme<>("winter", 
-                "background-and-platforms/bg-winter_1280_720.png", 
-                "background-and-platforms/hdlargerplatform-winter.png"),
-            new Theme<>("purple", 
-                "background-and-platforms/bg-midnightpurple_1280_720.png", 
-                "background-and-platforms/hdlargerplatform-purple.png"),
-            new Theme<>("fall", 
-                "background-and-platforms/bg-fall_1280_720.png", 
-                "background-and-platforms/hdlargerplatform-fall.png")
+                new Theme<>("winter",
+                        "background-and-platforms/bg-winter_1280_720.png",
+                        "background-and-platforms/hdlargerplatform-winter.png"),
+                new Theme<>("purple",
+                        "background-and-platforms/bg-midnightpurple_1280_720.png",
+                        "background-and-platforms/hdlargerplatform-purple.png"),
+                new Theme<>("fall",
+                        "background-and-platforms/bg-fall_1280_720.png",
+                        "background-and-platforms/hdlargerplatform-fall.png")
         };
-        
+
         // Always select the purple theme on first run
         if (isFirstRun) {
             isFirstRun = false;
             // Return the purple theme (index 1)
             return themes[1];
         }
-        
+
         int randomIndex = (int)(Math.random() * themes.length);
         return themes[randomIndex];
     }
@@ -561,20 +563,20 @@ public class UIFactory {
      */
     public static void createBackground(int width, int height) {
         Theme<String> theme = selectRandomTheme();
-        
+
         // Store the selected theme for platform creation
         FXGL.getWorldProperties().setValue("currentTheme", theme.getName());
         FXGL.getWorldProperties().setValue("currentThemeObj", theme);
-        
+
         Image backgroundImage = FXGL.image(theme.getBackgroundPath());
         Rectangle background = new Rectangle(width, height);
         background.setFill(new ImagePattern(backgroundImage));
 
         FXGL.entityBuilder()
-            .at(0, 0)
-            .view(background)
-            .zIndex(-100)
-            .buildAndAttach();
+                .at(0, 0)
+                .view(background)
+                .zIndex(-100)
+                .buildAndAttach();
     }
 
     /**
@@ -590,7 +592,7 @@ public class UIFactory {
         } else {
             // Fallback to the old method if the theme object isn't available
             String themeName = FXGL.getWorldProperties().getString("currentTheme");
-            
+
             String platformFile;
             switch(themeName) {
                 case "purple":
@@ -604,12 +606,12 @@ public class UIFactory {
                     platformFile = "background-and-platforms/hdlargerplatform-winter.png";
                     break;
             }
-            
+
             Image platformImage = FXGL.image(platformFile);
             createPlatformEntity(platformImage);
         }
     }
-    
+
     /**
      * Creates the platform entity with the given image
      * @param platformImage The platform image to use
@@ -627,13 +629,13 @@ public class UIFactory {
         double platformOffsetX = (platformWidth - FXGL.getAppWidth()) / -2;
 
         FXGL.entityBuilder()
-            .type(Game.EntityType.PLATFORM)
-            .at(platformOffsetX, platformOffsetY)
-            .view(platformView)
-            .bbox(new HitBox(BoundingShape.box(platformWidth, platformHeight)))
-            .with(new PhysicsComponent())
-            .zIndex(10)
-            .buildAndAttach();
+                .type(Game.EntityType.PLATFORM)
+                .at(platformOffsetX, platformOffsetY)
+                .view(platformView)
+                .bbox(new HitBox(BoundingShape.box(platformWidth, platformHeight)))
+                .with(new PhysicsComponent())
+                .zIndex(10)
+                .buildAndAttach();
     }
 
     /**
@@ -657,32 +659,32 @@ public class UIFactory {
         double wizardScale = 0.30;
 
         FXGL.entityBuilder()
-            .type(Game.EntityType.PLAYER)
-            .at(-5, 50)
-            .view(wizardTexture)
-            .scale(wizardScale, wizardScale)
-            .bbox(new HitBox(BoundingShape.box(frameWidth * wizardScale, frameHeight * wizardScale)))
-            .zIndex(25)
-            .buildAndAttach();
+                .type(Game.EntityType.PLAYER)
+                .at(-5, 50)
+                .view(wizardTexture)
+                .scale(wizardScale, wizardScale)
+                .bbox(new HitBox(BoundingShape.box(frameWidth * wizardScale, frameHeight * wizardScale)))
+                .zIndex(25)
+                .buildAndAttach();
     }
 
     /**
      * Creates and sets up all UI elements
      * @param game Reference to the main Game class
      */
-    public static void createUI(Game game) {
+    public static void createUI(TypeWizApp game) {
         // Get the player manager directly from the game
         PlayerManager playerManager = game.getPlayerManager();
-        
+
         // Create health display with player's current health
         VBox healthDisplay = createHealthDisplay(
-            playerManager.getHealth(),
-            playerManager.getMaxHealth()
+                playerManager.getHealth(),
+                playerManager.getMaxHealth()
         );
-        
+
         // Set health display reference directly
         playerManager.setHealthDisplay(healthDisplay);
-        
+
         // Find and set the health text reference
         for (Node child : healthDisplay.getChildren()) {
             if (child instanceof Text) {
@@ -693,10 +695,10 @@ public class UIFactory {
                 }
             }
         }
-        
+
         // Create top bar with initial score and wave
         HBox topBar = createTopBar(playerManager.getScore(), 1, 10);
-        
+
         // Find and set score text reference
         for (Node child : topBar.getChildren()) {
             if (child instanceof VBox) {
@@ -709,10 +711,10 @@ public class UIFactory {
                 }
             }
         }
-        
+
         // Create performance display
         VBox performanceDisplay = createPerformanceDisplay();
-        
+
         // Add UI elements to the scene
         FXGL.addUINode(healthDisplay);
         FXGL.addUINode(topBar);
@@ -726,7 +728,7 @@ public class UIFactory {
     public static void updatePerformanceDisplay(double tpf) {
         // Calculate FPS
         double fps = 1.0 / Math.max(tpf, 0.0001);
-        
+
         // Find and update the performance display
         for (Node node : FXGL.getGameScene().getUINodes()) {
             if (node instanceof VBox) {
@@ -753,7 +755,7 @@ public class UIFactory {
             @Override
             public Text create(LabelConfig config) {
                 Text label = new Text(config.text);
-                
+
                 // Apply styling based on style type
                 switch(config.style) {
                     case "title":
@@ -777,25 +779,25 @@ public class UIFactory {
                         label.setFill(UI_TEXT_PRIMARY);
                         break;
                 }
-                
+
                 return label;
             }
         }, new LabelConfig(text, style));
     }
-    
+
     /**
      * Configuration class for label creation
      */
     private static class LabelConfig {
         final String text;
         final String style;
-        
+
         LabelConfig(String text, String style) {
             this.text = text;
             this.style = style;
         }
     }
-    
+
     /**
      * Generic component factory method for creating UI components
      * @param <T> Type of component to create
@@ -806,16 +808,16 @@ public class UIFactory {
      */
     public static <T extends Node, P> T createComponent(ComponentCreator<T, P> creator, P config) {
         T component = creator.create(config);
-        
+
         // Add default styling if component is a Region
         if (component instanceof Region) {
             Region region = (Region) component;
             region.setPadding(new Insets(5));
         }
-        
+
         return component;
     }
-    
+
     /**
      * Functional interface for component creation
      * @param <T> Type of component to create
@@ -846,10 +848,10 @@ public class UIFactory {
                     System.err.println("Failed to create container: " + e.getMessage());
                     return (T) new VBox();
                 }
-                
+
                 // Apply basic styling
                 container.setPadding(new Insets(10));
-                
+
                 // Apply style-specific styling
                 switch(styleType) {
                     case "panel":
@@ -869,7 +871,7 @@ public class UIFactory {
                         container.setBackground(null);
                         break;
                 }
-                
+
                 return container;
             }
         }, style);
@@ -885,16 +887,16 @@ public class UIFactory {
         // Create main container using the generic container factory
         VBox panel = createGameContainer(VBox.class, "panel");
         panel.setSpacing(10);
-        
+
         // Create title using the generic label factory
         Text titleLabel = createGameLabel(title, "title");
-        
+
         // Create content using the generic label factory
         Text contentLabel = createGameLabel(content, "info");
-        
+
         // Add title and content to panel
         panel.getChildren().addAll(titleLabel, contentLabel);
-        
+
         return panel;
     }
-} 
+}

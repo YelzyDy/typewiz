@@ -30,7 +30,7 @@ import java.util.ArrayList;
  * - Model: GameStateManager, EntityManager, PlayerManager, WaveManager
  * - View: UIFactory, GamePromptFactory, GargoyleFactory
  * - Controller: InputManager, Game (as coordinator)
- * 
+ *
  * @implNote This class should not be launched directly.
  *           Use {@link com.oop2.typewiz.GameLauncher} instead.
  */
@@ -51,7 +51,7 @@ public class Game extends GameApplication {
     private static final double GARGOYLE_FRAME_WIDTH = 288;
     private static final double GARGOYLE_FRAME_HEIGHT = 312;
     private static final double GARGOYLE_SCALE = 0.6;
-    
+
     // Manager instances (MVC components)
     private GameStateManager stateManager;     // Model
     private EntityManager entityManager;       // Model
@@ -78,20 +78,20 @@ public class Game extends GameApplication {
     protected void initGame() {
         // Initialize managers first (Model and Controller components)
         initializeManagers();
-        
+
         // Add global event filter to properly handle shift key
         setupGlobalKeyHandling();
-        
+
         // Initialize the game environment (View setup)
         setupGameEnvironment();
-        
+
         // Set up state handlers
         setupStateHandlers();
-        
+
         // Start the first wave
         stateManager.announceWave(1);
     }
-    
+
     /**
      * Sets up the game environment (View component)
      */
@@ -99,19 +99,19 @@ public class Game extends GameApplication {
         // Set up background and platform
         UIFactory.createBackground(FXGL.getAppWidth(), FXGL.getAppHeight());
         UIFactory.createPlatform();
-        
+
         // Add the wizard character
         UIFactory.createWizard();
-        
+
         // Initialize animations for entities
         GargoyleFactory.initializeAnimations();
         GrimougeFactory.initializeAnimations();
         VyleyeFactory.initializeAnimations();
-        
+
         // Set up UI elements
-        UIFactory.createUI(this);
+//        UIFactory.createUI(this);
     }
-    
+
     /**
      * Initializes all manager classes (Model and Controller components)
      */
@@ -120,22 +120,22 @@ public class Game extends GameApplication {
         stateManager = new GameStateManager();
         entityManager = new EntityManager(FXGL.getAppWidth(), FXGL.getAppHeight());
         playerManager = new PlayerManager();
-        
+
         // Create controller components
         inputManager = new InputManager(entityManager, playerManager, stateManager);
-        
+
         // Create and configure the wave manager
         waveManager = new WaveManager(entityManager, stateManager, this::getRandomWordForWave, FXGL.getAppHeight());
-        
+
         // Register managers in world properties for access from other components
         FXGL.getWorldProperties().setValue("playerManager", playerManager);
         FXGL.getWorldProperties().setValue("inputManager", inputManager);
-        
+
         // Set up input handling
         inputManager.setupInput();
         inputManager.setRestartGameCallback(v -> restartGame());
     }
-    
+
     /**
      * Word generator based on wave difficulty
      */
@@ -152,22 +152,22 @@ public class Game extends GameApplication {
         stateManager.setStateEntryAction(GameStateManager.GameState.WAVE_ANNOUNCEMENT, wave -> {
             // Start the wave to initialize parameters
             waveManager.startWave();
-            
+
             // Reset any current input state to prepare for the new wave
             inputManager.reset();
-            
+
             // Update the wave counter in the UI
             updateWaveUI(waveManager.getCurrentWave());
-            
+
             // Show wave announcement and start wave
             Node announcementNode = GamePromptFactory.createWaveAnnouncement(
-                waveManager.getCurrentWave(), waveManager.getMaxWaves());
-            
+                    waveManager.getCurrentWave(), waveManager.getMaxWaves());
+
             Entity announcement = FXGL.entityBuilder()
-                .view(announcementNode)
-                .zIndex(50)
-                .buildAndAttach();
-            
+                    .view(announcementNode)
+                    .zIndex(50)
+                    .buildAndAttach();
+
             // Delay the transition to PLAYING state
             FXGL.runOnce(() -> {
                 announcement.removeFromWorld();
@@ -175,43 +175,43 @@ public class Game extends GameApplication {
                 waveManager.startSpawning();
             }, Duration.seconds(2.0));
         });
-        
-        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message -> 
-            showEndGameScreen("Game Over!", false));
-        
-        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message -> 
-            showEndGameScreen("Victory! Game Complete!", true));
+
+        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message ->
+                showEndGameScreen("Game Over!", false));
+
+        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message ->
+                showEndGameScreen("Victory! Game Complete!", true));
     }
-    
+
     /**
      * Shows game over or victory screen
      */
     private void showEndGameScreen(String title, boolean isVictory) {
         // Pass character count to statistics factory
         StatsUIFactory.setTotalCharactersTyped(playerManager.getTotalCharactersTyped());
-        
+
         // Create game over screen with all statistics
         Node endGameScreen = GamePromptFactory.createGameOverScreen(
-            title,
-            playerManager.getScore(),
-            playerManager.calculateWPM(),
-            playerManager.calculateRawWPM(),
-            playerManager.calculateAccuracy(),
-            playerManager.calculateConsistency(),
-            playerManager.getWpmOverTime(),
-            playerManager.getAccuracyOverTime()
+                title,
+                playerManager.getScore(),
+                playerManager.calculateWPM(),
+                playerManager.calculateRawWPM(),
+                playerManager.calculateAccuracy(),
+                playerManager.calculateConsistency(),
+                playerManager.getWpmOverTime(),
+                playerManager.getAccuracyOverTime()
         );
-        
+
         // Add a unique ID to the screen for easy identification
         endGameScreen.setId(isVictory ? "victory-screen" : "game-over-screen");
-        
+
         // Set up the play again button
         GamePromptFactory.setupPlayAgainButton(endGameScreen, this::restartGame);
-        
+
         FXGL.entityBuilder()
-            .view(endGameScreen)
-            .zIndex(100)
-            .buildAndAttach();
+                .view(endGameScreen)
+                .zIndex(100)
+                .buildAndAttach();
     }
 
     @Override
@@ -237,13 +237,13 @@ public class Game extends GameApplication {
                 stateManager.announceWave(waveManager.getCurrentWave());
             }
         }
-        
+
         // Update entity positions
         entityManager.updateEntities(tpf, waveManager.getCurrentWaveSpeedMultiplier());
-        
+
         // Process entity removals
         entityManager.processRemovals();
-        
+
         // Update performance display
         UIFactory.updatePerformanceDisplay(tpf);
     }
@@ -259,40 +259,40 @@ public class Game extends GameApplication {
                 entitiesToRemove.add(entity);
             }
         }
-        
+
         // Remove them outside the iteration to avoid concurrent modification
         for (Entity entity : entitiesToRemove) {
             entity.removeFromWorld();
         }
-        
+
         // Also check UI nodes
         List<Node> nodesToRemove = new ArrayList<>();
         for (Node node : FXGL.getGameScene().getUINodes()) {
-            if (node.getId() != null && 
-               (node.getId().equals("game-over-screen") || 
-                node.getId().equals("victory-screen"))) {
+            if (node.getId() != null &&
+                    (node.getId().equals("game-over-screen") ||
+                            node.getId().equals("victory-screen"))) {
                 nodesToRemove.add(node);
             }
         }
-        
+
         // Remove UI nodes
         for (Node node : nodesToRemove) {
             FXGL.removeUINode(node);
         }
-        
+
         // Reset all managers
         entityManager.clear();
         playerManager.reset();
         playerManager.resetHealth();
         inputManager.reset();
         waveManager.reset();
-        
+
         // Reset UI to wave 1
         updateWaveUI(1);
-        
+
         // Force game state to PLAYING before starting the wave
         stateManager.startPlaying(null);
-        
+
         // Small delay before starting a new game to ensure clean state
         FXGL.getGameTimer().runOnceAfter(() -> {
             // Start a new wave
@@ -325,7 +325,7 @@ public class Game extends GameApplication {
         for (Node node : FXGL.getGameScene().getUINodes()) {
             if (node instanceof HBox) {
                 HBox topBar = (HBox) node;
-                
+
                 // Check if this is the top bar by looking for wave display
                 for (Node child : topBar.getChildren()) {
                     if (child instanceof VBox) {
@@ -351,7 +351,7 @@ public class Game extends GameApplication {
         // Track the last time the shift key was processed to prevent rapid repeats
         final long[] lastShiftKeyTime = {0};
         final long SHIFT_DEBOUNCE_MS = 200; // Debounce time in milliseconds
-        
+
         // Only handle SHIFT key presses for cycling through targets
         FXGL.getInput().addEventHandler(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
@@ -367,17 +367,12 @@ public class Game extends GameApplication {
                 }
             }
         });
-        
+
         // No need to handle shift key release events
     }
 
-    /**
-     * Internal method to launch the game
-     * @deprecated Use GameLauncher instead for launching the game
-     * @param args Command line arguments
-     */
-    @Deprecated
-    public static void launch(String[] args) {
-        com.almasb.fxgl.app.GameApplication.launch(Game.class, args);
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

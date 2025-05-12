@@ -2,6 +2,8 @@ package com.oop2.typewiz;
 
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.almasb.fxgl.app.scene.FXGLMenu;
+import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
 import javafx.geometry.Insets;
@@ -18,28 +20,19 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import org.jetbrains.annotations.NotNull;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
 
-public class LoginScreen extends GameApplication {
+public class LoginScreen extends FXGLMenu {
     private HBox root; // class-level root
 
-    public Node getRoot() {
-        addLoginUI(); // ensure UI is initialized
-        return root;
-    }
-
-    @Override
-    protected void initSettings(GameSettings settings) {
-        FXGL.getAssetLoader().loadSound("sound-library/click.wav");
-        settings.setTitle("TypeWiz Login");
-        settings.setWidth(1550);
-        settings.setHeight(800);
-        settings.setMainMenuEnabled(false);
-        settings.setGameMenuEnabled(false);
-
+    public LoginScreen() {
+        super(MenuType.MAIN_MENU);
+        addLoginUI();
+        getContentRoot().getChildren().add(root);
     }
 
     public void addLoginUI() {
@@ -283,8 +276,5 @@ public class LoginScreen extends GameApplication {
 
         return box;
     }
-//
-//    public static void main(String[] args) {
-//        launch(args);
-//    }
+
 }

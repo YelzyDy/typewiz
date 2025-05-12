@@ -1,6 +1,8 @@
 package com.oop2.typewiz;
 
+import com.almasb.fxgl.app.scene.FXGLMenu;
 import com.almasb.fxgl.app.scene.LoadingScene;
+import com.almasb.fxgl.app.scene.MenuType;
 import com.almasb.fxgl.audio.Music;
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
@@ -20,12 +22,13 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-public class LoadingScreen extends LoadingScene {
+public class LoadingScreen extends FXGLMenu {
 
     private Rectangle progressBar;
     private StackPane root;
 
     public LoadingScreen() {
+        super(MenuType.MAIN_MENU);
         // Gradient background
 
 // Play the sound after the delay
@@ -121,8 +124,7 @@ public class LoadingScreen extends LoadingScene {
         }
 
         timeline.setOnFinished(e -> {
-            FXGL.getGameScene().removeUINode(root);
-            FXGL.getGameScene().getContentRoot().getChildren().add(new MainMenuScreen().getContentRoot());
+            FXGL.getSceneService().pushSubScene(new MainMenuScreen());
         });
 
         timeline.play();
