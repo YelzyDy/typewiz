@@ -27,6 +27,7 @@ Lovely Shane P. Ong
 
 ---
 
+
 ## About the Project 💜✨
 
 **TypeWiz** is an action-packed typing game where you play as a wizard defending your tower from waves of flying mobs. Each enemy is tied to a word—type it correctly to cast spells and destroy them before they reach your tower. Use the following controls to enhance your experience:
@@ -35,6 +36,8 @@ Lovely Shane P. Ong
 - **Enter**: Restart the game after losing.
 
 Stay alert—if monsters breach your defenses, your health will drop. Lose all your health, and it’s game over. Press Enter to try again and sharpen your typing skills.
+
+<img src="https://github.com/user-attachments/assets/473d53ad-e2f5-4f8d-8aea-6b65eaf959f5" width="150" height="130" align="left" />
 
 ### Difficulty Levels:
 - 💫 **APPRENTICE**: Fewer monsters, simpler words.
@@ -62,6 +65,8 @@ Our project highlights several key OOP principles:
 
 We incorporated several design patterns to ensure maintainable and efficient code:
 
+<img src="https://github.com/user-attachments/assets/f4be2632-bdb9-410b-b1a6-00f6fe8e5ee6" width="150" height="110" align="right" />
+
 - **Singleton Pattern:** Used for managing game states and shared resources like the game timer and score tracker.
 - **Observer Pattern:** Implemented for event-driven communication between game components, such as notifying observers when the player achieves a milestone.
 - **Factory Pattern:** Utilized for creating game entities dynamically without exposing the instantiation logic.
@@ -85,6 +90,8 @@ To enhance the game's functionality, we integrated JDBC:
 ---
 
 ## Features
+<img src="https://github.com/user-attachments/assets/8aa88937-db30-46b6-adcf-b6c71043fcd3" width="180" height="140" align="right" />
+
 - **Real-time Typing-based Combat:** Type words to cast spells and defeat enemies.
 - **Dynamic Difficulty Levels:** Choose from Apprentice, Wizard, or Archmage modes to match your skill level.
 - **Leaderboard Integration:** Track high scores and compete with others.
