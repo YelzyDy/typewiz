@@ -62,7 +62,7 @@ public class TypeWizApp extends GameApplication {
         settings.setWidth(1280);
         settings.setHeight(720);
         settings.setMainMenuEnabled(true);
-        settings.setGameMenuEnabled(false);
+        settings.setGameMenuEnabled(true);
         settings.setSceneFactory(new CustomSceneFactory());
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
