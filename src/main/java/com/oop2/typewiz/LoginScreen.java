@@ -39,7 +39,7 @@ public class LoginScreen extends FXGLMenu {
         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1280, 720);
-        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+       // root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
 //        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
         root.setStyle(
                 "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
@@ -134,6 +134,10 @@ public class LoginScreen extends FXGLMenu {
                 buttonBox
         );
         root.getChildren().addAll(leftBox, rightBox);
+        FXGL.getGameScene().getRoot().setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+        javafx.application.Platform.runLater(() ->
+                root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR)
+        );
         applyFadeInAnimation(root);
     }
 
