@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+
+import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.Node;
 
 /**
@@ -15,7 +17,7 @@ import javafx.scene.Node;
  * This class implements the Object Pool pattern to efficiently reuse entities.
  */
 public class EntityManager {
-    
+
     private List<Entity> activeEntities;
     private List<Entity> gargoylePool;
     private List<Entity> grimougePool;
@@ -24,36 +26,36 @@ public class EntityManager {
     private SpatialPartitioning spatialPartitioning;
     private double width;
     private double height;
-    
+
     private static final int BATCH_SIZE = 50;
     private static final int MAX_GARGOYLES = 10;
     private static final int MAX_GRIMOUGES = 10;
     private static final int MAX_VYLEYES = 10;
     private static final int MAX_ACTIVE_ENTITIES = 12; // Maximum entities on screen at once
-    
+
     // Constants for entity movement
     private static final double GARGOYLE_SPEED = 50.0;
     private static final double GARGOYLE_FRAME_WIDTH = 288;
     private static final double GARGOYLE_FRAME_HEIGHT = 312;
     private static final double GARGOYLE_SCALE = 0.6;
-    
+
     private static final double GRIMOUGE_SPEED = 50.0;
     private static final int GRIMOUGE_SPRITE_SHEET_WIDTH = 7200;
     private static final int GRIMOUGE_FRAME_COUNT = 9;
     private static final double GRIMOUGE_FRAME_WIDTH = GRIMOUGE_SPRITE_SHEET_WIDTH / GRIMOUGE_FRAME_COUNT; // 800px per frame
     private static final double GRIMOUGE_FRAME_HEIGHT = 400;
     private static final double GRIMOUGE_SCALE = 0.6;
-    
+
     private static final double VYLEYE_SPEED = 50.0;
     private static final int VYLEYE_SPRITE_SHEET_WIDTH = 5600;
     private static final int VYLEYE_FRAME_COUNT = 7;
     private static final double VYLEYE_FRAME_WIDTH = VYLEYE_SPRITE_SHEET_WIDTH / VYLEYE_FRAME_COUNT; // 800px per frame
     private static final double VYLEYE_FRAME_HEIGHT = 400;
     private static final double VYLEYE_SCALE = 0.6;
-    
+
     /**
      * Creates a new EntityManager with initialized pools and spatial partitioning
-     * 
+     *
      * @param width Width of the game area
      * @param height Height of the game area
      */
@@ -66,13 +68,13 @@ public class EntityManager {
         vyleyePool = new ArrayList<>(MAX_VYLEYES);
         entitiesToRemove = new ArrayList<>(BATCH_SIZE);
         spatialPartitioning = new SpatialPartitioning(100, width, height);
-        
+
         // Pre-initialize the entity pools
         initializeGargoylePool();
         initializeGrimougePool();
         initializeVyleyePool();
     }
-    
+
     /**
      * Initializes the gargoyle entity pool
      */
@@ -82,12 +84,12 @@ public class EntityManager {
                     .type(Game.EntityType.GARGOYLE)
                     .zIndex(25)
                     .build();
-            
+
             // Add to pool
             gargoylePool.add(gargoyleEntity);
         }
     }
-    
+
     /**
      * Initializes the grimouge entity pool
      */
@@ -97,12 +99,12 @@ public class EntityManager {
                     .type(Game.EntityType.GRIMOUGE)
                     .zIndex(25)
                     .build();
-            
+
             // Add to pool
             grimougePool.add(grimougeEntity);
         }
     }
-    
+
     /**
      * Initializes the vyleye entity pool
      */
@@ -112,15 +114,15 @@ public class EntityManager {
                     .type(Game.EntityType.VYLEYE)
                     .zIndex(25)
                     .build();
-            
+
             // Add to pool
             vyleyePool.add(vyleyeEntity);
         }
     }
-    
+
     /**
      * Gets a gargoyle entity from the pool or creates a new one if needed
-     * 
+     *
      * @return An available gargoyle entity
      */
     public Entity getGargoyleFromPool() {
@@ -132,14 +134,14 @@ public class EntityManager {
                     .build();
             return gargoyleEntity;
         }
-        
+
         // Get and remove the last entity from the pool
         return gargoylePool.remove(gargoylePool.size() - 1);
     }
-    
+
     /**
      * Gets a grimouge entity from the pool or creates a new one if needed
-     * 
+     *
      * @return An available grimouge entity
      */
     public Entity getGrimougeFromPool() {
@@ -151,14 +153,14 @@ public class EntityManager {
                     .build();
             return grimougeEntity;
         }
-        
+
         // Get and remove the last entity from the pool
         return grimougePool.remove(grimougePool.size() - 1);
     }
-    
+
     /**
      * Gets a vyleye entity from the pool or creates a new one if needed
-     * 
+     *
      * @return An available vyleye entity
      */
     public Entity getVyleyeFromPool() {
@@ -170,14 +172,14 @@ public class EntityManager {
                     .build();
             return vyleyeEntity;
         }
-        
+
         // Get and remove the last entity from the pool
         return vyleyePool.remove(vyleyePool.size() - 1);
     }
-    
+
     /**
      * Returns an entity to the gargoyle pool for reuse
-     * 
+     *
      * @param entity The entity to return to the pool
      */
     public void returnGargoyleToPool(Entity entity) {
@@ -189,10 +191,10 @@ public class EntityManager {
             gargoylePool.add(entity);
         }
     }
-    
+
     /**
      * Returns an entity to the grimouge pool for reuse
-     * 
+     *
      * @param entity The entity to return to the pool
      */
     public void returnGrimougeToPool(Entity entity) {
@@ -204,10 +206,10 @@ public class EntityManager {
             grimougePool.add(entity);
         }
     }
-    
+
     /**
      * Returns an entity to the vyleye pool for reuse
-     * 
+     *
      * @param entity The entity to return to the pool
      */
     public void returnVyleyeToPool(Entity entity) {
@@ -219,10 +221,10 @@ public class EntityManager {
             vyleyePool.add(entity);
         }
     }
-    
+
     /**
      * Adds an entity to the active entities list and updates spatial partitioning
-     * 
+     *
      * @param entity The entity to add
      * @return true if entity was added, false if limit reached
      */
@@ -233,10 +235,10 @@ public class EntityManager {
                 System.out.println("Maximum active entities limit reached, not adding new entity");
                 return false;
             }
-            
+
             activeEntities.add(entity);
             spatialPartitioning.updateEntity(entity);
-            
+
             // Ensure entity is attached to world
             if (!entity.isActive()) {
                 System.out.println("Entity was not active, attaching to world: " + entity);
@@ -248,49 +250,49 @@ public class EntityManager {
         }
         return false;
     }
-    
+
     /**
      * Checks if adding more entities is possible
-     * 
+     *
      * @return true if more entities can be added, false if at max capacity
      */
     public boolean canAddMoreEntities() {
         return getActiveEnemies().size() < MAX_ACTIVE_ENTITIES;
     }
-    
+
     /**
      * Gets the maximum number of active entities allowed
-     * 
+     *
      * @return The maximum number of active entities
      */
     public int getMaxActiveEntities() {
         return MAX_ACTIVE_ENTITIES;
     }
-    
+
     /**
      * Gets the number of slots available for new entities
-     * 
+     *
      * @return Number of available entity slots
      */
     public int getAvailableEntitySlots() {
         return Math.max(0, MAX_ACTIVE_ENTITIES - getActiveEnemies().size());
     }
-    
+
     /**
      * Removes an entity from the active entities list and returns it to the pool if applicable
-     * 
+     *
      * @param entity The entity to remove
      */
     public void removeEntity(Entity entity) {
         if (entity != null) {
             activeEntities.remove(entity);
-            
+
             if (entity.isActive()) {
                 entity.removeFromWorld();
             }
-            
+
             spatialPartitioning.removeEntity(entity);
-            
+
             // Return entity to appropriate pool based on type
             if (entity.isType(Game.EntityType.GARGOYLE)) {
                 gargoylePool.add(entity);
@@ -301,10 +303,10 @@ public class EntityManager {
             }
         }
     }
-    
+
     /**
      * Marks an entity for removal in the next update cycle
-     * 
+     *
      * @param entity The entity to mark for removal
      */
     public void markForRemoval(Entity entity) {
@@ -312,7 +314,7 @@ public class EntityManager {
             entitiesToRemove.add(entity);
         }
     }
-    
+
     /**
      * Processes all entities marked for removal
      */
@@ -322,19 +324,19 @@ public class EntityManager {
         }
         entitiesToRemove.clear();
     }
-    
+
     /**
      * Gets the list of active entities
-     * 
+     *
      * @return List of active entities
      */
     public List<Entity> getActiveEntities() {
         return new ArrayList<>(activeEntities);
     }
-    
+
     /**
      * Gets active entities of a specific type
-     * 
+     *
      * @param type The entity type to filter by
      * @return List of active entities of the specified type
      */
@@ -347,37 +349,37 @@ public class EntityManager {
         }
         return result;
     }
-    
+
     /**
      * Gets the active gargoyle entities
-     * 
+     *
      * @return List of active gargoyle entities
      */
     public List<Entity> getActiveGargoyles() {
         return getActiveEntitiesByType(Game.EntityType.GARGOYLE);
     }
-    
+
     /**
      * Gets the active grimouge entities
-     * 
+     *
      * @return List of active grimouge entities
      */
     public List<Entity> getActiveGrimouges() {
         return getActiveEntitiesByType(Game.EntityType.GRIMOUGE);
     }
-    
+
     /**
      * Gets the active vyleye entities
-     * 
+     *
      * @return List of active vyleye entities
      */
     public List<Entity> getActiveVyleyes() {
         return getActiveEntitiesByType(Game.EntityType.VYLEYE);
     }
-    
+
     /**
      * Gets all active enemy entities (gargoyles, grimouges, and vyleyes)
-     * 
+     *
      * @return List of all active enemy entities
      */
     public List<Entity> getActiveEnemies() {
@@ -387,10 +389,10 @@ public class EntityManager {
         enemies.addAll(getActiveVyleyes());
         return enemies;
     }
-    
+
     /**
      * Removes all active entities of a specified type
-     * 
+     *
      * @param type The entity type to remove
      */
     public void removeAllEntitiesOfType(Game.EntityType type) {
@@ -399,10 +401,10 @@ public class EntityManager {
             removeEntity(entity);
         }
     }
-    
+
     /**
      * Finds entities matching a predicate
-     * 
+     *
      * @param predicate The predicate to match entities against
      * @return List of matching entities
      */
@@ -415,23 +417,23 @@ public class EntityManager {
         }
         return result;
     }
-    
+
     /**
      * Updates the spatial partitioning for all active entities
      */
     public void updateSpatialPartitioning() {
         spatialPartitioning.batchUpdate(activeEntities);
     }
-    
+
     /**
      * Gets the spatial partitioning system
-     * 
+     *
      * @return The spatial partitioning system
      */
     public SpatialPartitioning getSpatialPartitioning() {
         return spatialPartitioning;
     }
-    
+
     /**
      * Clears all entities and resets the manager
      */
@@ -442,11 +444,11 @@ public class EntityManager {
                 entity.removeFromWorld();
             }
         }
-        
+
         // Clear all lists
         activeEntities.clear();
         entitiesToRemove.clear();
-        
+
         // Reinitialize the pools
         gargoylePool.clear();
         grimougePool.clear();
@@ -454,11 +456,11 @@ public class EntityManager {
         initializeGargoylePool();
         initializeGrimougePool();
         initializeVyleyePool();
-        
+
         // Reset spatial partitioning
         spatialPartitioning.clear();
     }
-    
+
     /**
      * Updates all active entities
      * @param tpf Time per frame
@@ -467,14 +469,14 @@ public class EntityManager {
     public void updateEntities(double tpf, double speedMultiplier) {
         // Process all active gargoyles
         updateGargoyles(tpf, speedMultiplier);
-        
+
         // Process all active grimouges
         updateGrimouges(tpf, speedMultiplier);
-        
+
         // Process all active vyleyes
         updateVyleyes(tpf, speedMultiplier);
     }
-    
+
     /**
      * Updates all active gargoyle entities
      * @param tpf Time per frame
@@ -542,7 +544,7 @@ public class EntityManager {
             spatialPartitioning.updateEntity(gargoyle);
         }
     }
-    
+
     /**
      * Updates all active grimouge entities
      * @param tpf Time per frame
@@ -610,7 +612,7 @@ public class EntityManager {
             spatialPartitioning.updateEntity(grimouge);
         }
     }
-    
+
     /**
      * Updates all active vyleye entities
      * @param tpf Time per frame
@@ -678,7 +680,7 @@ public class EntityManager {
             spatialPartitioning.updateEntity(vyleye);
         }
     }
-    
+
     /**
      * Updates animation for an entity
      * @param entity The entity to update
@@ -688,9 +690,9 @@ public class EntityManager {
         if (entity.getViewComponent() != null && !entity.getViewComponent().getChildren().isEmpty()) {
             Node view = entity.getViewComponent().getChildren().get(0);
             if (view != null) {
-                Node viewNode = view instanceof javafx.scene.layout.StackPane ? 
-                    ((javafx.scene.layout.StackPane) view).getChildren().get(0) : view;
-                
+                Node viewNode = view instanceof javafx.scene.layout.StackPane ?
+                        ((javafx.scene.layout.StackPane) view).getChildren().get(0) : view;
+
                 if (viewNode instanceof AnimatedTexture) {
                     AnimatedTexture texture = (AnimatedTexture) viewNode;
                     double animationTime = 0.0;
@@ -698,6 +700,13 @@ public class EntityManager {
                         animationTime = entity.getDouble("animationTime");
                     }
                     animationTime += tpf;
+
+                    // Play wing flap sound at certain animation frames
+                    if (animationTime >= 1.5) { // Play sound every 0.2 seconds of animation
+                        SoundManager.getInstance().playWingFlap();
+                        animationTime = 0; // Reset animation timer
+                    }
+
                     entity.setProperty("animationTime", animationTime);
 
                     // Update the animation frame
@@ -705,8 +714,20 @@ public class EntityManager {
                 }
             }
         }
+
+        // Update visibility flag once entity is on screen
+        try {
+            if (!entity.getBoolean("hasBeenVisible")) {
+                if (isEntityVisible(entity)) {
+                    entity.setProperty("hasBeenVisible", true);
+                }
+            }
+        } catch (Exception e) {
+            // Skip visibility update if properties are missing
+            System.err.println("Error updating entity visibility: " + e.getMessage());
+        }
     }
-    
+
     /**
      * Checks if an entity is visible on screen
      * @param entity The entity to check

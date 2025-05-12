@@ -9,6 +9,7 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.*;
@@ -78,6 +79,10 @@ public class Game extends GameApplication {
     protected void initGame() {
         // Initialize managers first (Model and Controller components)
         initializeManagers();
+
+        // Start game music with fade in
+        SoundManager.getInstance().playBGM("game");
+        SoundManager.getInstance().fadeInBGM(Duration.seconds(2.0));
 
         // Add global event filter to properly handle shift key
         setupGlobalKeyHandling();
@@ -150,6 +155,9 @@ public class Game extends GameApplication {
     private void setupStateHandlers() {
         // Set actions for state transitions
         stateManager.setStateEntryAction(GameStateManager.GameState.WAVE_ANNOUNCEMENT, wave -> {
+            // Play wave announcement sound
+            SoundManager.getInstance().playWaveAnnounce();
+
             // Start the wave to initialize parameters
             waveManager.startWave();
 
@@ -176,11 +184,19 @@ public class Game extends GameApplication {
             }, Duration.seconds(2.0));
         });
 
-        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message ->
-                showEndGameScreen("Game Over!", false));
+        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message -> {
+            // Play game over sound and fade out music
+            SoundManager.getInstance().playGameOver();
+            SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
+            showEndGameScreen("Game Over!", false);
+        });
 
-        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message ->
-                showEndGameScreen("Victory! Game Complete!", true));
+        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message -> {
+            // Play victory sound and fade out music
+            SoundManager.getInstance().playVictory();
+            SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
+            showEndGameScreen("Victory! Game Complete!", true);
+        });
     }
 
     /**
@@ -252,6 +268,10 @@ public class Game extends GameApplication {
      * Restarts the game by resetting all components
      */
     private void restartGame() {
+        // Start game music again
+        SoundManager.getInstance().playBGM("game");
+        SoundManager.getInstance().fadeInBGM(Duration.seconds(1.0));
+
         // Remove game over or victory screens
         List<Entity> entitiesToRemove = new ArrayList<>();
         for (Entity entity : FXGL.getGameWorld().getEntities()) {

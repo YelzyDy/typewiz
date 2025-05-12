@@ -6,6 +6,7 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.oop2.typewiz.GameplayComponents.*;
 import com.oop2.typewiz.util.CustomSceneFactory;
+import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.ImageCursor;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -375,6 +376,10 @@ public class TypeWizApp extends GameApplication {
                     // Debounce logic to prevent too rapid cycling
                     long currentTime = System.currentTimeMillis();
                     if (currentTime - lastShiftKeyTime[0] > SHIFT_DEBOUNCE_MS) {
+                        System.out.println("Shift key pressed - cycling targets");
+                        // Play shift cycle sound
+                        SoundManager.getInstance().playShiftCycle();
+                        // Cycle to next target
                         inputManager.cycleToNextWordBlock();
                         lastShiftKeyTime[0] = currentTime;
                     }
@@ -382,8 +387,6 @@ public class TypeWizApp extends GameApplication {
                 }
             }
         });
-
-        // No need to handle shift key release events
     }
 
 

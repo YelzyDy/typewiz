@@ -15,4 +15,5 @@ open module TypeWiz {
     // Export game packages explicitly to FXGL
     exports com.oop2.typewiz;
     exports com.oop2.typewiz.GameplayComponents;
+    exports com.oop2.typewiz.util;
 }

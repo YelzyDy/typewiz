@@ -20,6 +20,7 @@ import javafx.scene.text.Text;
 import javafx.scene.control.Button;
 import javafx.util.Duration;
 import com.almasb.fxgl.audio.Music;
+import com.oop2.typewiz.util.SoundManager;
 
 
 import java.util.concurrent.ExecutorService;
@@ -34,6 +35,9 @@ public class MainMenuScreen extends FXGLMenu {
 
     public MainMenuScreen() {
         super(MenuType.MAIN_MENU);
+
+        // Start menu music
+        SoundManager.getInstance().playBGM("menu");
 
         // Main container with magical gradient background
         StackPane root = new StackPane();
@@ -104,7 +108,7 @@ public class MainMenuScreen extends FXGLMenu {
         });
 
 
-        Button helpButton = createWizardButton("WIZARD’S GUIDE", () -> {
+        Button helpButton = createWizardButton("WIZARD'S GUIDE", () -> {
             FXGL.play("sound-library/click.wav"); // plays the sound
             FXGL.getSceneService().pushSubScene(new HowToPlayScreen(() -> FXGL.getSceneService().popSubScene()));
         });
@@ -179,6 +183,9 @@ public class MainMenuScreen extends FXGLMenu {
         );
         fadeOut.setOnFinished(e -> FXGL.getAudioPlayer().stopMusic(bgmMusic));
         fadeOut.play();
+
+        // Fade out menu music when leaving menu
+        SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
     }
 
 
@@ -231,47 +238,33 @@ public class MainMenuScreen extends FXGLMenu {
 
         // Hover effects (Scale Animation)
         button.setOnMouseEntered(e -> {
-            button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
-            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
-
-            ThreadManager.runAsyncThenUI(
-                    () -> {
-                        ScaleTransition scaleUp = new ScaleTransition(Duration.seconds(0.2), button);
-                        scaleUp.setToX(1.1);
-                        scaleUp.setToY(1.1);
-                        scaleUp.play();
-                    },
-                    () -> {} // UI thread callback
-            );
+            // Play hover sound
+            SoundManager.getInstance().playButtonHover();
+            button.setTextFill(Color.web("#f8bbd0"));
+            ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
+            st.setToX(1.1);
+            st.setToY(1.1);
+            st.play();
         });
 
         button.setOnMouseExited(e -> {
-            button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
-            ThreadManager.runAsyncThenUI(
-                    () -> {
-                        ScaleTransition scaleDown = new ScaleTransition(Duration.seconds(0.2), button);
-                        scaleDown.setToX(1);
-                        scaleDown.setToY(1);
-                        scaleDown.play();
-                    },
-                    () -> {} // UI thread callback
-            );
+            button.setTextFill(Color.web("#ce93d8"));
+            ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
         });
 
 
         // Click effect (Scale Animation)
         button.setOnAction(e -> {
-
-            ThreadManager.runAsyncThenUI(
-                    () -> {
-                        ScaleTransition scaleClick = new ScaleTransition(Duration.seconds(0.1), button);
-                        scaleClick.setToX(0.9);
-                        scaleClick.setToY(0.9);
-                        scaleClick.setOnFinished(event -> action.run());
-                        scaleClick.play();
-                    },
-                    () -> {} // UI thread callback
-            );
+            // Play click sound
+//            SoundManager.getInstance().playButtonClick();
+            ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
+            st.setToX(0.9);
+            st.setToY(0.9);
+            st.setOnFinished(event -> action.run());
+            st.play();
         });
 
         return button;
