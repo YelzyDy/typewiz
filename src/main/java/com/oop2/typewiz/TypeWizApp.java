@@ -25,6 +25,14 @@ public class TypeWizApp extends GameApplication {
         settings.setWidth(1550);
         settings.setHeight(800);
         settings.setTitle("TypeWiz");
+        settings.setGameMenuEnabled(false);
+        settings.setIntroEnabled(false);
+        settings.setProfilingEnabled(false);
+        settings.setCloseConfirmation(false);
+        settings.setManualResizeEnabled(true);
+        settings.setPreserveResizeRatio(true);
+        settings.setFullScreenAllowed(true);
+        settings.setFullScreenFromStart(true);
     }
 
     public static void setupCustomCursor() {
