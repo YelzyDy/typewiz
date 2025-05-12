@@ -166,6 +166,9 @@ public class TypeWizApp extends GameApplication {
     private void setupStateHandlers() {
         // Set actions for state transitions
         stateManager.setStateEntryAction(GameStateManager.GameState.WAVE_ANNOUNCEMENT, wave -> {
+            // Play wave announcement sound
+            SoundManager.getInstance().playWaveAnnounce();
+
             // Start the wave to initialize parameters
             waveManager.startWave();
 
@@ -192,11 +195,36 @@ public class TypeWizApp extends GameApplication {
             }, Duration.seconds(2.0));
         });
 
-        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message ->
-                showEndGameScreen("Game Over!", false));
+        stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message -> {
+            // Play game over sound and fade out game music
+            SoundManager.getInstance().playGameOver();
+            SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
 
-        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message ->
-                showEndGameScreen("Victory! Game Complete!", true));
+            // Show game over screen
+            showEndGameScreen("Game Over!", false);
+        });
+
+        stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message -> {
+            // Play victory sound and fade out game music
+            SoundManager.getInstance().playVictory();
+            SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
+
+            // Show victory screen
+            showEndGameScreen("Victory! Game Complete!", true);
+        });
+
+        // Add state exit actions
+        stateManager.setStateExitAction(GameStateManager.GameState.GAME_OVER, message -> {
+            // Start menu music when leaving game over screen
+            SoundManager.getInstance().playBGM("menu");
+            SoundManager.getInstance().fadeInBGM(Duration.seconds(2.0));
+        });
+
+        stateManager.setStateExitAction(GameStateManager.GameState.VICTORY, message -> {
+            // Start menu music when leaving victory screen
+            SoundManager.getInstance().playBGM("menu");
+            SoundManager.getInstance().fadeInBGM(Duration.seconds(2.0));
+        });
     }
 
     /**
@@ -268,6 +296,13 @@ public class TypeWizApp extends GameApplication {
      * Restarts the game by resetting all components
      */
     private void restartGame() {
+        // Play button click sound
+        SoundManager.getInstance().playButtonClick();
+
+        // Start game music
+        SoundManager.getInstance().playBGM("game");
+        SoundManager.getInstance().fadeInBGM(Duration.seconds(1.0));
+
         // Remove game over or victory screens
         List<Entity> entitiesToRemove = new ArrayList<>();
         for (Entity entity : FXGL.getGameWorld().getEntities()) {

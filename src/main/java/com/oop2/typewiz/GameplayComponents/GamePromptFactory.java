@@ -1,6 +1,7 @@
 package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.dsl.FXGL;
+import com.oop2.typewiz.util.SoundManager;
 import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -55,6 +56,9 @@ public class GamePromptFactory {
      * @return Node containing the announcement overlay
      */
     public static Node createWaveAnnouncement(int currentWave, int maxWaves) {
+
+        SoundManager.getInstance().playWaveAnnounce();
+
         // Create semi-transparent overlay with a gradient effect
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
         LinearGradient gradient = new LinearGradient(
@@ -169,6 +173,13 @@ public class GamePromptFactory {
     public static Node createGameOverScreen(String message, int score, double wpm, 
                                            double rawWpm, double accuracy, double consistency,
                                            List<Double> wpmData, List<Double> accuracyData) {
+
+        // Play appropriate sound
+        if (message.contains("Victory")) {
+            SoundManager.getInstance().playVictory();
+        } else {
+            SoundManager.getInstance().playGameOver();
+        }
         // Create full-screen semi-transparent overlay
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
         overlay.setFill(Color.rgb(0, 0, 0, 0.85));
