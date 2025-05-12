@@ -61,6 +61,23 @@ Our project highlights several key OOP principles:
 
 ---
 
+## Generics Usage 🧩✨
+
+Generics are used in **TypeWiz** to improve code flexibility and type safety. They allow us to write cleaner, reusable logic for managing game entities and operations.
+
+- **Entity Management:**  
+  The `EntityManager` class uses generics (e.g., `List<Entity>`) to handle various entity types like *Gargoyles* and *Grimouges* dynamically.
+
+- **Predicate-Based Filtering:**  
+  Methods like `findEntities(Predicate<Entity> predicate)` allow filtering entities based on custom conditions using generic predicates.
+
+- **Type-Specific Operations:**  
+  `getActiveEntitiesByType(Game.EntityType type)` returns a filtered list of entities by their type, leveraging generics for safe casting.
+
+This approach keeps the game logic modular and adaptable, making it easier to introduce new entities or behaviors without rewriting core functionality.
+
+---
+
 ## Design Patterns Used 🎆✨
 
 We incorporated several design patterns to ensure maintainable and efficient code:
