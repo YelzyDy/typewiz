@@ -68,7 +68,7 @@ public class Game extends GameApplication {
         settings.setPreserveResizeRatio(true);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-        settings.setGameMenuEnabled(false);
+        settings.setGameMenuEnabled(true);
         settings.setIntroEnabled(false);
         settings.setProfilingEnabled(false);
         settings.setCloseConfirmation(false);
