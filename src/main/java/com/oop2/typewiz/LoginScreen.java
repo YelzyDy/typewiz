@@ -39,6 +39,7 @@ public class LoginScreen extends FXGLMenu {
         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(1280, 720);
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
 //        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
         root.setStyle(
                 "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
@@ -132,7 +133,6 @@ public class LoginScreen extends FXGLMenu {
                 animateNode(optionsBox, 0.8),
                 buttonBox
         );
-
         root.getChildren().addAll(leftBox, rightBox);
         applyFadeInAnimation(root);
     }
@@ -149,6 +149,7 @@ public class LoginScreen extends FXGLMenu {
         String hoverStyle = "-fx-background-color: derive(" + bgColor + ", 10%); -fx-text-fill: " + textFillHex + "; -fx-background-radius: 30; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(200,91,255,0.6), 10, 0.3, 0, 3);";
 
         button.setStyle(baseStyle);
+
         button.setOnMouseEntered(e -> {
             FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
             button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);

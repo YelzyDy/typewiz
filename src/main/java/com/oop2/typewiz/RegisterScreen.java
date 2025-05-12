@@ -38,6 +38,7 @@ public class RegisterScreen extends FXGLMenu {
     private void addRegisterUI() {
         root = new HBox(10);
         root.setPrefSize(1280, 720);
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
         root.setAlignment(Pos.CENTER);
         root.setStyle(
                 "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
@@ -119,6 +120,7 @@ public class RegisterScreen extends FXGLMenu {
 
         root.getChildren().addAll(leftPane, formPane);
         getContentRoot().getChildren().add(root);
+
     }
 
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
@@ -194,10 +196,14 @@ public class RegisterScreen extends FXGLMenu {
 
         button.setStyle(baseStyle);
         button.setOnMouseEntered(e -> {
+            button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
             FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound("sound-library/hover.wav"));
             button.setStyle(hoverStyle);
         });
-        button.setOnMouseExited(e -> button.setStyle(baseStyle));
+        button.setOnMouseExited(e -> {
+            button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+            button.setStyle(baseStyle);
+        });
     }
 
     private void animateNode(javafx.scene.Node node, double delaySeconds) {

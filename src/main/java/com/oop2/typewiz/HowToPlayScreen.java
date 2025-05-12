@@ -144,5 +144,7 @@ public class HowToPlayScreen extends FXGLMenu {
 //        FXGL.getGameTimer().runOnceAfter(() -> {
 //            FXGL.getAudioPlayer().playMusic(FXGL.getAssetLoader().loadMusic("magic_theme.wav"));
 //        }, Duration.seconds(1)); // Start the music after 1 second delay
+
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
     }
 }

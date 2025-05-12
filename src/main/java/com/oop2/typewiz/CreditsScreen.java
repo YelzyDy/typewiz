@@ -42,6 +42,8 @@ public class CreditsScreen extends FXGLMenu {
                         "-fx-background-position: center center;"
         );
 
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+
         Pane starField = createMagicalStars();
         Text title = new Text("Council of the Enchanted");
         title.setFont(Font.font("Papyrus", 42));

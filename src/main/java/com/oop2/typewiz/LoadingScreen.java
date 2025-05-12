@@ -30,12 +30,7 @@ public class LoadingScreen extends FXGLMenu {
     public LoadingScreen() {
         super(MenuType.MAIN_MENU);
         // Gradient background
-
-// Play the sound after the delay
-        FXGL.getGameTimer().runOnceAfter(() -> {
-            // Load and play your music file with a delay
             FXGL.getAudioPlayer().playMusic(FXGL.getAssetLoader().loadMusic("magic.wav"));
-        }, Duration.seconds(1)); // Delay of 1 second
 
         Pane background = new Pane();
         background.setPrefSize(getAppWidth(), getAppHeight());
@@ -104,6 +99,8 @@ public class LoadingScreen extends FXGLMenu {
 
         root = new StackPane(background, centerBox);
         getContentRoot().getChildren().setAll(root);
+
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
 
         startSmoothLoading();
     }

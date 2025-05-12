@@ -150,6 +150,9 @@ public class MainMenuScreen extends FXGLMenu {
         // Load and loop BGM
         bgmMusic = FXGL.getAssetLoader().loadMusic("bgm.mp3");
         FXGL.getAudioPlayer().loopMusic(bgmMusic);
+
+
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
 //
 //// Start volume at 0
 //        FXGL.getSettings().setGlobalMusicVolume(0.0);

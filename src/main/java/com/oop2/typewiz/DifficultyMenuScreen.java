@@ -101,10 +101,13 @@ public class DifficultyMenuScreen extends FXGLMenu {
         StackPane glassPane = new StackPane(panel, menuBox);
         root.getChildren().add(glassPane);
         getContentRoot().getChildren().add(root);
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+
     }
 
     private void addMagicHover(Button button) {
         button.setOnMouseEntered(e -> {
+            button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
             button.setTextFill(Color.web("#f8bbd0"));
             ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
             st.setToX(1.1);
@@ -113,6 +116,7 @@ public class DifficultyMenuScreen extends FXGLMenu {
         });
 
         button.setOnMouseExited(e -> {
+            button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
             button.setTextFill(Color.web("#ce93d8"));
             ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
             st.setToX(1.0);
