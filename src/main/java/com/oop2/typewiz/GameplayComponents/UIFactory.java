@@ -43,12 +43,13 @@ import javafx.scene.Node;
  */
 public class UIFactory {
     // UI theme colors
-    private static final Color UI_PRIMARY_COLOR = Color.rgb(70, 130, 230);     // Cool blue
-    private static final Color UI_SECONDARY_COLOR = Color.rgb(210, 60, 160);   // Magenta/purple
-    private static final Color UI_ACCENT_COLOR = Color.rgb(255, 215, 0);       // Gold
-    private static final Color UI_BG_COLOR = Color.rgb(30, 30, 50, 0.8);       // Dark blue/purple background
-    private static final Color UI_TEXT_PRIMARY = Color.WHITE;
-    private static final Color UI_TEXT_SECONDARY = Color.LIGHTGRAY;
+    private static final Color UI_PRIMARY_COLOR = Color.rgb(138, 43, 226); // Deep purple
+    private static final Color UI_SECONDARY_COLOR = Color.rgb(186, 85, 211); // Medium orchid
+    private static final Color UI_ACCENT_COLOR = Color.rgb(255, 223, 0); // Gold
+    private static final Color UI_BG_COLOR = Color.rgb(48, 25, 52, 0.85); // Dark purple with transparency
+    private static final Color UI_TEXT_PRIMARY = Color.WHITE; // Primary text
+    private static final Color UI_TEXT_SECONDARY = Color.LIGHTGRAY; // Secondary text
+
 
     // UI style constants
     private static final String FONT_FAMILY = "Arial";
@@ -272,7 +273,7 @@ public class UIFactory {
         Rectangle buttonBg = new Rectangle(width, height);
         buttonBg.setArcWidth(20);
         buttonBg.setArcHeight(20);
-        buttonBg.setFill(Color.rgb(60, 60, 80, 0.8));
+        buttonBg.setFill(Color.rgb(75, 0, 130, 0.8));
         buttonBg.setStroke(color);
         buttonBg.setStrokeWidth(3);
 
@@ -280,7 +281,7 @@ public class UIFactory {
         DropShadow buttonGlow = new DropShadow();
         buttonGlow.setColor(color);
         buttonGlow.setRadius(15);
-        buttonGlow.setSpread(0.2);
+        buttonGlow.setSpread(0.3);
         buttonBg.setEffect(buttonGlow);
 
         // Create button text
@@ -289,7 +290,7 @@ public class UIFactory {
         buttonText.setFill(Color.WHITE);
 
         // Add glow to text
-        Glow textGlow = new Glow(0.6);
+        Glow textGlow = new Glow(0.8);
         buttonText.setEffect(textGlow);
 
         // Stack text on background
@@ -307,13 +308,13 @@ public class UIFactory {
         // Add hover effect
         button.setOnMouseEntered(e -> {
             // Brighten background
-            buttonBg.setFill(Color.rgb(80, 80, 100, 0.9));
+            buttonBg.setFill(Color.rgb(123, 104, 238, 0.9));
             // Increase glow
             buttonGlow.setRadius(25);
-            buttonGlow.setSpread(0.4);
+            buttonGlow.setSpread(0.5);
             // Scale button slightly
-            button.setScaleX(1.05);
-            button.setScaleY(1.05);
+            button.setScaleX(1.1);
+            button.setScaleY(1.1);
         });
 
         // Reset on mouse exit
@@ -434,8 +435,8 @@ public class UIFactory {
         // Add a subtle glow around the panel
         DropShadow glow = new DropShadow();
         glow.setColor(color);
-        glow.setRadius(15);
-        glow.setSpread(0.4);
+        glow.setRadius(20);
+        glow.setSpread(0.5);
         panel.setEffect(glow);
     }
 
@@ -443,7 +444,7 @@ public class UIFactory {
         Glow glow = new Glow(intensity);
         DropShadow shadow = new DropShadow();
         shadow.setColor(color);
-        shadow.setRadius(5);
+        shadow.setRadius(10);
         shadow.setInput(glow);
         text.setEffect(shadow);
     }
