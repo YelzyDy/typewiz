@@ -1,7 +1,7 @@
 <div align="center">
   
-  ![header](https://github.com/user-attachments/assets/b8695295-c3da-4a86-9a07-5cce7052490d)
-  
+ ![header(1)](https://github.com/user-attachments/assets/4dd0eebd-3bd3-4e09-a710-bdb52f95d179)
+
 </div>
 
 <div align="center">
@@ -147,3 +147,10 @@ We welcome contributions from the community! Please follow these steps to contri
 
 
 ---
+
+<div align="center">
+  
+  ![footer(1)](https://github.com/user-attachments/assets/6b683d29-6530-442c-a289-10199c004313)
+
+  
+</div>
