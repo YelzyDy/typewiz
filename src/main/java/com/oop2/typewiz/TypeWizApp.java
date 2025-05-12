@@ -64,6 +64,8 @@ public class TypeWizApp extends GameApplication {
         settings.setMainMenuEnabled(true);
         settings.setGameMenuEnabled(false);
         settings.setSceneFactory(new CustomSceneFactory());
+        settings.setFullScreenAllowed(true);
+        settings.setFullScreenFromStart(true);
     }
 
     public static void setupCustomCursor() {
