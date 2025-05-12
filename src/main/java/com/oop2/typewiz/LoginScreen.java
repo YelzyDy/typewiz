@@ -38,7 +38,7 @@ public class LoginScreen extends FXGLMenu {
     public void addLoginUI() {
         root = new HBox(10);
         root.setAlignment(Pos.CENTER);
-        root.setPrefSize(1550, 800);
+        root.setPrefSize(1280, 720);
 //        root.setStyle("-fx-background-color: linear-gradient(to bottom right, #1c0033, #4b0082);");
         root.setStyle(
                 "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +

@@ -36,7 +36,7 @@ public class RegisterScreen extends FXGLMenu {
 
     private void addRegisterUI() {
         root = new HBox(10);
-        root.setPrefSize(1550, 800);
+        root.setPrefSize(1280, 720);
         root.setAlignment(Pos.CENTER);
         root.setStyle(
                 "-fx-background-image: url('assets/textures/background-and-platforms/darkerpurplebg.png');" +
