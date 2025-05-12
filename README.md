@@ -41,6 +41,8 @@ Stay alert—if monsters breach your defenses, your health will drop. Lose all y
 - 🧙‍♂️ **WIZARD**: Balanced difficulty for seasoned typists.
 - 🔮 **ARCHMAGE**: Fast waves and tricky words to truly test your reflexes.
 
+The **OOP2 Capstone Project**, **TypeWiz**, showcases object-oriented programming principles applied to game development. Built with FXGL, a Java game development library, it leverages modern tools to deliver an engaging and interactive experience beyond the traditional FXML framework.
+
 Can you survive the onslaught and become the ultimate typing wizard?
 
 ---
@@ -104,3 +106,44 @@ To get started with TypeWiz, follow these steps:
 1. Clone the repository:
    ```bash
    git clone https://github.com/coding-chez/OOP2-Capstone.git
+2. Configure the database:
+- Create a database and import the provided schema.
+- Update the db.properties file with your database credentials.
+3. Build and run the project:
+
+       ./gradlew run
+
+---
+
+### From Brainstorming to Open Source 🔮✨
+
+Our journey began with a brainstorming session to decide on the concept of our capstone project. We aimed to create a fun and educational typing game that enhances players' typing speed and accuracy.
+
+Each team member contributed to the ideation, design, and development process:
+
+- **Conceptualization:** We collaborated to identify the core mechanics and objectives of TypeWiz, ensuring they aligned with our goals as a team.
+- **Development:** Responsibilities were divided based on individual strengths—team members worked on coding, designing, and integrating features.
+- **Testing and Refinement:** We rigorously tested the game for bugs and usability, incorporating feedback to polish the final product.
+- **Open Source Contribution:** To give back to the community, we made the project open source, allowing others to learn from and extend our work.
+
+### Contributing
+
+We welcome contributions from the community! Please follow these steps to contribute:
+
+1. Fork the repository.
+2. Create a feature branch:
+
+        git checkout -b feature-name
+
+3. Commit your changes:
+
+       git commit -m "Add feature-name"
+
+4. Push to your branch:
+
+        git push origin feature-name
+
+5. Open a pull request.
+
+
+---
