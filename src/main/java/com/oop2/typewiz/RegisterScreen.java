@@ -32,6 +32,7 @@ public class RegisterScreen extends FXGLMenu {
 
     public RegisterScreen() {
         super(MenuType.MAIN_MENU);
+        addRegisterUI();
     }
 
     private void addRegisterUI() {
@@ -117,6 +118,7 @@ public class RegisterScreen extends FXGLMenu {
         animateNode(loginBtn, 1.6);
 
         root.getChildren().addAll(leftPane, formPane);
+        getContentRoot().getChildren().add(root);
     }
 
     private HBox createInputField(String iconPath, String promptText, boolean isPassword) {
