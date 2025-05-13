@@ -76,13 +76,13 @@ public class UIFactory {
         healthDisplay.setTranslateX(25);
         healthDisplay.setTranslateY(20);   // Moved up
         healthDisplay.setPadding(new Insets(10));  // Reduced padding
-        healthDisplay.setMaxWidth(180);    // Smaller width
+        healthDisplay.setPrefSize(190, 100);    // Smaller width
 
         healthDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(healthDisplay, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
 
         Text healthLabel = new Text("VITALITY");
-        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
+        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 14));  // Smaller font
         healthLabel.setFill(UI_ACCENT_COLOR);
         addTextGlow(healthLabel, UI_SECONDARY_COLOR, 0.6);
 
