@@ -24,12 +24,12 @@ public class EntityManager {
     private SpatialPartitioning spatialPartitioning;
     private double width;
     private double height;
+    private int maxActiveEntities;
 
     private static final int BATCH_SIZE = 50;
     private static final int MAX_GARGOYLES = 10;
     private static final int MAX_GRIMOUGES = 10;
     private static final int MAX_VYLEYES = 10;
-    private static final int MAX_ACTIVE_ENTITIES = 12; // Maximum entities on screen at once
 
     // Constants for entity movement
     private static final double GARGOYLE_SPEED = 50.0;
@@ -56,10 +56,12 @@ public class EntityManager {
      *
      * @param width Width of the game area
      * @param height Height of the game area
+     * @param maxActiveEntities Maximum number of active entities allowed
      */
-    public EntityManager(double width, double height) {
+    public EntityManager(double width, double height, int maxActiveEntities) {
         this.width = width;
         this.height = height;
+        this.maxActiveEntities = maxActiveEntities;
         activeEntities = new ArrayList<>();
         gargoylePool = new ArrayList<>(MAX_GARGOYLES);
         grimougePool = new ArrayList<>(MAX_GRIMOUGES);
@@ -228,16 +230,12 @@ public class EntityManager {
      */
     public boolean addActiveEntity(Entity entity) {
         if (entity != null) {
-            // Check if we've reached the maximum number of active entities
-            if (getActiveEnemies().size() >= MAX_ACTIVE_ENTITIES) {
+            if (getActiveEnemies().size() >= maxActiveEntities) {
                 System.out.println("Maximum active entities limit reached, not adding new entity");
                 return false;
             }
-
             activeEntities.add(entity);
             spatialPartitioning.updateEntity(entity);
-
-            // Ensure entity is attached to world
             if (!entity.isActive()) {
                 System.out.println("Entity was not active, attaching to world: " + entity);
                 FXGL.getGameWorld().addEntity(entity);
@@ -255,7 +253,7 @@ public class EntityManager {
      * @return true if more entities can be added, false if at max capacity
      */
     public boolean canAddMoreEntities() {
-        return getActiveEnemies().size() < MAX_ACTIVE_ENTITIES;
+        return getActiveEnemies().size() < maxActiveEntities;
     }
 
     /**
@@ -264,7 +262,7 @@ public class EntityManager {
      * @return The maximum number of active entities
      */
     public int getMaxActiveEntities() {
-        return MAX_ACTIVE_ENTITIES;
+        return maxActiveEntities;
     }
 
     /**
@@ -273,7 +271,7 @@ public class EntityManager {
      * @return Number of available entity slots
      */
     public int getAvailableEntitySlots() {
-        return Math.max(0, MAX_ACTIVE_ENTITIES - getActiveEnemies().size());
+        return Math.max(0, maxActiveEntities - getActiveEnemies().size());
     }
 
     /**

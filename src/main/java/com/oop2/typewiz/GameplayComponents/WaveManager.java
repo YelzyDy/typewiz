@@ -60,6 +60,13 @@ public class WaveManager {
     private double maxY;
     private double spawnPerimeterRight;
     
+    private int maxWaves;
+    private int[] waveSpawnsPerWave;
+    private double[] waveSpeedMultipliers;
+    private int[] minSpawnsPerGroupByWave;
+    private int[] maxSpawnsPerGroupByWave;
+    private double[] spawnDelayMultipliers;
+    
     /**
      * Creates a new WaveManager
      * 
@@ -67,13 +74,26 @@ public class WaveManager {
      * @param stateManager The game state manager
      * @param wordSupplier Function that supplies random words
      * @param screenHeight Height of the game screen
+     * @param maxWaves Maximum number of waves
+     * @param waveSpawnsPerWave Array of wave spawn counts
+     * @param waveSpeedMultipliers Array of wave speed multipliers
+     * @param minSpawnsPerGroupByWave Array of minimum spawns per group
+     * @param maxSpawnsPerGroupByWave Array of maximum spawns per group
+     * @param spawnDelayMultipliers Array of spawn delay multipliers
      */
-    public WaveManager(EntityManager entityManager, GameStateManager stateManager, 
-                        Supplier<String> wordSupplier, double screenHeight) {
+    public WaveManager(EntityManager entityManager, GameStateManager stateManager, Supplier<String> wordSupplier, double screenHeight,
+                      int maxWaves, int[] waveSpawnsPerWave, double[] waveSpeedMultipliers, int[] minSpawnsPerGroupByWave,
+                      int[] maxSpawnsPerGroupByWave, double[] spawnDelayMultipliers) {
         this.entityManager = entityManager;
         this.stateManager = stateManager;
         this.wordSupplier = wordSupplier;
         this.random = new Random();
+        this.maxWaves = maxWaves;
+        this.waveSpawnsPerWave = waveSpawnsPerWave;
+        this.waveSpeedMultipliers = waveSpeedMultipliers;
+        this.minSpawnsPerGroupByWave = minSpawnsPerGroupByWave;
+        this.maxSpawnsPerGroupByWave = maxSpawnsPerGroupByWave;
+        this.spawnDelayMultipliers = spawnDelayMultipliers;
         
         // Initialize wave state
         this.currentWave = 1;
@@ -106,7 +126,7 @@ public class WaveManager {
      * @return The maximum number of waves
      */
     public int getMaxWaves() {
-        return MAX_WAVES;
+        return maxWaves;
     }
     
     /**
@@ -115,49 +135,31 @@ public class WaveManager {
      * @return true if all waves are completed
      */
     public boolean areAllWavesCompleted() {
-        return currentWave > MAX_WAVES;
+        return currentWave > maxWaves;
     }
     
     /**
      * Starts a new wave
      */
     public void startWave() {
-        // Check if all waves are completed
         if (areAllWavesCompleted()) {
             stateManager.victory(null);
             return;
         }
-        
-        // Remove all existing enemies before starting a new wave
         entityManager.removeAllEntitiesOfType(Game.EntityType.GARGOYLE);
         entityManager.removeAllEntitiesOfType(Game.EntityType.GRIMOUGE);
         entityManager.removeAllEntitiesOfType(Game.EntityType.VYLEYE);
-        
-        // Get wave index (0-based)
         int waveIndex = currentWave - 1;
-        
-        // Reset wave spawning state with wave-specific parameters
-        isSpawningWave = false; // Start as false, set to true after announcement
-        spawnFromRight = true; // Always spawn from right side
-        nextEnemyType = 0; // Start with Gargoyles for each wave
-        
-        // Apply wave-specific difficulty settings
-        int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-        int maxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-        
+        isSpawningWave = false;
+        spawnFromRight = true;
+        nextEnemyType = 0;
+        int minSpawns = minSpawnsPerGroupByWave[waveIndex];
+        int maxSpawns = maxSpawnsPerGroupByWave[waveIndex];
         System.out.println("Wave " + currentWave + " settings: minSpawns=" + minSpawns + ", maxSpawns=" + maxSpawns);
-        
-        // Cap max spawns based on screen height to prevent overcrowding
         double availableHeight = maxY - minY;
         int maxPossibleSpawns = Math.max(1, (int)(availableHeight / (SCREEN_MARGIN * 0.3)));
-        
-        // Adjust group size if necessary
         maxSpawns = Math.min(maxSpawns, maxPossibleSpawns);
         minSpawns = Math.min(minSpawns, maxSpawns);
-        
-        System.out.println("After adjustment: minSpawns=" + minSpawns + ", maxSpawns=" + maxSpawns + ", maxPossibleSpawns=" + maxPossibleSpawns);
-        
-        // Set the current group size
         int newGroupSize;
         if (minSpawns == maxSpawns) {
             newGroupSize = minSpawns;
@@ -165,20 +167,13 @@ public class WaveManager {
             newGroupSize = Math.max(1, random.nextInt(maxSpawns - minSpawns + 1) + minSpawns);
         }
         currentGroupSize = newGroupSize;
-        
         System.out.println("Set currentGroupSize to " + currentGroupSize);
-        
-        // Set total spawns for this wave
-        totalWaveSpawns = WAVE_SPAWNS_PER_WAVE[waveIndex];
-        
-        // Apply wave-specific spawn delay
-        currentSpawnDelay = WAVE_SPAWN_DELAY * SPAWN_DELAY_MULTIPLIERS[waveIndex];
-        
+        totalWaveSpawns = waveSpawnsPerWave[waveIndex];
+        currentSpawnDelay = WAVE_SPAWN_DELAY * spawnDelayMultipliers[waveIndex];
         waveSpawnTimer.capture();
         waveInProgress = true;
-        
         System.out.println("Starting wave " + currentWave + " with " + totalWaveSpawns + 
-                " total spawns, speed multiplier " + WAVE_SPEED_MULTIPLIERS[waveIndex] + ", group size " + currentGroupSize);
+                " total spawns, speed multiplier " + waveSpeedMultipliers[waveIndex] + ", group size " + currentGroupSize);
     }
     
     /**
@@ -211,8 +206,7 @@ public class WaveManager {
      * Spawns a group of entities
      */
     private List<Entity> spawnGroup() {
-        // Get wave index (0-based)
-        int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
+        int waveIndex = Math.min(currentWave - 1, maxWaves - 1);
         
         // Check how many more entities we can spawn based on the active entity limit
         int availableSlots = entityManager.getAvailableEntitySlots();
@@ -231,8 +225,8 @@ public class WaveManager {
         
         // Ensure we don't try to spawn 0 entities
         if (currentGroupSize <= 0) {
-            int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-            int maxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+            int minSpawns = minSpawnsPerGroupByWave[waveIndex];
+            int maxSpawns = maxSpawnsPerGroupByWave[waveIndex];
             if (minSpawns == maxSpawns) {
                 currentGroupSize = minSpawns;
             } else {
@@ -532,8 +526,8 @@ public class WaveManager {
                 " entities, next spawn: " + nextEntityType + ", " + totalWaveSpawns + " remaining in wave");
         
         // Prepare for next group with wave-specific parameters
-        int waveMinSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-        int waveMaxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+        int waveMinSpawns = minSpawnsPerGroupByWave[waveIndex];
+        int waveMaxSpawns = maxSpawnsPerGroupByWave[waveIndex];
         
         // Calculate next group size
         if (waveMinSpawns == waveMaxSpawns) {
@@ -543,7 +537,7 @@ public class WaveManager {
         }
         
         // Apply wave-specific delay reduction for next spawn
-        currentSpawnDelay *= SPAWN_SPEED_INCREASE * SPAWN_DELAY_MULTIPLIERS[waveIndex];
+        currentSpawnDelay *= SPAWN_SPEED_INCREASE * spawnDelayMultipliers[waveIndex];
         
         waveSpawnTimer.capture();
         
@@ -578,9 +572,9 @@ public class WaveManager {
         
         // Ensure group size is not zero
         if (currentGroupSize <= 0) {
-            int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
-            int minSpawns = MIN_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
-            int maxSpawns = MAX_SPAWNS_PER_GROUP_BY_WAVE[waveIndex];
+            int waveIndex = Math.min(currentWave - 1, maxWaves - 1);
+            int minSpawns = minSpawnsPerGroupByWave[waveIndex];
+            int maxSpawns = maxSpawnsPerGroupByWave[waveIndex];
             currentGroupSize = Math.max(1, random.nextInt(maxSpawns - minSpawns + 1) + minSpawns);
             System.out.println("WaveManager: Corrected group size to: " + currentGroupSize);
         }
@@ -627,8 +621,8 @@ public class WaveManager {
      * @return The speed multiplier
      */
     public double getCurrentWaveSpeedMultiplier() {
-        int waveIndex = Math.min(currentWave - 1, MAX_WAVES - 1);
-        return WAVE_SPEED_MULTIPLIERS[waveIndex];
+        int waveIndex = Math.min(currentWave - 1, maxWaves - 1);
+        return waveSpeedMultipliers[waveIndex];
     }
     
     /**

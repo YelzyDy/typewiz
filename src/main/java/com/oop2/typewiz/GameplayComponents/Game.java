@@ -23,6 +23,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.Parent;
+import com.oop2.typewiz.Difficulty;
 
 import java.util.Arrays;
 import java.util.List;
@@ -128,22 +129,69 @@ public class Game extends GameApplication {
      * Initializes all manager classes (Model and Controller components)
      */
     private void initializeManagers() {
+        // Get selected difficulty
+        Difficulty difficulty = FXGL.getWorldProperties().getObject("difficulty");
+        if (difficulty == null) difficulty = Difficulty.APPRENTICE;
+
+        // Set parameters based on difficulty
+        int maxWaves;
+        int maxActiveEntities;
+        int[] waveSpawnsPerWave;
+        double[] waveSpeedMultipliers;
+        int[] minSpawnsPerGroupByWave;
+        int[] maxSpawnsPerGroupByWave;
+        double[] spawnDelayMultipliers;
+
+        switch (difficulty) {
+            case APPRENTICE -> {
+                maxWaves = 5;
+                maxActiveEntities = 10;
+                waveSpawnsPerWave = new int[]{6, 7, 8, 9, 10};
+                waveSpeedMultipliers = new double[]{0.5, 0.6, 0.7, 0.8, 0.9}; // super slow
+                minSpawnsPerGroupByWave = new int[]{1, 1, 1, 1, 1};
+                maxSpawnsPerGroupByWave = new int[]{1, 1, 2, 2, 3}; // max follow up entity is 1, increase per 3 waves
+                spawnDelayMultipliers = new double[]{1.2, 1.1, 1.0, 0.95, 0.9};
+            }
+            case WIZARD -> {
+                maxWaves = 8;
+                maxActiveEntities = 14;
+                waveSpawnsPerWave = new int[]{8, 10, 12, 14, 16, 18, 20, 22};
+                waveSpeedMultipliers = new double[]{0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
+                minSpawnsPerGroupByWave = new int[]{1, 1, 2, 2, 2, 3, 3, 3};
+                maxSpawnsPerGroupByWave = new int[]{2, 2, 3, 3, 4, 4, 5, 5};
+                spawnDelayMultipliers = new double[]{1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65};
+            }
+            case ARCHMAGE -> {
+                maxWaves = 12;
+                maxActiveEntities = 18;
+                waveSpawnsPerWave = new int[]{10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32};
+                waveSpeedMultipliers = new double[]{1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2};
+                minSpawnsPerGroupByWave = new int[]{1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5};
+                maxSpawnsPerGroupByWave = new int[]{2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8};
+                spawnDelayMultipliers = new double[]{0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35};
+            }
+            default -> throw new IllegalStateException("Unknown difficulty: " + difficulty);
+        }
+
         // Create model components
         stateManager = new GameStateManager();
-        entityManager = new EntityManager(FXGL.getAppWidth(), FXGL.getAppHeight());
+        entityManager = new EntityManager(FXGL.getAppWidth(), FXGL.getAppHeight(), maxActiveEntities);
         playerManager = new PlayerManager();
-
-        // Create controller components
         inputManager = new InputManager(entityManager, playerManager, stateManager);
-
-        // Create and configure the wave manager
-        waveManager = new WaveManager(entityManager, stateManager, this::getRandomWordForWave, FXGL.getAppHeight());
-
-        // Register managers in world properties for access from other components
+        waveManager = new WaveManager(
+            entityManager,
+            stateManager,
+            this::getRandomWordForWave,
+            FXGL.getAppHeight(),
+            maxWaves,
+            waveSpawnsPerWave,
+            waveSpeedMultipliers,
+            minSpawnsPerGroupByWave,
+            maxSpawnsPerGroupByWave,
+            spawnDelayMultipliers
+        );
         FXGL.getWorldProperties().setValue("playerManager", playerManager);
         FXGL.getWorldProperties().setValue("inputManager", inputManager);
-
-        // Set up input handling
         inputManager.setupInput();
         inputManager.setRestartGameCallback(v -> restartGame());
     }
