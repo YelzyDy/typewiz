@@ -88,7 +88,7 @@ public class GamePromptFactory {
 
         // Wave announcement with magical styling
         Text waveText = new Text("WAVE " + currentWave);
-        waveText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 72));
+        waveText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 60));  // Slightly reduced font size
         waveText.setFill(MAGIC_GOLD);
 
         // Mystical text effects
@@ -140,12 +140,16 @@ public class GamePromptFactory {
         HBox waveBox = new HBox(15, waveText, ofText);
         waveBox.setAlignment(Pos.CENTER);
 
-        VBox contentLayout = new VBox(20);
+        VBox contentLayout = new VBox(15);  // Reduced spacing
         contentLayout.setAlignment(Pos.CENTER);
         contentLayout.getChildren().addAll(waveBox, difficultyText, subtitleText);
 
         // Combine elements with magical animations
         StackPane portalPane = new StackPane(portalPanel, contentLayout);
+
+        // Center the announcement in the screen
+        StackPane centeredPane = new StackPane(overlay, portalPane);
+        centeredPane.setAlignment(Pos.CENTER);  // This ensures perfect centering
 
         // Magical appearance animation
         ScaleTransition portalOpen = new ScaleTransition(Duration.seconds(0.5), portalPane);
@@ -161,7 +165,7 @@ public class GamePromptFactory {
         ParallelTransition magicReveal = new ParallelTransition(portalOpen, fadeIn);
         magicReveal.play();
 
-        return new StackPane(overlay, portalPane);
+        return centeredPane;  // Return the centered pane instead of the basic stack
     }
 
     /**
@@ -169,6 +173,7 @@ public class GamePromptFactory {
      * @param message Message to display
      * @param score Final score
      * @param wpm Words per minute
+     * @param rawWpm Raw words per minute
      * @param accuracy Typing accuracy
      * @param consistency Typing consistency
      * @param wpmData WPM data over time
@@ -218,7 +223,7 @@ public class GamePromptFactory {
 
         HBox titleBox = new HBox(titleText);
         titleBox.setAlignment(Pos.CENTER);
-        titleBox.setPadding(new Insets(30));
+        titleBox.setPadding(new Insets(10));  // Reduced from 30 to 10
 
         // Magical score display
         Text scoreText = new Text("Magical Score: " + score);
@@ -280,9 +285,11 @@ public class GamePromptFactory {
 
         statsLayout.getChildren().addAll(leftStack, rightStack);
 
-        // Final magical layout
-        VBox fullLayout = new VBox(20, titleBox, statsLayout, restartButton);
+        // Final magical layout with adjusted spacing and padding
+        VBox fullLayout = new VBox(10);  // Reduced spacing from 20 to 10
         fullLayout.setAlignment(Pos.CENTER);
+        fullLayout.setPadding(new Insets(0, 0, 30, 0));  // Added bottom padding
+        fullLayout.getChildren().addAll(titleBox, statsLayout, restartButton);
 
         // Add magical entrance animation
         FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), fullLayout);

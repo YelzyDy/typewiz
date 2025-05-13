@@ -200,6 +200,18 @@ public class TypeWizApp extends GameApplication {
             SoundManager.getInstance().playGameOver();
             SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
 
+            // Safely remove all UI elements first
+            List<Node> nodesToRemove = new ArrayList<>();
+            for (Node node : FXGL.getGameScene().getUINodes()) {
+                if (node instanceof VBox || node instanceof HBox) {
+                    nodesToRemove.add(node);
+                }
+            }
+            // Remove collected nodes
+            for (Node node : nodesToRemove) {
+                FXGL.removeUINode(node);
+            }
+
             // Show game over screen
             showEndGameScreen("Game Over!", false);
         });
@@ -208,6 +220,18 @@ public class TypeWizApp extends GameApplication {
             // Play victory sound and fade out game music
             SoundManager.getInstance().playVictory();
             SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
+
+            // Safely remove all UI elements first
+            List<Node> nodesToRemove = new ArrayList<>();
+            for (Node node : FXGL.getGameScene().getUINodes()) {
+                if (node instanceof VBox || node instanceof HBox) {
+                    nodesToRemove.add(node);
+                }
+            }
+            // Remove collected nodes
+            for (Node node : nodesToRemove) {
+                FXGL.removeUINode(node);
+            }
 
             // Show victory screen
             showEndGameScreen("Victory! Game Complete!", true);
@@ -337,6 +361,9 @@ public class TypeWizApp extends GameApplication {
         playerManager.resetHealth();
         inputManager.reset();
         waveManager.reset();
+
+        // Recreate UI elements
+        UIFactory.createUI(this);
 
         // Reset UI to wave 1
         updateWaveUI(1);
