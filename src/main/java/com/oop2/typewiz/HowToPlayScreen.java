@@ -46,7 +46,7 @@ public class HowToPlayScreen extends FXGLMenu {
         String[] instructions = {
                 "TypeWiz is a typing game where you, a wizard, battle monsters.",
                 "Each monster has a word you need to type to kill it.",
-                "Press spacebar to cast a spell and eliminate the monster.",
+                "Press Spacebar to cast a spell and eliminate the monster.",
                 "Use Shift to change your target monster.",
                 "If a monster reaches the wizard tower, your health will decrease.",
                 "If your health runs out, it's game over.",

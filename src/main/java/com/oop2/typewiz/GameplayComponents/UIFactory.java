@@ -76,13 +76,13 @@ public class UIFactory {
         healthDisplay.setTranslateX(25);
         healthDisplay.setTranslateY(20);   // Moved up
         healthDisplay.setPadding(new Insets(10));  // Reduced padding
-        healthDisplay.setPrefSize(180, 100);    // Smaller width
+        healthDisplay.setMaxWidth(180);    // Smaller width
 
         healthDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(healthDisplay, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
 
         Text healthLabel = new Text("VITALITY");
-        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 14));  // Smaller font
+        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
         healthLabel.setFill(UI_ACCENT_COLOR);
         addTextGlow(healthLabel, UI_SECONDARY_COLOR, 0.6);
 
@@ -279,14 +279,46 @@ public class UIFactory {
      * Creates a controls help text display
      * @return A Text node for controls help
      */
-    public static Text createControlsText() {
+    public static Node createControlsText() {
+        // Create the text
         Text controlsText = new Text("Magical Controls: Type to cast | SHIFT to switch targets | SPACE to banish word");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 250);  // Centered position
-        controlsText.setTranslateY(FXGL.getAppHeight() - 40);      // Moved up slightly
-        controlsText.setFill(UI_TEXT_PRIMARY);
-        controlsText.setFont(Font.font(FONT_FAMILY, 16));          // Smaller font
-        addTextGlow(controlsText, UI_SECONDARY_COLOR, 0.3);
-        return controlsText;
+        controlsText.setFill(UI_ACCENT_COLOR);                      // Use gold color for better visibility
+        controlsText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 20));  // Larger, bold font
+
+        // Add stronger glow effect
+        DropShadow glow = new DropShadow();
+        glow.setColor(UI_SECONDARY_COLOR);
+        glow.setRadius(15);
+        glow.setSpread(0.5);
+        controlsText.setEffect(glow);
+
+        // Create semi-transparent background with less transparency
+        Rectangle bg = new Rectangle();
+        bg.setFill(Color.rgb(0, 0, 0, 0.80));  // Reduced transparency
+        bg.setArcWidth(20);
+        bg.setArcHeight(20);
+        bg.setStroke(UI_ACCENT_COLOR);
+        bg.setStrokeWidth(2);
+
+        // Create container for text and background
+        StackPane container = new StackPane(bg, controlsText);
+        container.setPadding(new Insets(10, 20, 10, 20));
+
+        // Center the container horizontally
+        container.setTranslateX((FXGL.getAppWidth() - controlsText.getLayoutBounds().getWidth()) / 2 - 150);
+        container.setTranslateY(FXGL.getAppHeight() - 100);  // Position from bottom
+
+        // Ensure it's always on top
+        container.setViewOrder(-1000);
+
+        // Bind background size to text
+        bg.widthProperty().bind(controlsText.layoutBoundsProperty().map(bounds -> bounds.getWidth() + 40));
+        bg.heightProperty().bind(controlsText.layoutBoundsProperty().map(bounds -> bounds.getHeight() + 20));
+
+        // Set ID for the container
+        container.setId("controls-guide");
+
+        return container;
     }
 
     /**
@@ -719,11 +751,11 @@ public class UIFactory {
 
     /**
      * Creates and sets up all UI elements
-     * @param game Reference to the main Game class
+     * @param game Reference to the game class
      */
-    public static void createUI(TypeWizApp game) {
-        // Get the player manager directly from the game
-        PlayerManager playerManager = game.getPlayerManager();
+    public static void createUI(GameApplication game) {
+        // Get the player manager from world properties
+        PlayerManager playerManager = (PlayerManager) FXGL.getWorldProperties().getObject("playerManager");
 
         // Create health display with player's current health
         VBox healthDisplay = createHealthDisplay(
@@ -775,10 +807,15 @@ public class UIFactory {
         // Create performance display
         VBox performanceDisplay = createPerformanceDisplay();
 
+//        // Create controls text
+//        Node controlsText = createControlsText();
+//        controlsText.setId("controls-guide");
+
         // Add UI elements to the scene
         FXGL.addUINode(healthDisplay);
         FXGL.addUINode(topBar);
         FXGL.addUINode(performanceDisplay);
+//        FXGL.addUINode(controlsText);
     }
 
     /**

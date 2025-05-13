@@ -124,7 +124,7 @@ public class PlayerManager {
 
         // Play damage sound
         if (playerHealth > 0) {
-            SoundManager.getInstance().playButtonClick(); // Use a click for now, you can add a specific damage sound later
+            SoundManager.getInstance().playDamage();
         }
 
         // Update health text if available

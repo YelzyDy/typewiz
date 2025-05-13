@@ -4,14 +4,13 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
-import com.oop2.typewiz.TypeWizApp;
-import com.oop2.typewiz.SceneManager;
-
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import com.oop2.typewiz.SceneManager;
+import com.oop2.typewiz.TypeWizApp;
 import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
@@ -117,7 +116,12 @@ public class Game extends GameApplication {
         VyleyeFactory.initializeAnimations();
 
         // Set up UI elements
-//        UIFactory.createUI(this);
+        UIFactory.createUI(this);
+
+//        // Add controls text guide
+//        Node controlsGuide = UIFactory.createControlsText();
+//        controlsGuide.setId("controls-guide");
+//        FXGL.addUINode(controlsGuide);
     }
 
     /**
@@ -142,11 +146,6 @@ public class Game extends GameApplication {
         // Set up input handling
         inputManager.setupInput();
         inputManager.setRestartGameCallback(v -> restartGame());
-
-        // Add controls text guide
-        Text controlsGuide = UIFactory.createControlsText();
-        controlsGuide.setId("controls-guide");
-        FXGL.addUINode(controlsGuide);
     }
 
     /**
@@ -231,10 +230,15 @@ public class Game extends GameApplication {
         }
 
         // Remove controls guide
+        List<Node> nodesToRemove = new ArrayList<>();
         for (Node node : FXGL.getGameScene().getUINodes()) {
             if (node.getId() != null && node.getId().equals("controls-guide")) {
-                FXGL.removeUINode(node);
+                nodesToRemove.add(node);
             }
+        }
+        // Remove nodes outside the loop to avoid concurrent modification
+        for (Node node : nodesToRemove) {
+            FXGL.removeUINode(node);
         }
 
         // Pass character count to statistics factory
@@ -351,7 +355,6 @@ public class Game extends GameApplication {
         // Reset UI to wave 1
         updateWaveUI(1);
 
-        System.out.println("Setting game state to PLAYING");
         // Force game state to PLAYING before starting the wave
         stateManager.startPlaying(null);
 
@@ -359,10 +362,10 @@ public class Game extends GameApplication {
         System.out.println("Re-setting up input handlers");
         inputManager.setupInput();
 
-        // Add back the controls guide
-        Text controlsGuide = UIFactory.createControlsText();
-        controlsGuide.setId("controls-guide");
-        FXGL.addUINode(controlsGuide);
+//        // Add back the controls guide
+//        Node controlsGuide = UIFactory.createControlsText();
+//        controlsGuide.setId("controls-guide");
+//        FXGL.addUINode(controlsGuide);
 
         // Small delay before starting a new game to ensure clean state
         FXGL.getGameTimer().runOnceAfter(() -> {
@@ -524,6 +527,7 @@ public class Game extends GameApplication {
         // TODO: Implement back to tower functionality
         // For now, just restart the game
         SceneManager.showScreen(TypeWizApp.ScreenType.MAIN_MENU);
+
     }
 
     public static void main(String[] args) {
