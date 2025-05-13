@@ -39,6 +39,7 @@ public class DifficultyMenuScreen extends FXGLMenu {
                         "-fx-background-position: center center;"
         );
 
+        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
         // Glass panel effect
         Rectangle panel = new Rectangle(500, 500);
         panel.setArcHeight(30);

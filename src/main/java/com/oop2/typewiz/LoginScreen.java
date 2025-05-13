@@ -134,11 +134,11 @@ public class LoginScreen extends FXGLMenu {
                 buttonBox
         );
         root.getChildren().addAll(leftBox, rightBox);
-        FXGL.getGameScene().getRoot().setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
-        javafx.application.Platform.runLater(() ->
-                root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR)
-        );
-        applyFadeInAnimation(root);
+////        FXGL.getGameScene().getRoot().setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+//        javafx.application.Platform.runLater(() ->
+                root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+//        );
+//        applyFadeInAnimation(root);
     }
 
     private void styleButton(Button button, String bgColor, Color textColor) {

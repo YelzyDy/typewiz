@@ -9,6 +9,7 @@ import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
 import com.oop2.typewiz.TypeWizApp;
+import com.oop2.typewiz.util.SoundManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -43,24 +44,23 @@ import javafx.scene.Node;
  */
 public class UIFactory {
     // UI theme colors
-    private static final Color UI_PRIMARY_COLOR = Color.rgb(138, 43, 226); // Deep purple
-    private static final Color UI_SECONDARY_COLOR = Color.rgb(186, 85, 211); // Medium orchid
-    private static final Color UI_ACCENT_COLOR = Color.rgb(255, 223, 0); // Gold
-    private static final Color UI_BG_COLOR = Color.rgb(48, 25, 52, 0.85); // Dark purple with transparency
-    private static final Color UI_TEXT_PRIMARY = Color.WHITE; // Primary text
-    private static final Color UI_TEXT_SECONDARY = Color.LIGHTGRAY; // Secondary text
-
+    private static final Color UI_PRIMARY_COLOR = Color.rgb(128, 0, 128);     // Deep purple
+    private static final Color UI_SECONDARY_COLOR = Color.rgb(138, 43, 226);  // Blue violet
+    private static final Color UI_ACCENT_COLOR = Color.rgb(255, 215, 0);      // Mystical gold
+    private static final Color UI_BG_COLOR = Color.rgb(25, 25, 35, 0.9);      // Dark mystical background
+    private static final Color UI_TEXT_PRIMARY = Color.rgb(230, 230, 250);    // Lavender text
+    private static final Color UI_TEXT_SECONDARY = Color.rgb(255, 223, 0);    // Gold text
 
     // UI style constants
-    private static final String FONT_FAMILY = "Arial";
-    private static final double UI_CORNER_RADIUS = 15;
+    private static final String FONT_FAMILY = "Papyrus";
+    private static final double UI_CORNER_RADIUS = 20;
     private static final double UI_PANEL_OPACITY = 0.85;
-    private static final double UI_BORDER_WIDTH = 2.0;
+    private static final double UI_BORDER_WIDTH = 2.5;
 
     // Performance colors
-    private static final Color GOOD_PERFORMANCE = Color.GREEN;
-    private static final Color MEDIUM_PERFORMANCE = Color.YELLOW;
-    private static final Color POOR_PERFORMANCE = Color.RED;
+    private static final Color GOOD_PERFORMANCE = Color.rgb(147, 112, 219);   // Purple for excellent
+    private static final Color MEDIUM_PERFORMANCE = Color.rgb(65, 105, 225);  // Blue for good
+    private static final Color POOR_PERFORMANCE = Color.rgb(178, 34, 34);     // Dark red for poor
 
     /**
      * Creates a health bar panel
@@ -69,44 +69,43 @@ public class UIFactory {
      * @return A VBox containing the health display
      */
     public static VBox createHealthDisplay(int initialHealth, int maxHealth) {
-        VBox healthDisplay = new VBox(8);
-        healthDisplay.setTranslateX(20);
-        healthDisplay.setTranslateY(20);
-        healthDisplay.setPadding(new Insets(10, 15, 10, 15));
+        VBox healthDisplay = new VBox(6);  // Reduced spacing
+        healthDisplay.setTranslateX(25);
+        healthDisplay.setTranslateY(20);   // Moved up
+        healthDisplay.setPadding(new Insets(10));  // Reduced padding
+        healthDisplay.setMaxWidth(180);    // Smaller width
 
-        // Add background and styling to health panel
         healthDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
-        addPanelBorder(healthDisplay, UI_PRIMARY_COLOR, UI_CORNER_RADIUS);
+        addPanelBorder(healthDisplay, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
 
-        Text healthLabel = new Text("HEALTH");
-        healthLabel.setFill(UI_PRIMARY_COLOR);
-        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));
-        addTextGlow(healthLabel, UI_PRIMARY_COLOR, 0.4);
+        Text healthLabel = new Text("VITALITY");
+        healthLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
+        healthLabel.setFill(UI_ACCENT_COLOR);
+        addTextGlow(healthLabel, UI_SECONDARY_COLOR, 0.6);
 
-        Rectangle healthBar = new Rectangle(200, 20, getHealthColor(initialHealth, maxHealth));
+        Rectangle healthBar = new Rectangle(150, 20, getHealthColor(initialHealth, maxHealth));  // Smaller width
         healthBar.setArcWidth(10);
         healthBar.setArcHeight(10);
-        // Add drop shadow to health bar
-        healthBar.setEffect(new DropShadow(5, Color.BLACK));
 
-        // Add background for health bar
-        Rectangle healthBarBg = new Rectangle(200, 20, Color.rgb(50, 50, 50, 0.6));
+        DropShadow healthGlow = new DropShadow();
+        healthGlow.setColor(UI_SECONDARY_COLOR);
+        healthGlow.setRadius(8);  // Reduced glow
+        healthGlow.setSpread(0.3);
+        healthBar.setEffect(healthGlow);
+
+        Rectangle healthBarBg = new Rectangle(150, 20, Color.rgb(40, 0, 60, 0.6));  // Match width
         healthBarBg.setArcWidth(10);
         healthBarBg.setArcHeight(10);
 
-        // Change the health bar from middle to right to left
         Pane healthBarPane = new Pane();
-        healthBarPane.setPrefSize(200, 20);
-        healthBarPane.setMaxSize(200, 20);
+        healthBarPane.setPrefSize(150, 20);  // Match width
+        healthBarPane.setMaxSize(150, 20);   // Match width
         healthBarPane.getChildren().addAll(healthBarBg, healthBar);
 
-        // Anchor health bar to the left
-        healthBar.setTranslateX(0);
-        healthBar.setTranslateY(0);
-
         Text healthText = new Text(initialHealth + "/" + maxHealth);
+        healthText.setFont(Font.font(FONT_FAMILY, 16));  // Smaller font
         healthText.setFill(UI_TEXT_PRIMARY);
-        healthText.setFont(Font.font(FONT_FAMILY, 16));
+        addTextGlow(healthText, UI_SECONDARY_COLOR, 0.4);
 
         healthDisplay.getChildren().addAll(healthLabel, healthBarPane, healthText);
         healthDisplay.setUserData(new HealthDisplayData(healthBar, healthText, maxHealth));
@@ -124,7 +123,7 @@ public class UIFactory {
 
         HealthDisplayData data = (HealthDisplayData) healthDisplay.getUserData();
         double healthPercentage = (double) currentHealth / data.maxHealth;
-        ((Rectangle)data.getComponent()).setWidth(200 * healthPercentage);
+        ((Rectangle)data.getComponent()).setWidth(150 * healthPercentage);
         data.healthText.setText(currentHealth + "/" + data.maxHealth);
 
         // Update color based on health with smoother gradient
@@ -134,11 +133,11 @@ public class UIFactory {
     private static Color getHealthColor(int health, int maxHealth) {
         double healthPercentage = (double) health / maxHealth;
         if (healthPercentage > 0.6) {
-            return Color.rgb(50, 220, 50); // Bright green
+            return Color.rgb(147, 112, 219); // Magical purple for high health
         } else if (healthPercentage > 0.3) {
-            return Color.rgb(220, 220, 50); // Yellow
+            return Color.rgb(255, 165, 0);   // Mystical orange for medium health
         } else {
-            return Color.rgb(220, 50, 50); // Red
+            return Color.rgb(178, 34, 34);   // Dark red for low health
         }
     }
 
@@ -150,56 +149,53 @@ public class UIFactory {
      * @return An HBox containing the top bar
      */
     public static HBox createTopBar(int initialScore, int initialWave, int maxWaves) {
-        HBox topBar = new HBox(20);
-        topBar.setTranslateX(FXGL.getAppWidth() / 2 - 200);
-        topBar.setTranslateY(20);
-        topBar.setPadding(new Insets(10, 15, 10, 15));
+        HBox topBar = new HBox(50);  // Increased spacing between elements
+        topBar.setTranslateX(FXGL.getAppWidth() / 2 - 300);  // Moved left for wider layout
+        topBar.setTranslateY(20);    // Moved up
+        topBar.setPadding(new Insets(8));  // Reduced padding
         topBar.setAlignment(Pos.CENTER);
+        topBar.setMaxHeight(80);     // Reduced height
 
-        // Add background and styling to top bar
         topBar.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(topBar, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
 
-        // Create score display with cool styling
-        VBox scoreDisplay = new VBox(5);
-        scoreDisplay.setPadding(new Insets(5, 10, 5, 10));
+        // Score display
+        VBox scoreDisplay = new VBox(4);  // Reduced spacing
+        scoreDisplay.setPadding(new Insets(4, 10, 4, 10));  // Reduced padding
         scoreDisplay.setAlignment(Pos.CENTER);
 
-        Text scoreLabel = new Text("SCORE");
+        Text scoreLabel = new Text("ARCANE POINTS");
+        scoreLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
         scoreLabel.setFill(UI_SECONDARY_COLOR);
-        scoreLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));
-        addTextGlow(scoreLabel, UI_SECONDARY_COLOR, 0.4);
+        addTextGlow(scoreLabel, UI_ACCENT_COLOR, 0.5);
 
         Text scoreText = new Text(Integer.toString(initialScore));
-        scoreText.setFill(Color.WHITE);
-        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 28));
-        addTextGlow(scoreText, UI_SECONDARY_COLOR, 0.3);
+        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));  // Smaller font
+        scoreText.setFill(UI_TEXT_SECONDARY);
+        addTextGlow(scoreText, UI_SECONDARY_COLOR, 0.4);
 
         scoreDisplay.getChildren().addAll(scoreLabel, scoreText);
         scoreDisplay.setUserData(scoreText);
 
-        // Create wave display with cool styling
-        VBox waveDisplay = new VBox(5);
-        waveDisplay.setPadding(new Insets(5, 10, 5, 10));
+        // Wave display
+        VBox waveDisplay = new VBox(4);  // Reduced spacing
+        waveDisplay.setPadding(new Insets(4, 10, 4, 10));  // Reduced padding
         waveDisplay.setAlignment(Pos.CENTER);
 
-        Text waveLabel = new Text("WAVE");
+        Text waveLabel = new Text("SPELL WAVE");
+        waveLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
         waveLabel.setFill(UI_ACCENT_COLOR);
-        waveLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));
-        addTextGlow(waveLabel, UI_ACCENT_COLOR, 0.4);
+        addTextGlow(waveLabel, UI_SECONDARY_COLOR, 0.5);
 
         Text waveText = new Text(initialWave + "/" + maxWaves);
-        waveText.setFill(Color.WHITE);
-        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 28));
-        addTextGlow(waveText, UI_ACCENT_COLOR, 0.3);
+        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));  // Smaller font
+        waveText.setFill(UI_TEXT_SECONDARY);
+        addTextGlow(waveText, UI_SECONDARY_COLOR, 0.4);
 
         waveDisplay.getChildren().addAll(waveLabel, waveText);
         waveDisplay.setUserData(waveText);
 
-        // Add score and wave displays to top bar
         topBar.getChildren().addAll(scoreDisplay, waveDisplay);
-
-        // Store both texts in the userdata
         topBar.setUserData(new TopBarData(scoreText, waveText, maxWaves));
 
         return topBar;
@@ -235,12 +231,12 @@ public class UIFactory {
      */
     public static Text createInstructionText() {
         Text instructionText = new Text("");
-        instructionText.setTranslateX(FXGL.getAppWidth() / 2 - 150);
-        instructionText.setTranslateY(FXGL.getAppHeight() / 2);
-        instructionText.setFill(Color.YELLOW);
-        instructionText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 28));
+        instructionText.setTranslateX(FXGL.getAppWidth() / 2 - 200);
+        instructionText.setTranslateY(FXGL.getAppHeight() / 2 - 100);
+        instructionText.setFill(UI_TEXT_SECONDARY);
+        instructionText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 32));
         instructionText.setVisible(false);
-        addTextGlow(instructionText, Color.ORANGE, 0.6);
+        addTextGlow(instructionText, UI_SECONDARY_COLOR, 0.6);
 
         return instructionText;
     }
@@ -250,12 +246,12 @@ public class UIFactory {
      * @return A Text node for controls help
      */
     public static Text createControlsText() {
-        Text controlsText = new Text("Controls: Type words | SHIFT to switch targets | SPACE to destroy word");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 240);
-        controlsText.setTranslateY(FXGL.getAppHeight() - 20);
-        controlsText.setFill(UI_TEXT_SECONDARY);
-        controlsText.setFont(Font.font(FONT_FAMILY, 16));
-        addTextGlow(controlsText, Color.WHITE, 0.2);
+        Text controlsText = new Text("Magical Controls: Type to cast | SHIFT to switch targets | SPACE to banish word");
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 300);
+        controlsText.setTranslateY(FXGL.getAppHeight() - 60);
+        controlsText.setFill(UI_TEXT_PRIMARY);
+        controlsText.setFont(Font.font(FONT_FAMILY, 20));
+        addTextGlow(controlsText, UI_SECONDARY_COLOR, 0.3);
 
         return controlsText;
     }
@@ -269,55 +265,52 @@ public class UIFactory {
      * @return A StackPane containing the button
      */
     public static StackPane createStylishButton(String text, double width, double height, Color color) {
-        // Create button background with rounded corners
         Rectangle buttonBg = new Rectangle(width, height);
-        buttonBg.setArcWidth(20);
-        buttonBg.setArcHeight(20);
-        buttonBg.setFill(Color.rgb(75, 0, 130, 0.8));
-        buttonBg.setStroke(color);
+        buttonBg.setArcWidth(UI_CORNER_RADIUS);
+        buttonBg.setArcHeight(UI_CORNER_RADIUS);
+        buttonBg.setFill(UI_BG_COLOR);
+        buttonBg.setStroke(UI_ACCENT_COLOR);
         buttonBg.setStrokeWidth(3);
 
-        // Add glow effect to button
         DropShadow buttonGlow = new DropShadow();
-        buttonGlow.setColor(color);
-        buttonGlow.setRadius(15);
+        buttonGlow.setColor(UI_SECONDARY_COLOR);
+        buttonGlow.setRadius(20);
         buttonGlow.setSpread(0.3);
         buttonBg.setEffect(buttonGlow);
 
-        // Create button text
         Text buttonText = new Text(text);
-        buttonText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
-        buttonText.setFill(Color.WHITE);
+        buttonText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 28));
+        buttonText.setFill(UI_TEXT_SECONDARY);
 
-        // Add glow to text
         Glow textGlow = new Glow(0.8);
-        buttonText.setEffect(textGlow);
+        DropShadow textShadow = new DropShadow();
+        textShadow.setColor(UI_SECONDARY_COLOR);
+        textShadow.setRadius(10);
+        textShadow.setInput(textGlow);
+        buttonText.setEffect(textShadow);
 
-        // Stack text on background
         StackPane button = new StackPane(buttonBg, buttonText);
+        button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
 
-        // Make button responsive and interactive
-        button.setCursor(javafx.scene.Cursor.HAND); // Change cursor on hover
-
-        // Store original values for animations
+        // Store original values
         Color originalFill = (Color) buttonBg.getFill();
         Color originalStroke = (Color) buttonBg.getStroke();
         double originalRadius = buttonGlow.getRadius();
         double originalSpread = buttonGlow.getSpread();
 
-        // Add hover effect
+        // Hover effect
         button.setOnMouseEntered(e -> {
-            // Brighten background
-            buttonBg.setFill(Color.rgb(123, 104, 238, 0.9));
-            // Increase glow
-            buttonGlow.setRadius(25);
+            buttonBg.setFill(Color.rgb(45, 0, 75, 0.9));
+            buttonGlow.setRadius(30);
             buttonGlow.setSpread(0.5);
-            // Scale button slightly
-            button.setScaleX(1.1);
-            button.setScaleY(1.1);
+            button.setScaleX(1.05);
+            button.setScaleY(1.05);
+
+            // Play hover sound
+            SoundManager.getInstance().playButtonHover();
         });
 
-        // Reset on mouse exit
+        // Reset on exit
         button.setOnMouseExited(e -> {
             buttonBg.setFill(originalFill);
             buttonGlow.setRadius(originalRadius);
@@ -326,18 +319,18 @@ public class UIFactory {
             button.setScaleY(1.0);
         });
 
-        // Add click effect
+        // Click effect
         button.setOnMousePressed(e -> {
-            // Darken background
-            buttonBg.setFill(Color.rgb(40, 40, 60, 0.9));
-            // Change stroke color
-            buttonBg.setStroke(Color.WHITE);
-            // Scale button down
+            buttonBg.setFill(Color.rgb(35, 0, 55, 0.9));
+            buttonBg.setStroke(UI_SECONDARY_COLOR);
             button.setScaleX(0.95);
             button.setScaleY(0.95);
-            // Add vibration effect for feedback
+
+            // Play click sound
+            SoundManager.getInstance().playButtonClick();
+
             javafx.animation.TranslateTransition tt = new javafx.animation.TranslateTransition(
-                    javafx.util.Duration.millis(50), button);
+                    Duration.millis(50), button);
             tt.setByX(3);
             tt.setByY(0);
             tt.setCycleCount(2);
@@ -361,19 +354,32 @@ public class UIFactory {
      * @return A VBox containing the performance display
      */
     public static VBox createPerformanceDisplay() {
-        VBox performanceDisplay = new VBox(5);
-        performanceDisplay.setTranslateX(FXGL.getAppWidth() - 200);
-        performanceDisplay.setTranslateY(20);
+        VBox performanceDisplay = new VBox(4);  // Reduced spacing
+        performanceDisplay.setTranslateX(FXGL.getAppWidth() - 180);  // Moved left
+        performanceDisplay.setTranslateY(20);   // Moved up
+        performanceDisplay.setPadding(new Insets(8));  // Reduced padding
+        performanceDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
+        addPanelBorder(performanceDisplay, UI_SECONDARY_COLOR, UI_CORNER_RADIUS);
 
-        Text performanceLabel = new Text("Performance:");
-        performanceLabel.setFill(Color.WHITE);
-        performanceLabel.setFont(Font.font(16));
+        Text performanceLabel = new Text("Arcane Flow:");
+        performanceLabel.setFont(Font.font(FONT_FAMILY, 16));  // Smaller font
+        performanceLabel.setFill(UI_TEXT_SECONDARY);
+        addTextGlow(performanceLabel, UI_SECONDARY_COLOR, 0.4);
 
-        Rectangle performanceBar = new Rectangle(150, 10, GOOD_PERFORMANCE);
+        Rectangle performanceBar = new Rectangle(120, 12, GOOD_PERFORMANCE);  // Smaller size
+        performanceBar.setArcWidth(8);
+        performanceBar.setArcHeight(8);
+
+        DropShadow barGlow = new DropShadow();
+        barGlow.setColor(UI_SECONDARY_COLOR);
+        barGlow.setRadius(6);  // Reduced glow
+        barGlow.setSpread(0.3);
+        performanceBar.setEffect(barGlow);
 
         Text performanceText = new Text("FPS: 144");
-        performanceText.setFill(Color.WHITE);
-        performanceText.setFont(Font.font(14));
+        performanceText.setFont(Font.font(FONT_FAMILY, 14));  // Smaller font
+        performanceText.setFill(UI_TEXT_PRIMARY);
+        addTextGlow(performanceText, UI_SECONDARY_COLOR, 0.3);
 
         performanceDisplay.getChildren().addAll(performanceLabel, performanceBar, performanceText);
         performanceDisplay.setUserData(new PerformanceData(performanceBar, performanceText));
@@ -399,7 +405,7 @@ public class UIFactory {
         double performancePercentage = Math.min(fps / TARGET_FPS, 1.0);
 
         // Update performance bar
-        ((Rectangle)data.getComponent()).setWidth(150 * performancePercentage);
+        ((Rectangle)data.getComponent()).setWidth(120 * performancePercentage);
 
         // Update performance bar color
         if (performancePercentage >= 0.9) {
@@ -435,8 +441,8 @@ public class UIFactory {
         // Add a subtle glow around the panel
         DropShadow glow = new DropShadow();
         glow.setColor(color);
-        glow.setRadius(20);
-        glow.setSpread(0.5);
+        glow.setRadius(15);
+        glow.setSpread(0.4);
         panel.setEffect(glow);
     }
 
@@ -444,7 +450,7 @@ public class UIFactory {
         Glow glow = new Glow(intensity);
         DropShadow shadow = new DropShadow();
         shadow.setColor(color);
-        shadow.setRadius(10);
+        shadow.setRadius(5);
         shadow.setInput(glow);
         text.setEffect(shadow);
     }
@@ -706,7 +712,7 @@ public class UIFactory {
                 VBox box = (VBox) child;
                 if (!box.getChildren().isEmpty() && box.getChildren().get(0) instanceof Text) {
                     Text label = (Text) box.getChildren().get(0);
-                    if (label.getText().equals("SCORE") && box.getChildren().size() > 1) {
+                    if (label.getText().equals("ARCANE POINTS") && box.getChildren().size() > 1) {
                         playerManager.setScoreText((Text) box.getChildren().get(1));
                     }
                 }
@@ -736,7 +742,7 @@ public class UIFactory {
                 VBox vbox = (VBox) node;
                 if (!vbox.getChildren().isEmpty() && vbox.getChildren().get(0) instanceof Text) {
                     Text titleText = (Text) vbox.getChildren().get(0);
-                    if ("Performance:".equals(titleText.getText())) {
+                    if ("Arcane Flow:".equals(titleText.getText())) {
                         updatePerformanceDisplay(vbox, fps);
                         break;
                     }
@@ -766,13 +772,13 @@ public class UIFactory {
                         break;
                     case "score":
                         label.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));
-                        label.setFill(UI_SECONDARY_COLOR);
-                        addTextGlow(label, UI_SECONDARY_COLOR, 0.4);
+                        label.setFill(UI_TEXT_SECONDARY);
+                        addTextGlow(label, UI_TEXT_SECONDARY, 0.4);
                         break;
                     case "health":
                         label.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));
-                        label.setFill(UI_PRIMARY_COLOR);
-                        addTextGlow(label, UI_PRIMARY_COLOR, 0.4);
+                        label.setFill(UI_ACCENT_COLOR);
+                        addTextGlow(label, UI_ACCENT_COLOR, 0.4);
                         break;
                     case "info":
                     default:
@@ -857,7 +863,7 @@ public class UIFactory {
                 switch(styleType) {
                     case "panel":
                         container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
-                        addPanelBorder(container, UI_PRIMARY_COLOR, UI_CORNER_RADIUS);
+                        addPanelBorder(container, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
                         break;
                     case "header":
                         container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
@@ -865,7 +871,7 @@ public class UIFactory {
                         break;
                     case "footer":
                         container.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
-                        addPanelBorder(container, UI_SECONDARY_COLOR, UI_CORNER_RADIUS);
+                        addPanelBorder(container, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
                         break;
                     default:
                         // Default transparent style

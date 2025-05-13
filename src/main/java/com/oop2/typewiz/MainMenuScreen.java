@@ -239,6 +239,9 @@ public class MainMenuScreen extends FXGLMenu {
         // Hover effects (Scale Animation)
         button.setOnMouseEntered(e -> {
             // Play hover sound
+
+                    FXGL.getGameScene().getRoot().setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
+
             SoundManager.getInstance().playButtonHover();
             button.setTextFill(Color.web("#f8bbd0"));
             ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
@@ -248,6 +251,8 @@ public class MainMenuScreen extends FXGLMenu {
         });
 
         button.setOnMouseExited(e -> {
+                  FXGL.getGameScene().getRoot().setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+
             button.setTextFill(Color.web("#ce93d8"));
             ScaleTransition st = new ScaleTransition(Duration.millis(200), button);
             st.setToX(1.0);

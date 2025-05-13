@@ -2,7 +2,10 @@ package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.oop2.typewiz.util.SoundManager;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -28,26 +31,27 @@ import java.util.List;
  * This class follows the Factory Method pattern to centralize UI creation.
  */
 public class GamePromptFactory {
-    // UI theme colors
-    private static final Color UI_PRIMARY_COLOR = Color.rgb(70, 130, 230);     // Cool blue
-    private static final Color UI_SECONDARY_COLOR = Color.rgb(210, 60, 160);   // Magenta/purple
-    private static final Color UI_ACCENT_COLOR = Color.rgb(255, 215, 0);       // Gold
-    private static final Color UI_BG_COLOR = Color.rgb(30, 30, 50, 0.8);       // Dark blue/purple background
-    private static final Color UI_TEXT_PRIMARY = Color.WHITE;
-    private static final Color UI_TEXT_SECONDARY = Color.LIGHTGRAY;
-    
+    // Magical theme colors
+    private static final Color MAGIC_PURPLE = Color.rgb(128, 0, 128);      // Deep purple for primary elements
+    private static final Color MAGIC_GOLD = Color.rgb(255, 215, 0);       // Mystical gold for accents
+    private static final Color MAGIC_BLUE = Color.rgb(65, 105, 225);      // Royal blue for secondary elements
+    private static final Color MAGIC_VIOLET = Color.rgb(138, 43, 226);    // Blue violet for highlights
+    private static final Color DARK_MYSTICAL = Color.rgb(25, 25, 35, 0.9); // Dark background with transparency
+
+    // Text colors
+    private static final Color TEXT_LIGHT = Color.rgb(255, 255, 255);     // White text
+    private static final Color TEXT_GOLD = Color.rgb(255, 223, 0);        // Gold text
+    private static final Color TEXT_MYSTIC = Color.rgb(230, 230, 250);    // Lavender text
+
     // UI style constants
-    private static final String FONT_FAMILY = "Arial";
-    private static final double UI_CORNER_RADIUS = 15;
-    
-    // Statistic colors
-    private static final Color STAT_TITLE_COLOR = Color.GOLD;
-    private static final Color STAT_VALUE_COLOR = Color.WHITE;
-    private static final Color STAT_GOOD_COLOR = Color.LIMEGREEN;
-    private static final Color STAT_MEDIUM_COLOR = Color.YELLOW;
-    private static final Color STAT_POOR_COLOR = Color.RED;
-    private static final Color GRAPH_LINE_COLOR = Color.DEEPSKYBLUE;
-    private static final Color GRAPH_BACKGROUND_COLOR = Color.rgb(20, 20, 50, 0.7);
+    private static final String MAGIC_FONT = "Papyrus";  // More mystical font
+    private static final double CORNER_RADIUS = 20;      // Rounded corners
+
+    // Performance colors
+    private static final Color PERFECT_MAGIC = Color.rgb(147, 112, 219);   // Purple for excellent
+    private static final Color GOOD_MAGIC = Color.rgb(65, 105, 225);       // Blue for good
+    private static final Color FAIR_MAGIC = Color.rgb(255, 165, 0);        // Orange for fair
+    private static final Color POOR_MAGIC = Color.rgb(178, 34, 34);        // Dark red for poor
 
     /**
      * Creates a wave announcement overlay
@@ -56,109 +60,110 @@ public class GamePromptFactory {
      * @return Node containing the announcement overlay
      */
     public static Node createWaveAnnouncement(int currentWave, int maxWaves) {
-
         SoundManager.getInstance().playWaveAnnounce();
 
-        // Create semi-transparent overlay with a gradient effect
+        // Create mystical background overlay
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
-        LinearGradient gradient = new LinearGradient(
+        LinearGradient mysticalGradient = new LinearGradient(
                 0, 0, 0, 1, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
-                new Stop(0, Color.rgb(60, 20, 120, 0.7)),
-                new Stop(1, Color.rgb(20, 30, 70, 0.7))
+                new Stop(0, Color.rgb(75, 0, 130, 0.7)),   // Indigo top
+                new Stop(1, Color.rgb(128, 0, 128, 0.7))   // Purple bottom
         );
-        overlay.setFill(gradient);
+        overlay.setFill(mysticalGradient);
 
-        // Create stylish wave announcement panel
-        Rectangle announcementPanel = new Rectangle(500, 250);
-        announcementPanel.setArcWidth(30);
-        announcementPanel.setArcHeight(30);
-        announcementPanel.setFill(UI_BG_COLOR);
-        announcementPanel.setStroke(UI_ACCENT_COLOR);
-        announcementPanel.setStrokeWidth(3);
+        // Create magical portal-like panel
+        Rectangle portalPanel = new Rectangle(600, 300);
+        portalPanel.setArcWidth(50);
+        portalPanel.setArcHeight(50);
+        portalPanel.setFill(DARK_MYSTICAL);
+        portalPanel.setStroke(MAGIC_GOLD);
+        portalPanel.setStrokeWidth(3);
 
-        // Add glow effect to the panel
-        DropShadow panelGlow = new DropShadow();
-        panelGlow.setColor(UI_ACCENT_COLOR);
-        panelGlow.setRadius(20);
-        panelGlow.setSpread(0.2);
-        announcementPanel.setEffect(panelGlow);
+        // Add mystical glow
+        DropShadow portalGlow = new DropShadow();
+        portalGlow.setColor(MAGIC_VIOLET);
+        portalGlow.setRadius(30);
+        portalGlow.setSpread(0.3);
+        portalPanel.setEffect(portalGlow);
 
-        // Create wave announcement text with exciting styling
+        // Wave announcement with magical styling
         Text waveText = new Text("WAVE " + currentWave);
-        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 64));
-        waveText.setFill(UI_ACCENT_COLOR);
+        waveText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 72));
+        waveText.setFill(MAGIC_GOLD);
 
-        // Add text glow and effects
-        DropShadow textShadow = new DropShadow();
-        textShadow.setColor(Color.rgb(255, 150, 0));
-        textShadow.setRadius(15);
-        textShadow.setSpread(0.5);
-        waveText.setEffect(textShadow);
+        // Mystical text effects
+        DropShadow textGlow = new DropShadow();
+        textGlow.setColor(MAGIC_VIOLET);
+        textGlow.setRadius(20);
+        textGlow.setSpread(0.4);
+        waveText.setEffect(textGlow);
 
         Text ofText = new Text("OF " + maxWaves);
-        ofText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 32));
-        ofText.setFill(Color.WHITE);
-        ofText.setTranslateY(10); // Adjust vertical position
+        ofText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 36));
+        ofText.setFill(TEXT_MYSTIC);
 
-        // Create difficulty text
+        // Dynamic difficulty text with magical colors
         String difficultyLevel;
         Color difficultyColor;
         if (currentWave <= 3) {
-            difficultyLevel = "EASY";
-            difficultyColor = Color.rgb(60, 220, 60); // Green
+            difficultyLevel = "APPRENTICE";
+            difficultyColor = MAGIC_BLUE;
         } else if (currentWave <= 6) {
-            difficultyLevel = "MEDIUM";
-            difficultyColor = Color.rgb(220, 220, 60); // Yellow
+            difficultyLevel = "ADEPT";
+            difficultyColor = MAGIC_PURPLE;
         } else if (currentWave <= 9) {
-            difficultyLevel = "HARD";
-            difficultyColor = Color.rgb(220, 100, 60); // Orange
+            difficultyLevel = "MASTER";
+            difficultyColor = MAGIC_VIOLET;
         } else {
-            difficultyLevel = "BOSS WAVE";
-            difficultyColor = Color.rgb(220, 60, 60); // Red
+            difficultyLevel = "ARCHMAGE";
+            difficultyColor = MAGIC_GOLD;
         }
 
         Text difficultyText = new Text(difficultyLevel);
-        difficultyText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 46));
+        difficultyText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 48));
         difficultyText.setFill(difficultyColor);
 
-        // Add glow effect to difficulty text
-        Glow difficultyGlow = new Glow(0.8);
-        DropShadow difficultyTextShadow = new DropShadow();
-        difficultyTextShadow.setColor(difficultyColor);
-        difficultyTextShadow.setRadius(10);
-        difficultyTextShadow.setInput(difficultyGlow);
-        difficultyText.setEffect(difficultyTextShadow);
+        // Magical glow effect
+        Glow magicGlow = new Glow(0.8);
+        DropShadow magicShadow = new DropShadow();
+        magicShadow.setColor(difficultyColor);
+        magicShadow.setRadius(15);
+        magicShadow.setInput(magicGlow);
+        difficultyText.setEffect(magicShadow);
 
-        // Create subtitle text
-        Text subtitleText = new Text("Get ready to type!");
-        subtitleText.setFont(Font.font(FONT_FAMILY, 24));
-        subtitleText.setFill(UI_TEXT_SECONDARY);
-        subtitleText.setTranslateY(30);
+        // Mystical subtitle
+        Text subtitleText = new Text("Prepare your spells!");
+        subtitleText.setFont(Font.font(MAGIC_FONT, 28));
+        subtitleText.setFill(TEXT_MYSTIC);
 
-        // Create horizontal box for wave and "of max" text
-        HBox waveNumBox = new HBox(10, waveText, ofText);
-        waveNumBox.setAlignment(Pos.CENTER);
+        // Layout with magical spacing
+        HBox waveBox = new HBox(15, waveText, ofText);
+        waveBox.setAlignment(Pos.CENTER);
 
-        // Create layout for announcement
-        VBox announcementLayout = new VBox(15);
-        announcementLayout.setAlignment(Pos.CENTER);
-        announcementLayout.getChildren().addAll(waveNumBox, difficultyText, subtitleText);
+        VBox contentLayout = new VBox(20);
+        contentLayout.setAlignment(Pos.CENTER);
+        contentLayout.getChildren().addAll(waveBox, difficultyText, subtitleText);
 
-        // Combine panel and content
-        StackPane announcementPane = new StackPane(announcementPanel, announcementLayout);
+        // Combine elements with magical animations
+        StackPane portalPane = new StackPane(portalPanel, contentLayout);
 
-        // Add scale-up animation for the panel
-        ScaleTransition scaleIn = new ScaleTransition(Duration.seconds(0.3), announcementPane);
-        scaleIn.setFromX(0.5);
-        scaleIn.setFromY(0.5);
-        scaleIn.setToX(1.0);
-        scaleIn.setToY(1.0);
-        scaleIn.play();
-        
-        // Return the full view
-        return new StackPane(overlay, announcementPane);
+        // Magical appearance animation
+        ScaleTransition portalOpen = new ScaleTransition(Duration.seconds(0.5), portalPane);
+        portalOpen.setFromX(0.1);
+        portalOpen.setFromY(0.1);
+        portalOpen.setToX(1.0);
+        portalOpen.setToY(1.0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(0.5), portalPane);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+
+        ParallelTransition magicReveal = new ParallelTransition(portalOpen, fadeIn);
+        magicReveal.play();
+
+        return new StackPane(overlay, portalPane);
     }
-    
+
     /**
      * Creates a game over screen
      * @param message Message to display
@@ -170,121 +175,124 @@ public class GamePromptFactory {
      * @param accuracyData Accuracy data over time
      * @return Node containing the game over screen
      */
-    public static Node createGameOverScreen(String message, int score, double wpm, 
-                                           double rawWpm, double accuracy, double consistency,
-                                           List<Double> wpmData, List<Double> accuracyData) {
-
-        // Play appropriate sound
+    public static Node createGameOverScreen(String message, int score, double wpm,
+                                            double rawWpm, double accuracy, double consistency,
+                                            List<Double> wpmData, List<Double> accuracyData) {
+        // Play appropriate sound effect
         if (message.contains("Victory")) {
             SoundManager.getInstance().playVictory();
         } else {
             SoundManager.getInstance().playGameOver();
         }
-        // Create full-screen semi-transparent overlay
-        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
-        overlay.setFill(Color.rgb(0, 0, 0, 0.85));
 
-        // Create title with glow effect
+        // Mystical overlay
+        Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
+        LinearGradient mysticalGradient = new LinearGradient(
+                0, 0, 0, 1, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(25, 25, 35, 0.95)),
+                new Stop(1, Color.rgb(45, 0, 75, 0.95))
+        );
+        overlay.setFill(mysticalGradient);
+
+        // Magical title with effects
         Text titleText = new Text(message);
-        titleText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 64));
-        
-        // Set color based on message
-        if (message.contains("Victory") || message.contains("Complete")) {
-            titleText.setFill(Color.GOLD);
-            
-            // Add stronger glow for victory
-            Glow glow = new Glow(0.8);
-            DropShadow shadow = new DropShadow();
-            shadow.setColor(Color.ORANGE);
-            shadow.setRadius(25);
-            shadow.setSpread(0.5);
-            shadow.setInput(glow);
-            titleText.setEffect(shadow);
+        titleText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 72));
+
+        if (message.contains("Victory")) {
+            titleText.setFill(MAGIC_GOLD);
+            Glow victoryGlow = new Glow(1.0);
+            DropShadow victoryShadow = new DropShadow();
+            victoryShadow.setColor(MAGIC_VIOLET);
+            victoryShadow.setRadius(30);
+            victoryShadow.setSpread(0.6);
+            victoryShadow.setInput(victoryGlow);
+            titleText.setEffect(victoryShadow);
         } else {
-            titleText.setFill(Color.TOMATO);
-            
-            // Add glow for game over
-            Glow glow = new Glow(0.6);
-            DropShadow shadow = new DropShadow();
-            shadow.setColor(Color.DARKRED);
-            shadow.setRadius(15);
-            shadow.setInput(glow);
-            titleText.setEffect(shadow);
+            titleText.setFill(POOR_MAGIC);
+            DropShadow defeatShadow = new DropShadow();
+            defeatShadow.setColor(Color.BLACK);
+            defeatShadow.setRadius(20);
+            defeatShadow.setSpread(0.4);
+            titleText.setEffect(defeatShadow);
         }
 
-        // Create title box
         HBox titleBox = new HBox(titleText);
         titleBox.setAlignment(Pos.CENTER);
-        titleBox.setPadding(new Insets(20));
+        titleBox.setPadding(new Insets(30));
 
-        // Create score text
-        Text scoreText = new Text("Final Score: " + score);
-        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 36));
-        scoreText.setFill(Color.WHITE);
-        
-        // Add glow to score
-        Glow scoreGlow = new Glow(0.5);
+        // Magical score display
+        Text scoreText = new Text("Magical Score: " + score);
+        scoreText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 42));
+        scoreText.setFill(MAGIC_GOLD);
+
+        Glow scoreGlow = new Glow(0.6);
         DropShadow scoreShadow = new DropShadow();
-        scoreShadow.setColor(UI_ACCENT_COLOR);
-        scoreShadow.setRadius(10);
+        scoreShadow.setColor(MAGIC_VIOLET);
+        scoreShadow.setRadius(15);
         scoreShadow.setInput(scoreGlow);
         scoreText.setEffect(scoreShadow);
 
-        // Create stats panel using StatsUIFactory
+        // Create mystical stats panel
         VBox statsPanel = StatsUIFactory.createStatsPanel(wpm, rawWpm, accuracy, consistency);
-        
-        // Update stats data in factory
+
+        // Update performance data
         StatsUIFactory.setWpmData(wpmData);
         StatsUIFactory.setAccuracyData(accuracyData);
-        
-        // Create graph using StatsUIFactory
+
+        // Create magical performance graph
         javafx.scene.canvas.Canvas graphCanvas = StatsUIFactory.createTypingGraph();
-        
-        // Create restart button using UIFactory
-        StackPane restartButton = UIFactory.createStylishButton("Play Again", 200, 60, UI_PRIMARY_COLOR);
-        restartButton.setId("play-again-button"); // Add a unique ID to the button for easy identification
-        
-        // Create two columns for stats layout
-        HBox gameStatsLayout = new HBox(20);
-        gameStatsLayout.setAlignment(Pos.CENTER);
-        gameStatsLayout.setPadding(new Insets(20));
 
-        // Left column (stats)
-        VBox leftColumn = new VBox(15, scoreText, statsPanel);
+        // Mystical restart button
+        StackPane restartButton = UIFactory.createStylishButton("Cast Again", 220, 65, MAGIC_PURPLE);
+        restartButton.setId("play-again-button");
+
+        // Two-column mystical layout
+        HBox statsLayout = new HBox(30);
+        statsLayout.setAlignment(Pos.CENTER);
+        statsLayout.setPadding(new Insets(25));
+
+        // Left column (Magical Stats)
+        VBox leftColumn = new VBox(20, scoreText, statsPanel);
         leftColumn.setAlignment(Pos.CENTER);
-        leftColumn.setPadding(new Insets(10));
+        leftColumn.setPadding(new Insets(15));
 
-        Rectangle leftBg = new Rectangle(420, 340);
-        leftBg.setArcWidth(UI_CORNER_RADIUS);
-        leftBg.setArcHeight(UI_CORNER_RADIUS);
-        leftBg.setFill(Color.rgb(0, 40, 80, 0.75));
-        leftBg.setStroke(Color.web("#1E90FF"));
+        Rectangle leftBg = new Rectangle(450, 360);
+        leftBg.setArcWidth(CORNER_RADIUS);
+        leftBg.setArcHeight(CORNER_RADIUS);
+        leftBg.setFill(Color.rgb(45, 0, 75, 0.8));
+        leftBg.setStroke(MAGIC_GOLD);
         leftBg.setStrokeWidth(2);
 
-        // Right column (graph)
-        VBox rightColumn = new VBox(15, graphCanvas);
+        // Right column (Mystical Graph)
+        VBox rightColumn = new VBox(20, graphCanvas);
         rightColumn.setAlignment(Pos.CENTER);
-        rightColumn.setPadding(new Insets(10));
+        rightColumn.setPadding(new Insets(15));
 
-        Rectangle rightBg = new Rectangle(420, 340);
-        rightBg.setArcWidth(UI_CORNER_RADIUS);
-        rightBg.setArcHeight(UI_CORNER_RADIUS);
-        rightBg.setFill(Color.rgb(50, 0, 80, 0.75));
-        rightBg.setStroke(Color.web("#E1C16E"));
+        Rectangle rightBg = new Rectangle(450, 360);
+        rightBg.setArcWidth(CORNER_RADIUS);
+        rightBg.setArcHeight(CORNER_RADIUS);
+        rightBg.setFill(Color.rgb(75, 0, 130, 0.8));
+        rightBg.setStroke(MAGIC_VIOLET);
         rightBg.setStrokeWidth(2);
 
         StackPane leftStack = new StackPane(leftBg, leftColumn);
         StackPane rightStack = new StackPane(rightBg, rightColumn);
 
-        gameStatsLayout.getChildren().addAll(leftStack, rightStack);
+        statsLayout.getChildren().addAll(leftStack, rightStack);
 
-        VBox fullLayout = new VBox(15, titleBox, gameStatsLayout, restartButton);
+        // Final magical layout
+        VBox fullLayout = new VBox(20, titleBox, statsLayout, restartButton);
         fullLayout.setAlignment(Pos.CENTER);
 
-        // Return the full view
+        // Add magical entrance animation
+        FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), fullLayout);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
         return new StackPane(overlay, fullLayout);
     }
-    
+
     /**
      * Creates a fade-in text instruction
      * @param text The text to display
@@ -295,12 +303,12 @@ public class GamePromptFactory {
         // Create semi-transparent overlay
         Rectangle overlay = new Rectangle(FXGL.getAppWidth(), FXGL.getAppHeight());
         overlay.setFill(Color.rgb(0, 0, 0, 0.4));
-        
+
         // Create instruction text
         Text instructionText = new Text(text);
-        instructionText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 36));
+        instructionText.setFont(Font.font(MAGIC_FONT, FontWeight.BOLD, 36));
         instructionText.setFill(Color.YELLOW);
-        
+
         // Add glow to text
         Glow glow = new Glow(0.6);
         DropShadow shadow = new DropShadow();
@@ -308,11 +316,11 @@ public class GamePromptFactory {
         shadow.setRadius(10);
         shadow.setInput(glow);
         instructionText.setEffect(shadow);
-        
+
         // Create container for text
         StackPane textContainer = new StackPane(instructionText);
         textContainer.setPadding(new Insets(20));
-        
+
         // Return the full view
         return new StackPane(overlay, textContainer);
     }
@@ -339,19 +347,19 @@ public class GamePromptFactory {
         // Base case: found a StackPane that contains "Play Again" text
         if (node instanceof StackPane) {
             StackPane stackPane = (StackPane) node;
-            
+
             // Search for the text node
             for (Node child : stackPane.getChildren()) {
                 if (child instanceof Text) {
                     Text text = (Text) child;
-                    if (text.getText().equals("Play Again")) {
+                    if (text.getText().equals("Cast Again")) {
                         // Assign an ID to the button for easier identification
                         stackPane.setId("play-again-button");
-                        
+
                         // This is the button, add click handler with event consumption
                         stackPane.setOnMouseClicked(event -> {
                             event.consume(); // Prevent event bubbling
-                            
+
                             // Schedule restart on next frame to avoid concurrent modification
                             FXGL.getGameTimer().runOnceAfter(() -> {
                                 restartAction.run();
@@ -362,7 +370,7 @@ public class GamePromptFactory {
                 }
             }
         }
-        
+
         // Recursively search in children
         if (node instanceof Parent) {
             Parent parent = (Parent) node;
@@ -372,7 +380,7 @@ public class GamePromptFactory {
                 }
             }
         }
-        
+
         return false;
     }
 } 
