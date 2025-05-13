@@ -9,6 +9,8 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import com.oop2.typewiz.SceneManager;
+import com.oop2.typewiz.TypeWizApp;
 import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
@@ -487,8 +489,7 @@ public class Game extends GameApplication {
         SoundManager.getInstance().playButtonClick();
 
         // TODO: Implement back to tower functionality
-        // For now, just restart the game
-        restartGame();
+        SceneManager.showScreen(TypeWizApp.ScreenType.MAIN_MENU);
     }
 
     public static void main(String[] args) {
