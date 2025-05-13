@@ -42,11 +42,13 @@ public class InputManager {
      * Sets up event handlers for keyboard input
      */
     public void setupInput() {
+        System.out.println("Setting up input handlers...");
         // Handle key typing (letters, digits, etc.)
         FXGL.getInput().addEventHandler(KeyEvent.KEY_TYPED, this::handleKeyTyped);
 
         // Handle key presses (backspace, shift, space, enter)
         FXGL.getInput().addEventHandler(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        System.out.println("Input handlers set up successfully");
     }
 
     /**
@@ -68,6 +70,7 @@ public class InputManager {
         }
 
         char typedChar = event.getCharacter().charAt(0);
+        System.out.println("Received typed character: " + typedChar);
 
         // Only process letter, digit, hyphen, or apostrophe
         if (Character.isLetterOrDigit(typedChar) || typedChar == '-' || typedChar == '\'') {
@@ -76,12 +79,17 @@ public class InputManager {
             // If no word is selected, try to select one first
             if (selectedWordBlock == null) {
                 List<Entity> enemies = entityManager.getActiveEnemies();
+                System.out.println("No word selected. Found " + enemies.size() + " active enemies");
                 if (!enemies.isEmpty()) {
                     Entity target = findMostUrgentEnemy(enemies);
                     if (target != null) {
                         selectWordBlock(target);
                         System.out.println("Auto-selected target for typing: " + target.getString("word"));
+                    } else {
+                        System.out.println("No urgent enemy found to select");
                     }
+                } else {
+                    System.out.println("No active enemies to select from");
                 }
             }
 
@@ -536,8 +544,10 @@ public class InputManager {
      * Resets input state
      */
     public void reset() {
+        System.out.println("Resetting input manager...");
         currentInput.setLength(0);
         selectedWordBlock = null;
+        System.out.println("Input manager reset complete");
     }
 
     /**

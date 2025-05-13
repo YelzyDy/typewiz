@@ -84,7 +84,7 @@ public class Game extends GameApplication {
         SoundManager.getInstance().playBGM("game");
         SoundManager.getInstance().fadeInBGM(Duration.seconds(2.0));
 
-        // Add global event filter to properly handle shift key
+        // Add global event filter to properly handle shift key and ESC key
         setupGlobalKeyHandling();
 
         // Initialize the game environment (View setup)
@@ -157,6 +157,7 @@ public class Game extends GameApplication {
         stateManager.setStateEntryAction(GameStateManager.GameState.WAVE_ANNOUNCEMENT, wave -> {
             // Play wave announcement sound
             SoundManager.getInstance().playWaveAnnounce();
+            System.out.println("Entering WAVE_ANNOUNCEMENT state");
 
             // Start the wave to initialize parameters
             waveManager.startWave();
@@ -179,6 +180,7 @@ public class Game extends GameApplication {
             // Delay the transition to PLAYING state
             FXGL.runOnce(() -> {
                 announcement.removeFromWorld();
+                System.out.println("Transitioning to PLAYING state after wave announcement");
                 stateManager.startPlaying(null);
                 waveManager.startSpawning();
             }, Duration.seconds(2.0));
@@ -285,6 +287,7 @@ public class Game extends GameApplication {
      * Restarts the game by resetting all components
      */
     private void restartGame() {
+        System.out.println("=== Starting game restart ===");
         // Play button click sound
         SoundManager.getInstance().playButtonClick();
 
@@ -299,6 +302,7 @@ public class Game extends GameApplication {
                 entitiesToRemove.add(entity);
             }
         }
+        System.out.println("Found " + entitiesToRemove.size() + " entities to remove");
 
         // Remove them outside the iteration to avoid concurrent modification
         for (Entity entity : entitiesToRemove) {
@@ -314,12 +318,14 @@ public class Game extends GameApplication {
                 nodesToRemove.add(node);
             }
         }
+        System.out.println("Found " + nodesToRemove.size() + " UI nodes to remove");
 
         // Remove UI nodes
         for (Node node : nodesToRemove) {
             FXGL.removeUINode(node);
         }
 
+        System.out.println("Resetting all managers...");
         // Reset all managers
         entityManager.clear();
         playerManager.reset();
@@ -330,14 +336,22 @@ public class Game extends GameApplication {
         // Reset UI to wave 1
         updateWaveUI(1);
 
+        System.out.println("Setting game state to PLAYING");
         // Force game state to PLAYING before starting the wave
         stateManager.startPlaying(null);
 
+        // Re-setup input handlers
+        System.out.println("Re-setting up input handlers");
+        inputManager.setupInput();
+
         // Small delay before starting a new game to ensure clean state
         FXGL.getGameTimer().runOnceAfter(() -> {
+            System.out.println("Starting wave 1");
             // Start a new wave
             stateManager.announceWave(1);
         }, javafx.util.Duration.millis(200));
+
+        System.out.println("=== Game restart completed ===");
     }
 
     /**
@@ -392,7 +406,7 @@ public class Game extends GameApplication {
         final long[] lastShiftKeyTime = {0};
         final long SHIFT_DEBOUNCE_MS = 200; // Debounce time in milliseconds
 
-        // Only handle SHIFT key presses for cycling through targets
+        // Handle SHIFT key presses for cycling through targets and ESC for pause
         FXGL.getInput().addEventHandler(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
                 // If in playing state, cycle through targets
@@ -405,12 +419,77 @@ public class Game extends GameApplication {
                     }
                     event.consume(); // Prevent event from being processed further
                 }
+            } else if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                // Handle ESC key for pause menu
+                System.out.println("ESC key pressed - Current state: " + stateManager.getCurrentState());
+                if (stateManager.isInState(GameStateManager.GameState.PLAYING)) {
+                    System.out.println("Showing pause menu");
+                    showPauseMenu();
+                    event.consume();
+                } else if (stateManager.isInState(GameStateManager.GameState.PAUSED)) {
+                    System.out.println("Resuming game");
+                    resumeGame();
+                    event.consume();
+                }
             }
         });
-
-        // No need to handle shift key release events
     }
 
+    private void showPauseMenu() {
+        System.out.println("Creating pause menu");
+        // Create pause menu
+        Node pauseMenu = PauseMenuFactory.createPauseMenu(
+                this::resumeGame,      // Resume action
+                this::restartGame,     // Restart action
+                this::backToTower      // Back to tower action
+        );
+
+        // Add unique ID for the pause menu
+        pauseMenu.setId("pause-menu");
+
+        // Add to scene with high Z-index
+        FXGL.entityBuilder()
+                .view(pauseMenu)
+                .zIndex(200)  // Higher than game over screen
+                .buildAndAttach();
+
+        // Pause the game state
+        stateManager.pauseGame(null);
+        System.out.println("Pause menu created and game state set to PAUSED");
+
+        // Lower BGM volume
+        SoundManager.getInstance().setMusicVolume(0.2);
+    }
+
+    private void resumeGame() {
+        System.out.println("Removing pause menu");
+        // Remove pause menu
+        for (Entity entity : FXGL.getGameWorld().getEntities()) {
+            if (entity.getViewComponent().getChildren().stream()
+                    .anyMatch(node -> "pause-menu".equals(node.getId()))) {
+                entity.removeFromWorld();
+            }
+        }
+
+        // Resume game state
+        stateManager.resumeGame(null);
+        System.out.println("Pause menu removed and game state set to PLAYING");
+
+        // Restore BGM volume
+        SoundManager.getInstance().setMusicVolume(0.4);
+    }
+
+    private void backToTower() {
+        // Stop game music
+        SoundManager.getInstance().stopBGM();
+
+        // Play button click sound
+        SoundManager.getInstance().playButtonClick();
+
+        // TODO: Implement back to tower functionality
+        // For now, just restart the game
+        restartGame();
+    }
 
     public static void main(String[] args) {
         launch(args);
