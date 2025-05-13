@@ -16,7 +16,7 @@ public class SoundManager {
 
     // BGM files
     private static final String MENU_BGM = "bgm.mp3";
-    private static final String GAME_BGM = "bgmusic1.wav";
+    private static final String GAME_BGM = "bgm2.mp3";
 //    private static final String BOSS_BGM = "bgm/boss_theme.wav";
 
     // SFX files

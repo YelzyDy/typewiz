@@ -17,6 +17,12 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.geometry.Pos;
 import javafx.util.Duration;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.effect.Glow;
+import javafx.scene.text.TextAlignment;
+import javafx.geometry.Insets;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -174,11 +180,11 @@ public class GrimougeFactory {
 
         // Clear existing text
         textFlow.getChildren().clear();
-        
+
         // Create container for word with background
         StackPane wordContainer = new StackPane();
         wordContainer.setAlignment(Pos.CENTER); // Ensure container is centered
-        
+
         // Determine font size based on word length - longer words get smaller font
         double fontSize = WORD_FONT_SIZE;
         if (word.length() > 8) {
@@ -186,69 +192,115 @@ public class GrimougeFactory {
         } else if (word.length() > 12) {
             fontSize *= 0.7; // 30% smaller for very long words
         }
-        
-        // Create word background for better visibility
+
+        // Create word background with gradient
         Rectangle wordBackground = new Rectangle();
-        double padding = 10;
-        double wordLength = word.length() * fontSize * 0.55 + padding * 2;  // Even more compact width
+        double padding = 15;
+        double wordLength = word.length() * fontSize * 0.6 + padding * 2;  // Adjusted width calculation
         wordBackground.setWidth(Math.max(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE * 0.6, wordLength));
-        wordBackground.setHeight(fontSize + padding);  // Compact height
-        wordBackground.setArcWidth(10);  // Smaller corners
-        wordBackground.setArcHeight(10);
-        wordBackground.setFill(Color.rgb(0, 0, 0, 0.8));
-        wordBackground.setStroke(Color.rgb(200, 200, 200, 0.6));
-        wordBackground.setStrokeWidth(1.0);
-        
-        // Smaller drop shadow 
+        wordBackground.setHeight(fontSize + padding * 1.5);  // Increased height for better visual
+        wordBackground.setArcWidth(20);  // More rounded corners
+        wordBackground.setArcHeight(20);
+
+        // Create gradient background based on row number
+        int row = grimouge.getInt("row");
+        LinearGradient gradient;
+        switch (row % 4) {
+            case 0: // Purple theme for row 0
+                gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(75, 0, 130, 0.9)),
+                        new Stop(0.5, Color.rgb(128, 0, 128, 0.9)),
+                        new Stop(1, Color.rgb(75, 0, 130, 0.9)));
+                break;
+            case 1: // Blue theme for row 1
+                gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(0, 0, 139, 0.9)),
+                        new Stop(0.5, Color.rgb(65, 105, 225, 0.9)),
+                        new Stop(1, Color.rgb(0, 0, 139, 0.9)));
+                break;
+            case 2: // Cyan theme for row 2
+                gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(0, 139, 139, 0.9)),
+                        new Stop(0.5, Color.rgb(0, 206, 209, 0.9)),
+                        new Stop(1, Color.rgb(0, 139, 139, 0.9)));
+                break;
+            default: // Teal theme for other rows
+                gradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+                        new Stop(0, Color.rgb(0, 128, 128, 0.9)),
+                        new Stop(0.5, Color.rgb(32, 178, 170, 0.9)),
+                        new Stop(1, Color.rgb(0, 128, 128, 0.9)));
+                break;
+        }
+        wordBackground.setFill(gradient);
+
+        // Add golden border
+        wordBackground.setStroke(Color.rgb(255, 215, 0, 0.8));
+        wordBackground.setStrokeWidth(2.0);
+
+        // Enhanced drop shadow with color matching the gradient
         DropShadow dropShadow = new DropShadow();
-        dropShadow.setColor(Color.BLACK);
-        dropShadow.setRadius(5);
-        dropShadow.setSpread(0.2);
+        dropShadow.setColor(Color.rgb(0, 0, 0, 0.6));
+        dropShadow.setRadius(10);
+        dropShadow.setSpread(0.4);
+        dropShadow.setOffsetY(3);
         wordBackground.setEffect(dropShadow);
-        
+
         // Create compact HBox for text with center alignment
-        HBox wordBox = new HBox(1); // Minimal spacing between letters
+        HBox wordBox = new HBox(2); // Slightly increased spacing between letters
         wordBox.setAlignment(Pos.CENTER);
-        
-        // Create letter nodes
+        wordBox.setPadding(new Insets(0, 5, 0, 5)); // Add some horizontal padding
+
+        // Create letter nodes with enhanced styling
         List<Text> letterNodes = new ArrayList<>();
         for (char c : word.toCharArray()) {
             Text letterText = new Text(String.valueOf(c));
             letterText.setFont(Font.font(FONT_FAMILY, javafx.scene.text.FontWeight.BOLD, fontSize));
             letterText.setFill(Color.WHITE);
-            
-            // Add minimal stroke
-            letterText.setStroke(Color.BLACK);
-            letterText.setStrokeWidth(0.5);
-            
-            // Less glow
-            javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.2);
-            letterText.setEffect(glow);
-            
+
+            // Add stronger text outline
+            letterText.setStroke(Color.rgb(0, 0, 0, 0.8));
+            letterText.setStrokeWidth(1.0);
+
+            // Add text glow effect
+            Glow glow = new Glow(0.3);
+            DropShadow textShadow = new DropShadow();
+            textShadow.setColor(Color.rgb(255, 255, 255, 0.5));
+            textShadow.setRadius(5);
+            textShadow.setSpread(0.5);
+            textShadow.setInput(glow);
+            letterText.setEffect(textShadow);
+
             letterNodes.add(letterText);
             wordBox.getChildren().add(letterText);
         }
-        
+
         // Add word background and text to the container
         wordContainer.getChildren().addAll(wordBackground, wordBox);
-        
+
         // Add the container to the text flow
         textFlow.getChildren().add(wordContainer);
-        textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER); // Make sure text flow is centered
+        textFlow.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
 
         // Store letter nodes for later use
         grimouge.setProperty("letterNodes", letterNodes);
-        
-        // Add connecting line from grimouge to word
+
+        // Add connecting line from grimouge to word with gradient
         Line connectionLine = new Line();
         connectionLine.setStartX(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE / 2);
         connectionLine.setStartY(GRIMOUGE_FRAME_HEIGHT * GRIMOUGE_SCALE / 2);
         connectionLine.setEndX(GRIMOUGE_FRAME_WIDTH * GRIMOUGE_SCALE / 2);
-        connectionLine.setEndY(WORD_VERTICAL_OFFSET * 0.8);  // Match the reduced vertical offset
-        connectionLine.setStroke(Color.rgb(200, 200, 200, 0.3));
-        connectionLine.setStrokeWidth(0.75);
-        connectionLine.getStrokeDashArray().addAll(2.0, 2.0);  // Smaller dashes
-        
+        connectionLine.setEndY(WORD_VERTICAL_OFFSET * 0.8);
+
+        // Create gradient for the line
+        LinearGradient lineGradient = new LinearGradient(
+                0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(255, 255, 255, 0.1)),
+                new Stop(1, Color.rgb(255, 255, 255, 0.4))
+        );
+        connectionLine.setStroke(lineGradient);
+        connectionLine.setStrokeWidth(1.5);
+        connectionLine.getStrokeDashArray().addAll(5.0, 5.0);
+
         // Add to view before the text to keep text on top
         view.getChildren().add(1, connectionLine);
     }
@@ -265,27 +317,27 @@ public class GrimougeFactory {
      * @param entityType Entity type enum value for the grimouges
      * @return List of spawned grimouge entities
      */
-    public static List<Entity> spawnGrimougeGroup(int currentGroupSize, double minY, double maxY, 
-                                              boolean fromRight, double spawnPerimeterRight,
-                                              java.util.function.Supplier<String> wordSupplier,
-                                              Enum<?> entityType) {
+    public static List<Entity> spawnGrimougeGroup(int currentGroupSize, double minY, double maxY,
+                                                  boolean fromRight, double spawnPerimeterRight,
+                                                  java.util.function.Supplier<String> wordSupplier,
+                                                  Enum<?> entityType) {
         List<Entity> newGrimouges = new ArrayList<>();
-        
+
         // Calculate spawn area
         double availableHeight = maxY - minY;
-        
+
         // Generate random positions with minimal spacing checks
         List<Double> spawnPositions = new ArrayList<>();
-        
+
         // Generate random positions
         for (int i = 0; i < currentGroupSize; i++) {
             double yPos = minY + random.nextDouble() * availableHeight;
             spawnPositions.add(yPos);
         }
-        
+
         // Sort positions to keep some visual order
         Collections.sort(spawnPositions);
-        
+
         // Spawn grimouges at positions
         int spawned = 0;
         for (double yPos : spawnPositions) {
@@ -295,7 +347,7 @@ public class GrimougeFactory {
             newGrimouges.add(grimouge);
             spawned++;
         }
-        
+
         return newGrimouges;
     }
 
@@ -306,13 +358,13 @@ public class GrimougeFactory {
      */
     public static void selectWordBlock(Entity grimouge) {
         if (grimouge == null) return;
-        
+
         try {
             List<Text> letterNodes = grimouge.getObject("letterNodes");
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(SELECTED_COLOR);
-                    
+
                     // Increase glow effect for better visibility when selected
                     javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.5);
                     letter.setEffect(glow);
@@ -323,7 +375,7 @@ public class GrimougeFactory {
             System.err.println("Error selecting word block: " + e.getMessage());
         }
     }
-    
+
     /**
      * Resets the grimouge's word to default white color.
      *
@@ -331,7 +383,7 @@ public class GrimougeFactory {
      */
     public static void resetBlockToDefaultColor(Entity grimouge) {
         if (grimouge == null) return;
-        
+
         try {
             List<Text> letterNodes = grimouge.getObject("letterNodes");
             if (letterNodes != null) {
@@ -345,7 +397,7 @@ public class GrimougeFactory {
             System.err.println("Error resetting block color: " + e.getMessage());
         }
     }
-    
+
     /**
      * Updates letter colors based on typing progress.
      *
@@ -354,15 +406,15 @@ public class GrimougeFactory {
      */
     public static void updateLetterColors(Entity grimouge, String currentInput) {
         if (grimouge == null) return;
-        
+
         try {
             List<Text> letterNodes = grimouge.getObject("letterNodes");
             if (letterNodes == null) return;
-            
+
             // Update colors - typed letters blue, remaining letters yellow
             for (int i = 0; i < letterNodes.size(); i++) {
                 Text letter = letterNodes.get(i);
-                
+
                 if (i < currentInput.length()) {
                     letter.setFill(TYPED_COLOR);
                     // Add stronger glow for typed letters
@@ -380,7 +432,7 @@ public class GrimougeFactory {
             System.err.println("Error updating letter colors: " + e.getMessage());
         }
     }
-    
+
     /**
      * Marks all letters in the grimouge's word as complete (all blue).
      *
@@ -388,13 +440,13 @@ public class GrimougeFactory {
      */
     public static void markWordAsComplete(Entity grimouge) {
         if (grimouge == null) return;
-        
+
         try {
             List<Text> letterNodes = grimouge.getObject("letterNodes");
             if (letterNodes != null) {
                 for (Text letter : letterNodes) {
                     letter.setFill(TYPED_COLOR);
-                    
+
                     // Add strong glow effect for completed words
                     javafx.scene.effect.Glow glow = new javafx.scene.effect.Glow(0.8);
                     letter.setEffect(glow);
@@ -405,7 +457,7 @@ public class GrimougeFactory {
             System.err.println("Error marking word as complete: " + e.getMessage());
         }
     }
-    
+
     /**
      * Finds the closest grimouge to the center of the screen.
      *
@@ -414,22 +466,22 @@ public class GrimougeFactory {
      */
     public static Entity findClosestGrimougeToCenter(List<Entity> activeGrimouges) {
         if (activeGrimouges.isEmpty()) return null;
-        
+
         double centerX = FXGL.getAppWidth() / 2.0;
         double centerY = FXGL.getAppHeight() / 2.0;
-        
+
         Entity closest = null;
         double minDistance = Double.MAX_VALUE;
-        
+
         for (Entity grimouge : activeGrimouges) {
             try {
                 // Make sure it has the required property
                 grimouge.getString("word");
-                
+
                 double dx = grimouge.getX() - centerX;
                 double dy = grimouge.getY() - centerY;
                 double distance = Math.sqrt(dx * dx + dy * dy);
-                
+
                 if (distance < minDistance) {
                     minDistance = distance;
                     closest = grimouge;
@@ -439,7 +491,7 @@ public class GrimougeFactory {
                 continue;
             }
         }
-        
+
         return closest;
     }
 } 

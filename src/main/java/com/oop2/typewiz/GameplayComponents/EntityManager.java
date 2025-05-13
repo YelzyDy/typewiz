@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-
-import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.Node;
 
 /**
@@ -701,9 +699,8 @@ public class EntityManager {
                     }
                     animationTime += tpf;
 
-                    // Play wing flap sound at certain animation frames
-                    if (animationTime >= 1.5) { // Play sound every 0.2 seconds of animation
-                        SoundManager.getInstance().playWingFlap();
+                    // Remove wing flap sound - we'll use BGM instead
+                    if (animationTime >= 0.2) {
                         animationTime = 0; // Reset animation timer
                     }
 

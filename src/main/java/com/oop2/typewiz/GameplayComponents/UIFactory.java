@@ -31,7 +31,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -149,53 +152,84 @@ public class UIFactory {
      * @return An HBox containing the top bar
      */
     public static HBox createTopBar(int initialScore, int initialWave, int maxWaves) {
-        HBox topBar = new HBox(50);  // Increased spacing between elements
-        topBar.setTranslateX(FXGL.getAppWidth() / 2 - 300);  // Moved left for wider layout
-        topBar.setTranslateY(20);    // Moved up
-        topBar.setPadding(new Insets(8));  // Reduced padding
+        // Create main container with magical styling
+        HBox topBar = new HBox(20);  // Reduced spacing between elements
         topBar.setAlignment(Pos.CENTER);
-        topBar.setMaxHeight(80);     // Reduced height
+        topBar.setPadding(new Insets(5));  // Minimal padding
+        topBar.setMaxHeight(60);     // Reduced height
 
-        topBar.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
-        addPanelBorder(topBar, UI_ACCENT_COLOR, UI_CORNER_RADIUS);
+        // Calculate center position
+        double centerX = FXGL.getAppWidth() / 2 - 200;  // Adjusted for narrower layout
+        topBar.setTranslateX(centerX);
+        topBar.setTranslateY(20);
 
-        // Score display
-        VBox scoreDisplay = new VBox(4);  // Reduced spacing
-        scoreDisplay.setPadding(new Insets(4, 10, 4, 10));  // Reduced padding
+        // Create magical background with gradient
+        Rectangle bg = new Rectangle(400, 80);  // Reduced width and height
+        bg.setArcWidth(30);  // Adjusted corner radius
+        bg.setArcHeight(30);
+
+        // Create a more magical gradient background
+        LinearGradient gradient = new LinearGradient(
+                0, 0, 1, 0, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
+                new Stop(0, Color.rgb(45, 0, 75, 0.9)),    // Deep purple start
+                new Stop(0.5, Color.rgb(75, 0, 130, 0.9)), // Royal purple middle
+                new Stop(1, Color.rgb(45, 0, 75, 0.9))     // Deep purple end
+        );
+        bg.setFill(gradient);
+        bg.setStroke(UI_ACCENT_COLOR);
+        bg.setStrokeWidth(2);  // Slightly thinner border
+
+        // Score display with enhanced styling
+        VBox scoreDisplay = new VBox(2);  // Minimal spacing
         scoreDisplay.setAlignment(Pos.CENTER);
+        scoreDisplay.setPadding(new Insets(2, 8, 2, 8));  // Minimal padding
 
         Text scoreLabel = new Text("ARCANE POINTS");
-        scoreLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
-        scoreLabel.setFill(UI_SECONDARY_COLOR);
-        addTextGlow(scoreLabel, UI_ACCENT_COLOR, 0.5);
+        scoreLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 16));  // Smaller font
+        scoreLabel.setFill(UI_ACCENT_COLOR);
+        addTextGlow(scoreLabel, UI_SECONDARY_COLOR, 0.4);
 
         Text scoreText = new Text(Integer.toString(initialScore));
-        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));  // Smaller font
+        scoreText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 22));  // Smaller font
         scoreText.setFill(UI_TEXT_SECONDARY);
         addTextGlow(scoreText, UI_SECONDARY_COLOR, 0.4);
 
         scoreDisplay.getChildren().addAll(scoreLabel, scoreText);
         scoreDisplay.setUserData(scoreText);
 
-        // Wave display
-        VBox waveDisplay = new VBox(4);  // Reduced spacing
-        waveDisplay.setPadding(new Insets(4, 10, 4, 10));  // Reduced padding
+        // Wave display with enhanced styling
+        VBox waveDisplay = new VBox(2);  // Minimal spacing
         waveDisplay.setAlignment(Pos.CENTER);
+        waveDisplay.setPadding(new Insets(2, 8, 2, 8));  // Minimal padding
 
         Text waveLabel = new Text("SPELL WAVE");
-        waveLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 18));  // Smaller font
+        waveLabel.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 16));  // Smaller font
         waveLabel.setFill(UI_ACCENT_COLOR);
-        addTextGlow(waveLabel, UI_SECONDARY_COLOR, 0.5);
+        addTextGlow(waveLabel, UI_SECONDARY_COLOR, 0.4);
 
         Text waveText = new Text(initialWave + "/" + maxWaves);
-        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 24));  // Smaller font
+        waveText.setFont(Font.font(FONT_FAMILY, FontWeight.BOLD, 22));  // Smaller font
         waveText.setFill(UI_TEXT_SECONDARY);
         addTextGlow(waveText, UI_SECONDARY_COLOR, 0.4);
 
         waveDisplay.getChildren().addAll(waveLabel, waveText);
         waveDisplay.setUserData(waveText);
 
-        topBar.getChildren().addAll(scoreDisplay, waveDisplay);
+        // Create a magical separator
+        Rectangle separator = new Rectangle(2, 40);  // Shorter separator
+        separator.setFill(UI_ACCENT_COLOR);
+        addShapeGlow(separator, UI_SECONDARY_COLOR, 0.3);
+
+        // Create content pane to hold everything
+        HBox content = new HBox(15, scoreDisplay, separator, waveDisplay);  // Reduced spacing
+        content.setAlignment(Pos.CENTER);
+
+        // Combine background and content
+        StackPane finalLayout = new StackPane(bg, content);
+        finalLayout.setAlignment(Pos.CENTER);
+
+        // Store the data in the top bar
+        topBar.getChildren().add(finalLayout);
         topBar.setUserData(new TopBarData(scoreText, waveText, maxWaves));
 
         return topBar;
@@ -247,12 +281,11 @@ public class UIFactory {
      */
     public static Text createControlsText() {
         Text controlsText = new Text("Magical Controls: Type to cast | SHIFT to switch targets | SPACE to banish word");
-        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 300);
-        controlsText.setTranslateY(FXGL.getAppHeight() - 60);
+        controlsText.setTranslateX(FXGL.getAppWidth() / 2 - 250);  // Centered position
+        controlsText.setTranslateY(FXGL.getAppHeight() - 40);      // Moved up slightly
         controlsText.setFill(UI_TEXT_PRIMARY);
-        controlsText.setFont(Font.font(FONT_FAMILY, 20));
+        controlsText.setFont(Font.font(FONT_FAMILY, 16));          // Smaller font
         addTextGlow(controlsText, UI_SECONDARY_COLOR, 0.3);
-
         return controlsText;
     }
 
@@ -453,6 +486,15 @@ public class UIFactory {
         shadow.setRadius(5);
         shadow.setInput(glow);
         text.setEffect(shadow);
+    }
+
+    public static void addShapeGlow(Shape shape, Color color, double intensity) {
+        Glow glow = new Glow(intensity);
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(color);
+        shadow.setRadius(5);
+        shadow.setInput(glow);
+        shape.setEffect(shadow);
     }
 
     // Inner classes to store UI component references
@@ -708,12 +750,23 @@ public class UIFactory {
 
         // Find and set score text reference
         for (Node child : topBar.getChildren()) {
-            if (child instanceof VBox) {
-                VBox box = (VBox) child;
-                if (!box.getChildren().isEmpty() && box.getChildren().get(0) instanceof Text) {
-                    Text label = (Text) box.getChildren().get(0);
-                    if (label.getText().equals("ARCANE POINTS") && box.getChildren().size() > 1) {
-                        playerManager.setScoreText((Text) box.getChildren().get(1));
+            if (child instanceof StackPane) {
+                StackPane stackPane = (StackPane) child;
+                for (Node stackChild : stackPane.getChildren()) {
+                    if (stackChild instanceof HBox) {
+                        HBox content = (HBox) stackChild;
+                        for (Node contentChild : content.getChildren()) {
+                            if (contentChild instanceof VBox) {
+                                VBox box = (VBox) contentChild;
+                                if (!box.getChildren().isEmpty() && box.getChildren().get(0) instanceof Text) {
+                                    Text label = (Text) box.getChildren().get(0);
+                                    if (label.getText().equals("ARCANE POINTS") && box.getChildren().size() > 1) {
+                                        playerManager.setScoreText((Text) box.getChildren().get(1));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

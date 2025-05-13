@@ -185,17 +185,24 @@ public class Game extends GameApplication {
         });
 
         stateManager.setStateEntryAction(GameStateManager.GameState.GAME_OVER, message -> {
-            // Play game over sound and fade out music
-            SoundManager.getInstance().playGameOver();
+            // Stop game music with fade out
             SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
             showEndGameScreen("Game Over!", false);
         });
 
         stateManager.setStateEntryAction(GameStateManager.GameState.VICTORY, message -> {
-            // Play victory sound and fade out music
-            SoundManager.getInstance().playVictory();
+            // Stop game music with fade out
             SoundManager.getInstance().fadeOutBGM(Duration.seconds(2.0));
             showEndGameScreen("Victory! Game Complete!", true);
+        });
+
+        // Add state exit actions
+        stateManager.setStateExitAction(GameStateManager.GameState.GAME_OVER, message -> {
+            // No need to start menu music since we'll start game music on restart
+        });
+
+        stateManager.setStateExitAction(GameStateManager.GameState.VICTORY, message -> {
+            // No need to start menu music since we'll start game music on restart
         });
     }
 
@@ -203,6 +210,16 @@ public class Game extends GameApplication {
      * Shows game over or victory screen
      */
     private void showEndGameScreen(String title, boolean isVictory) {
+        // Stop game music first
+        SoundManager.getInstance().stopBGM();
+
+        // Play appropriate sound effect
+        if (isVictory) {
+            SoundManager.getInstance().playVictory();
+        } else {
+            SoundManager.getInstance().playGameOver();
+        }
+
         // Pass character count to statistics factory
         StatsUIFactory.setTotalCharactersTyped(playerManager.getTotalCharactersTyped());
 
@@ -268,7 +285,10 @@ public class Game extends GameApplication {
      * Restarts the game by resetting all components
      */
     private void restartGame() {
-        // Start game music again
+        // Play button click sound
+        SoundManager.getInstance().playButtonClick();
+
+        // Start game music again with fade in
         SoundManager.getInstance().playBGM("game");
         SoundManager.getInstance().fadeInBGM(Duration.seconds(1.0));
 
