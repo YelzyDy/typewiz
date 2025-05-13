@@ -1,6 +1,7 @@
 package com.oop2.typewiz.GameplayComponents;
 
 import com.almasb.fxgl.dsl.FXGL;
+import com.oop2.typewiz.TypeWizApp;
 import com.oop2.typewiz.util.SoundManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -119,34 +120,48 @@ public class PauseMenuFactory {
 
         // Combine background and text
         StackPane button = new StackPane(bg, buttonText);
-        button.setCursor(javafx.scene.Cursor.HAND);
+        button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
 
         // Add hover effects
-        bg.setOnMouseEntered(e -> {
+        button.setOnMouseEntered(e -> {
             bg.setFill(Color.rgb(75, 0, 130, 0.8));
             SoundManager.getInstance().playButtonHover();
             button.setScaleX(1.1);
             button.setScaleY(1.1);
+            button.setCursor(TypeWizApp.OPEN_BOOK_CURSOR);
+            buttonText.setFill(Color.web("#ffeb3b")); // Gold color on hover
         });
 
-        bg.setOnMouseExited(e -> {
+        button.setOnMouseExited(e -> {
             bg.setFill(Color.rgb(0, 0, 0, 0.6));
             button.setScaleX(1.0);
             button.setScaleY(1.0);
+            button.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
+            buttonText.setFill(TEXT_COLOR);
         });
 
         // Add click effect
-        bg.setOnMousePressed(e -> {
+        button.setOnMousePressed(e -> {
             SoundManager.getInstance().playButtonClick();
             button.setScaleX(0.9);
             button.setScaleY(0.9);
         });
 
-        bg.setOnMouseReleased(e -> {
-            button.setScaleX(1.0);
-            button.setScaleY(1.0);
+        button.setOnMouseReleased(e -> {
+            button.setScaleX(1.1); // Return to hover size since mouse is still over button
+            button.setScaleY(1.1);
             action.run();
         });
+
+        // Make sure the entire button area is clickable
+        bg.setOnMouseEntered(e -> button.fireEvent(e));
+        bg.setOnMouseExited(e -> button.fireEvent(e));
+        bg.setOnMousePressed(e -> button.fireEvent(e));
+        bg.setOnMouseReleased(e -> button.fireEvent(e));
+        buttonText.setOnMouseEntered(e -> button.fireEvent(e));
+        buttonText.setOnMouseExited(e -> button.fireEvent(e));
+        buttonText.setOnMousePressed(e -> button.fireEvent(e));
+        buttonText.setOnMouseReleased(e -> button.fireEvent(e));
 
         return button;
     }

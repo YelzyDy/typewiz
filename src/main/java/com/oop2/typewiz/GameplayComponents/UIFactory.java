@@ -76,7 +76,7 @@ public class UIFactory {
         healthDisplay.setTranslateX(25);
         healthDisplay.setTranslateY(20);   // Moved up
         healthDisplay.setPadding(new Insets(10));  // Reduced padding
-        healthDisplay.setPrefSize(190, 100);    // Smaller width
+        healthDisplay.setPrefSize(180, 100);    // Smaller width
 
         healthDisplay.setBackground(createPanelBackground(UI_BG_COLOR, UI_CORNER_RADIUS));
         addPanelBorder(healthDisplay, UI_ACCENT_COLOR, UI_CORNER_RADIUS);

@@ -35,6 +35,8 @@ public class SoundManager {
     private static final String BUTTON_CLICK = "sound-library/click.wav";
     private static final String SPACEBAR_COMPLETE = "sound-library/spacebar.mp3";
     private static final String SHIFT_CYCLE = "sound-library/shift.mp3";
+    private static final String DAMAGE = "sound-library/damage.mp3";
+
 
     private SoundManager() {
         // Private constructor for singleton
@@ -70,6 +72,7 @@ public class SoundManager {
             FXGL.getAssetLoader().loadSound(BUTTON_CLICK);
             FXGL.getAssetLoader().loadSound(SPACEBAR_COMPLETE);
             FXGL.getAssetLoader().loadSound(SHIFT_CYCLE);
+            FXGL.getAssetLoader().loadSound(DAMAGE);
         } catch (Exception e) {
             System.err.println("Error preloading sounds: " + e.getMessage());
         }
@@ -236,6 +239,14 @@ public class SoundManager {
                             e -> FXGL.getSettings().setGlobalMusicVolume(bgmVolume))
             );
             fadeIn.play();
+        }
+    }
+
+    public void playDamage() {
+        try {
+            FXGL.getAudioPlayer().playSound(FXGL.getAssetLoader().loadSound(DAMAGE));
+        } catch (Exception e) {
+            System.err.println("Error playing button hover sound: " + e.getMessage());
         }
     }
 }

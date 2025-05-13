@@ -114,7 +114,7 @@ public class InputManager {
                     restartGameCallback != null) {
                 System.out.println("Restarting game via keyboard...");
                 // Play button click sound for restart
-                SoundManager.getInstance().playButtonClick();
+                SoundManager.getInstance().playDamage();
                 restartGameCallback.accept(null);
                 event.consume();
                 return;

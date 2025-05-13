@@ -25,7 +25,7 @@ public class DifficultyMenuScreen extends FXGLMenu {
     }
 
     DifficultyMenuScreen(Runnable backAction, Runnable easyAction, Runnable mediumAction, Runnable hardAction) {
-        super(MenuType.GAME_MENU);
+        super(MenuType.MAIN_MENU);
 
         FXGL.getAssetLoader().loadSound("sound-library/click.wav");
 
@@ -39,7 +39,6 @@ public class DifficultyMenuScreen extends FXGLMenu {
                         "-fx-background-position: center center;"
         );
 
-        root.setCursor(TypeWizApp.CLOSED_BOOK_CURSOR);
         // Glass panel effect
         Rectangle panel = new Rectangle(500, 500);
         panel.setArcHeight(30);

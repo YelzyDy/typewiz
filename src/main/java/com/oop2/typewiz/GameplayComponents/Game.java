@@ -4,13 +4,14 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.oop2.typewiz.TypeWizApp;
+import com.oop2.typewiz.SceneManager;
+
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.physics.PhysicsComponent;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
-import com.oop2.typewiz.SceneManager;
-import com.oop2.typewiz.TypeWizApp;
 import com.oop2.typewiz.util.SoundManager;
 import javafx.scene.paint.*;
 import javafx.scene.shape.Rectangle;
@@ -71,7 +72,7 @@ public class Game extends GameApplication {
         settings.setPreserveResizeRatio(true);
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
-        settings.setGameMenuEnabled(true);
+        settings.setGameMenuEnabled(false);
         settings.setIntroEnabled(false);
         settings.setProfilingEnabled(false);
         settings.setCloseConfirmation(false);
@@ -141,6 +142,11 @@ public class Game extends GameApplication {
         // Set up input handling
         inputManager.setupInput();
         inputManager.setRestartGameCallback(v -> restartGame());
+
+        // Add controls text guide
+        Text controlsGuide = UIFactory.createControlsText();
+        controlsGuide.setId("controls-guide");
+        FXGL.addUINode(controlsGuide);
     }
 
     /**
@@ -222,6 +228,13 @@ public class Game extends GameApplication {
             SoundManager.getInstance().playVictory();
         } else {
             SoundManager.getInstance().playGameOver();
+        }
+
+        // Remove controls guide
+        for (Node node : FXGL.getGameScene().getUINodes()) {
+            if (node.getId() != null && node.getId().equals("controls-guide")) {
+                FXGL.removeUINode(node);
+            }
         }
 
         // Pass character count to statistics factory
@@ -346,6 +359,11 @@ public class Game extends GameApplication {
         System.out.println("Re-setting up input handlers");
         inputManager.setupInput();
 
+        // Add back the controls guide
+        Text controlsGuide = UIFactory.createControlsText();
+        controlsGuide.setId("controls-guide");
+        FXGL.addUINode(controlsGuide);
+
         // Small delay before starting a new game to ensure clean state
         FXGL.getGameTimer().runOnceAfter(() -> {
             System.out.println("Starting wave 1");
@@ -439,6 +457,14 @@ public class Game extends GameApplication {
 
     private void showPauseMenu() {
         System.out.println("Creating pause menu");
+
+        // Hide controls guide
+        for (Node node : FXGL.getGameScene().getUINodes()) {
+            if (node.getId() != null && node.getId().equals("controls-guide")) {
+                node.setVisible(false);
+            }
+        }
+
         // Create pause menu
         Node pauseMenu = PauseMenuFactory.createPauseMenu(
                 this::resumeGame,      // Resume action
@@ -473,6 +499,13 @@ public class Game extends GameApplication {
             }
         }
 
+        // Show controls guide again
+        for (Node node : FXGL.getGameScene().getUINodes()) {
+            if (node.getId() != null && node.getId().equals("controls-guide")) {
+                node.setVisible(true);
+            }
+        }
+
         // Resume game state
         stateManager.resumeGame(null);
         System.out.println("Pause menu removed and game state set to PLAYING");
@@ -489,6 +522,7 @@ public class Game extends GameApplication {
         SoundManager.getInstance().playButtonClick();
 
         // TODO: Implement back to tower functionality
+        // For now, just restart the game
         SceneManager.showScreen(TypeWizApp.ScreenType.MAIN_MENU);
     }
 

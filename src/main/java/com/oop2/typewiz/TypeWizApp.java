@@ -63,7 +63,7 @@ public class TypeWizApp extends GameApplication {
         settings.setWidth(1280);
         settings.setHeight(720);
         settings.setMainMenuEnabled(true);
-        settings.setGameMenuEnabled(true);
+        settings.setGameMenuEnabled(false);  // Disable built-in game menu
         settings.setSceneFactory(new CustomSceneFactory());
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(true);
@@ -430,7 +430,7 @@ public class TypeWizApp extends GameApplication {
         final long[] lastShiftKeyTime = {0};
         final long SHIFT_DEBOUNCE_MS = 200; // Debounce time in milliseconds
 
-        // Only handle SHIFT key presses for cycling through targets
+        // Handle SHIFT key presses for cycling through targets and ESC for pause
         FXGL.getInput().addEventHandler(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == javafx.scene.input.KeyCode.SHIFT) {
                 // If in playing state, cycle through targets
@@ -447,10 +447,84 @@ public class TypeWizApp extends GameApplication {
                     }
                     event.consume(); // Prevent event from being processed further
                 }
+            } else if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                // Handle ESC key for pause menu
+                System.out.println("ESC key pressed - Current state: " + stateManager.getCurrentState());
+                if (stateManager.isInState(GameStateManager.GameState.PLAYING)) {
+                    System.out.println("Showing pause menu");
+                    showPauseMenu();
+                    event.consume();
+                } else if (stateManager.isInState(GameStateManager.GameState.PAUSED)) {
+                    System.out.println("Resuming game");
+                    resumeGame();
+                    event.consume();
+                }
             }
         });
     }
 
+    private void showPauseMenu() {
+        System.out.println("Creating pause menu");
+        // Create pause menu
+        Node pauseMenu = PauseMenuFactory.createPauseMenu(
+                this::resumeGame,      // Resume action
+                this::restartGame,     // Restart action
+                this::backToTower      // Back to tower action
+        );
+
+        // Add unique ID for the pause menu
+        pauseMenu.setId("pause-menu");
+
+        // Add to scene with high Z-index
+        FXGL.entityBuilder()
+                .view(pauseMenu)
+                .zIndex(200)  // Higher than game over screen
+                .buildAndAttach();
+
+        // Pause the game state
+        stateManager.pauseGame(null);
+        System.out.println("Pause menu created and game state set to PAUSED");
+
+        // Lower BGM volume
+        SoundManager.getInstance().setMusicVolume(0.2);
+    }
+
+    private void resumeGame() {
+        System.out.println("Removing pause menu");
+        // Remove pause menu - collect entities to remove first
+        List<Entity> entitiesToRemove = new ArrayList<>();
+        for (Entity entity : FXGL.getGameWorld().getEntities()) {
+            if (entity.getViewComponent().getChildren().stream()
+                    .anyMatch(node -> "pause-menu".equals(node.getId()))) {
+                entitiesToRemove.add(entity);
+            }
+        }
+
+        // Now safely remove the collected entities
+        for (Entity entity : entitiesToRemove) {
+            entity.removeFromWorld();
+        }
+
+        // Resume game state
+        stateManager.resumeGame(null);
+        System.out.println("Pause menu removed and game state set to PLAYING");
+
+        // Restore BGM volume
+        SoundManager.getInstance().setMusicVolume(0.4);
+    }
+
+    private void backToTower() {
+        // Stop game music
+        SoundManager.getInstance().stopBGM();
+
+        // Play button click sound
+        SoundManager.getInstance().playButtonClick();
+
+        // TODO: Implement back to tower functionality
+        // For now, just restart the game
+        SceneManager.showScreen(TypeWizApp.ScreenType.MAIN_MENU);
+
+    }
 
     public static void main(String[] args) {
         launch(args);
